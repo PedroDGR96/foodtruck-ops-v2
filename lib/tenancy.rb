@@ -1,0 +1,32 @@
+module Tenancy
+  class TenantNotSetError < StandardError; end
+
+  module_function
+
+  def with_business(business_or_id)
+    business_id = business_or_id.respond_to?(:id) ? business_or_id.id : business_or_id
+    raise TenantNotSetError, "A business is required for tenant-scoped work" if business_id.blank?
+
+    business = business_or_id.respond_to?(:id) ? business_or_id : Business.find(business_id)
+
+    Current.set(business: business) do
+      ActiveRecord::Base.transaction(requires_new: true) do
+        set_local!(business_id)
+        begin
+          yield
+        ensure
+          reset_local!
+        end
+      end
+    end
+  end
+
+  def set_local!(business_id)
+    quoted_id = ActiveRecord::Base.connection.quote(business_id)
+    ActiveRecord::Base.connection.execute("SET LOCAL app.business_id = #{quoted_id}")
+  end
+
+  def reset_local!
+    ActiveRecord::Base.connection.execute("RESET app.business_id")
+  end
+end

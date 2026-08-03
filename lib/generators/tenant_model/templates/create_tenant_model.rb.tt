@@ -1,0 +1,12 @@
+require Rails.root.join("lib/tenancy/tenant_rls")
+
+class Create<%= table_name.camelize %> < ActiveRecord::Migration[8.1]
+  def change
+    create_table :<%= table_name %>, id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.references :business, null: false, type: :uuid, foreign_key: true
+      t.timestamps
+    end
+
+    Tenancy::TenantRls.install!(self, :<%= table_name %>)
+  end
+end
