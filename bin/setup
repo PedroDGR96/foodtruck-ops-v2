@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker compose up -d --build db redis
+docker compose run --rm --no-deps -e DATABASE_URL=postgresql://app_owner:app_owner@db:5432/foodtruck_ops_development web bin/db-prepare
+docker compose --profile dev up -d web worker tailwind
+docker compose exec -T web bin/rails runner 'abort("health check failed") unless Rails.application'
+echo "FoodTruck Ops is running at http://localhost:3000/up"

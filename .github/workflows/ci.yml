@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: app_owner
+          POSTGRES_PASSWORD: app_owner
+          POSTGRES_DB: foodtruck_ops_development
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app_owner"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      RAILS_ENV: test
+      DB_HOST: localhost
+      DB_USERNAME: app
+      DB_PASSWORD: app
+      REDIS_URL: redis://localhost:6379/1
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Create the non-owner application role
+        env:
+          PGPASSWORD: app_owner
+        run: psql -h localhost -U app_owner -d foodtruck_ops_development -c "CREATE ROLE app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD 'app';"
+      - name: Prepare database as migration owner
+        env:
+          DATABASE_URL: postgresql://app_owner:app_owner@localhost:5432/foodtruck_ops_test
+        run: bin/db-prepare
+      - name: Lint
+        run: bundle exec rubocop
+      - name: Security scan
+        run: bundle exec brakeman --no-pager
+      - name: Test and enforce coverage
+        run: bundle exec rspec

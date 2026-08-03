@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker compose up -d --build db redis
+docker compose run --rm --no-deps -e DATABASE_URL=postgresql://app_owner:app_owner@db:5432/foodtruck_ops_test test bin/db-prepare
+docker compose run --rm --no-deps test bundle exec rubocop
+docker compose run --rm --no-deps test bundle exec brakeman --no-pager
+docker compose run --rm --no-deps test bundle exec rspec
