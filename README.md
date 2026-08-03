@@ -33,3 +33,37 @@ same checks against PostgreSQL and Redis services.
 services. `--profile test` exposes the isolated test runner, and `--profile
 prod` builds the production image; production credentials must be supplied by
 environment variables.
+
+## Multi-tenant RLS
+
+Tenant-scoped tables are protected by Postgres row-level security. The
+application connects as the non-owner `app` role (NOBYPASSRLS); migrations and
+seeds run as the migration-owner role. Every tenant table carries a
+`business_id` UUID column, `FORCE ROW LEVEL SECURITY`, a `tenant_isolation`
+policy (`USING`/`WITH CHECK` against the `app.business_id` GUC — no
+`missing_ok`, so an unset tenant fails loudly), and a `BEFORE INSERT` trigger
+that fills `business_id` from the GUC.
+
+Tenant context is set through `Tenancy.with_business`, which issues `SET LOCAL`
+inside a transaction (reset on completion, so no connection-pool leak). The
+entry points are the request middleware, the Sidekiq client/server middleware,
+the ActionCable connection/channel, and the `tenancy:console` rake task. New
+tenant-scoped models use `bin/rails generate tenant_model <Name>`.
+
+Manual verification as the `app` role (from the `db` container):
+
+```sh
+# no GUC  -> hard error (never a silent empty read)
+docker compose exec db psql -U app -d foodtruck_ops_development -c \
+  "SELECT COUNT(*) FROM users;"
+
+# wrong GUC -> zero rows
+docker compose exec db psql -U app -d foodtruck_ops_development -c \
+  "SET app.business_id='00000000-0000-0000-0000-000000000000'; SELECT COUNT(*) FROM users;"
+
+# right GUC -> own rows only
+docker compose exec db psql -U app -d foodtruck_ops_development -c \
+  "SET app.business_id='<business-uuid>'; SELECT COUNT(*) FROM users;"
+```
+
+`bin/setup` seeds a default business (`FoodTruck Ops`) and its owner user.
