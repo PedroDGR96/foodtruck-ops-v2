@@ -1,0 +1,100 @@
+pt-BR:
+  app:
+    name: "FoodTruck Ops"
+
+  activerecord:
+    attributes:
+      user:
+        name: "Nome"
+        email: "E-mail"
+        role: "Perfil"
+        password: "Senha"
+        password_confirmation: "Confirmação de senha"
+        active: "Ativo"
+      business:
+        name: "Nome"
+        timezone: "Fuso horário"
+        currency: "Moeda"
+        active: "Ativo"
+
+  common:
+    save: "Salvar"
+    cancel: "Cancelar"
+    edit: "Editar"
+    back: "Voltar"
+    search: "Buscar"
+    add: "Adicionar"
+    actions: "Ações"
+    inactive: "Inativo"
+    active: "Ativo"
+    role: "Perfil"
+    confirm: "Confirmar"
+    email: "E-mail"
+    password: "Senha"
+    new_password: "Nova senha (opcional)"
+    confirm_new_password: "Confirmar nova senha"
+    save_changes: "Salvar alterações"
+    loading: "Carregando…"
+    dismiss: "Fechar"
+    skip_to_content: "Ir para o conteúdo"
+
+  roles:
+    owner: "proprietário"
+    cashier: "caixa"
+    kitchen: "cozinha"
+
+  layouts:
+    sign_out: "Sair"
+    toggle_dark: "Alternar tema"
+    primary_nav: "Navegação principal"
+    nav:
+      menu: "Cardápio"
+      staff: "Equipe"
+      settings: "Configurações"
+
+  home:
+    title: "Bem-vindo, %{name}"
+    title_short: "Início"
+    signed_in_as: "Você está conectado como %{role} da empresa %{business}."
+    manage_staff: "Gerenciar equipe"
+    business_settings: "Configurações da empresa"
+    placeholder: "As telas de caixa e cozinha chegam com o marco de ponto de venda."
+    empty_title: "Bem-vindo, %{role}"
+
+  sessions:
+    sign_in: "Entrar"
+    sign_in_title: "Acessar sua empresa"
+
+  users:
+    index:
+      title: "Equipe"
+      add: "Adicionar membro da equipe"
+    new:
+      title: "Adicionar membro da equipe"
+      submit: "Adicionar membro da equipe"
+    edit:
+      title: "Editar membro da equipe"
+      submit: "Salvar alterações"
+    created: "Membro %{name} adicionado."
+    updated: "Membro %{name} atualizado."
+
+  settings:
+    edit:
+      title: "Configurações da empresa"
+      submit: "Salvar configurações"
+    updated: "Configurações salvas."
+
+  errors:
+    forbidden:
+      title: "Acesso negado (403)"
+      message: "Você não tem permissão para realizar esta ação."
+
+  time:
+    formats:
+      br: "%d/%m/%Y %H:%M"
+      short_br: "%d/%m/%Y"
+
+  date:
+    formats:
+      br: "%d/%m/%Y %H:%M"
+      short_br: "%d/%m/%Y"

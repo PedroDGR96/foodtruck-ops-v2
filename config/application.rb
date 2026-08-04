@@ -32,6 +32,11 @@ module App
     config.active_record.schema_format = :sql
     config.middleware.insert_after Warden::Manager, TenantMiddleware
 
+    # The application is fully Brazilian Portuguese: default locale, all
+    # user-facing strings, money (BRL) and date/time formats.
+    config.i18n.default_locale = :"pt-BR"
+    config.i18n.available_locales = %i[en] + [ :"pt-BR" ]
+
     # Load routes at boot so Devise mappings exist before the Warden::Manager is
     # first built; otherwise request-time proxies dup a config that has no scope
     # strategies registered (see config/initializers/devise_warden_fix.rb).

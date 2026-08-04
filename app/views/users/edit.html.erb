@@ -1,5 +1,5 @@
 <div class="mx-auto max-w-md">
-  <h1 class="text-2xl font-bold">Edit staff member</h1>
+  <h1 class="text-2xl font-bold"><%= t("users.edit.title") %></h1>
 
   <%= form_with(model: @user, class: "mt-6") do |f| %>
     <% if @user.errors.any? %>
@@ -24,7 +24,7 @@
 
     <div class="mb-4">
       <%= f.label :role, class: "block text-sm font-medium" %>
-      <%= f.select :role, User.roles.keys.map { |role| [role.humanize, role] }, {}, class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
+      <%= f.select :role, User.roles.keys.map { |role| [t("roles.#{role}").capitalize, role] }, {}, class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
     </div>
 
     <div class="mb-4">
@@ -33,15 +33,15 @@
     </div>
 
     <div class="mb-4">
-      <%= f.label :password, "New password (optional)", class: "block text-sm font-medium" %>
+      <%= f.label :password, t("common.new_password"), class: "block text-sm font-medium" %>
       <%= f.password_field :password, autocomplete: "new-password", class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
     </div>
 
     <div class="mb-6">
-      <%= f.label :password_confirmation, "Confirm new password", class: "block text-sm font-medium" %>
+      <%= f.label :password_confirmation, t("common.confirm_new_password"), class: "block text-sm font-medium" %>
       <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
     </div>
 
-    <%= f.submit "Save changes", class: "w-full rounded-md bg-slate-900 px-3 py-2 font-medium text-white" %>
+    <%= f.submit t("users.edit.submit"), class: "btn btn-primary w-full" %>
   <% end %>
 </div>

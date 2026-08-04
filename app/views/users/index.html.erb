@@ -1,7 +1,7 @@
 <div class="mx-auto max-w-2xl">
   <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">Staff</h1>
-    <%= link_to "Add staff member", new_user_path, class: "rounded-md bg-slate-900 px-4 py-2 text-white" %>
+    <h1 class="text-2xl font-bold"><%= t("users.index.title") %></h1>
+    <%= link_to t("users.index.add"), new_user_path, class: "btn btn-primary" %>
   </div>
 
   <ul class="mt-6 divide-y divide-slate-200 border-t border-slate-200">
@@ -13,10 +13,10 @@
         </div>
         <div class="flex items-center gap-3">
           <% unless user.active? %>
-            <span class="rounded bg-red-50 px-2 py-1 text-xs text-red-700">Inactive</span>
+            <span class="rounded bg-red-50 px-2 py-1 text-xs text-red-700"><%= t("common.inactive") %></span>
           <% end %>
-          <span class="rounded bg-slate-100 px-2 py-1 text-xs capitalize"><%= user.role %></span>
-          <%= link_to "Edit", edit_user_path(user), class: "text-sm text-slate-600 underline" %>
+          <span class="rounded bg-slate-100 px-2 py-1 text-xs capitalize"><%= t("roles.#{user.role}") %></span>
+          <%= link_to t("common.edit"), edit_user_path(user), class: "text-sm text-slate-600 underline" %>
         </div>
       </li>
     <% end %>

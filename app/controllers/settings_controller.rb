@@ -16,7 +16,7 @@ class SettingsController < AuthenticatedController
         actor: current_user,
         metadata: business_params.to_h
       )
-      redirect_to edit_settings_path, notice: "Settings saved."
+      redirect_to edit_settings_path, notice: t("settings.updated")
     else
       render :edit, status: :unprocessable_entity
     end

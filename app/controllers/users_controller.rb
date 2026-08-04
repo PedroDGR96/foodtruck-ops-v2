@@ -17,7 +17,7 @@ class UsersController < AuthenticatedController
 
     if @user.save
       AuditLog.record!(action: "user_created", resource: "user", resource_id: @user.id, actor: current_user)
-      redirect_to users_path, notice: "#{@user.name} was added."
+      redirect_to users_path, notice: t("users.created", name: @user.name)
     else
       render :new, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class UsersController < AuthenticatedController
 
     if @user.update(user_params)
       AuditLog.record!(action: "user_updated", resource: "user", resource_id: @user.id, actor: current_user)
-      redirect_to users_path, notice: "#{@user.name} was updated."
+      redirect_to users_path, notice: t("users.updated", name: @user.name)
     else
       render :edit, status: :unprocessable_entity
     end

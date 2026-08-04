@@ -1,5 +1,5 @@
 <div class="mx-auto max-w-md">
-  <h1 class="text-2xl font-bold">Business settings</h1>
+  <h1 class="text-2xl font-bold"><%= t("settings.edit.title") %></h1>
 
   <%= form_with(model: @business, url: settings_path, class: "mt-6") do |f| %>
     <% if @business.errors.any? %>
@@ -32,6 +32,6 @@
       <%= f.check_box :active, class: "rounded border-slate-300" %>
     </div>
 
-    <%= f.submit "Save settings", class: "w-full rounded-md bg-slate-900 px-3 py-2 font-medium text-white" %>
+    <%= f.submit t("settings.edit.submit"), class: "btn btn-primary w-full" %>
   <% end %>
 </div>

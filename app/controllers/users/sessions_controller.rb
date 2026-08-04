@@ -20,7 +20,7 @@ module Users
       user = current_user
       sign_out(current_user)
       AuditLog.record!(action: "sign_out", resource: "session", actor: user) if user
-      redirect_to new_user_session_path, notice: "Signed out."
+      redirect_to new_user_session_path, notice: t("devise.sessions.signed_out")
     end
 
     private

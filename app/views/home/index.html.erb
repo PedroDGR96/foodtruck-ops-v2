@@ -1,15 +1,16 @@
-<h1 class="text-3xl font-bold">Welcome, <%= current_user.name %></h1>
+<h1 class="text-3xl font-bold"><%= t("home.title", name: current_user.name) %></h1>
 
 <p class="mt-4 text-slate-600">
-  You are signed in as <span class="font-medium"><%= current_user.role %></span> for
-  <span class="font-medium"><%= Current.business.name %></span>.
+  <%= t("home.signed_in_as", role: t("roles.#{current_user.role}"), business: Current.business.name) %>
 </p>
 
 <nav class="mt-8 flex gap-4">
   <% if current_user.owner? %>
-    <%= link_to "Manage staff", users_path, class: "rounded-md bg-slate-900 px-4 py-2 text-white" %>
-    <%= link_to "Business settings", edit_settings_path, class: "rounded-md border border-slate-300 px-4 py-2" %>
+    <%= link_to t("home.manage_staff"), users_path, class: "btn btn-primary" %>
+    <%= link_to t("home.business_settings"), edit_settings_path, class: "btn btn-secondary" %>
   <% else %>
-    <span class="text-sm text-slate-400">Cashier and kitchen surfaces arrive with the point-of-sale milestone.</span>
+    <div class="mt-8 w-full">
+      <%= render "layouts/empty_state", title: t("home.empty_title", role: t("roles.#{current_user.role}")), message: t("home.placeholder") %>
+    </div>
   <% end %>
 </nav>

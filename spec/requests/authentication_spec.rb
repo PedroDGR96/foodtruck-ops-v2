@@ -23,7 +23,7 @@ RSpec.describe "Authentication", type: :request do
       get new_user_session_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Log in to your workspace")
+      expect(response.body).to include("Acessar sua empresa")
     end
   end
 

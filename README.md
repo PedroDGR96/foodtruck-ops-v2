@@ -27,6 +27,16 @@ The command runs RuboCop, Brakeman, and RSpec in Docker. SimpleCov enforces a
 95% line-coverage floor (including every tracked file). GitHub Actions runs the
 same checks against PostgreSQL and Redis services.
 
+## Language, money and dates
+
+The application is fully in Brazilian Portuguese. `I18n.default_locale` is
+`:"pt-BR"` (via the `rails-i18n` gem), user-facing strings are translated in
+`config/locales/*.pt-BR.yml`, money is formatted as BRL (`R$ 1.234,56`), and
+dates/times are rendered as `dd/mm/aaaa hh:mm` in the business timezone. New
+user-facing strings must use `I18n.t` keys in a `pt-BR` locale file — hardcoded
+English in views is not allowed. Use the `format_money`, `format_date` and
+`format_datetime` helpers instead of raw formatting.
+
 ## Profiles
 
 `docker compose --profile dev up` runs the local web, worker, and Tailwind
