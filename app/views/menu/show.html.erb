@@ -1,0 +1,72 @@
+<%= content_for :title, t("menu.title") %>
+
+<div class="mx-auto max-w-3xl pb-20">
+  <h1 class="text-2xl font-bold"><%= t("menu.title") %></h1>
+
+  <%= form_with url: menu_path, method: :get, class: "mt-4", role: "search" do |form| %>
+    <div class="relative">
+      <%= form.text_field :query, value: @query, id: "menu-search", autofocus: true, placeholder: t("menu.search_placeholder"), class: "input pr-10", autocomplete: "off", data: { shortcut: "/", shortcut_focus: "#menu-search" } %>
+      <svg class="pointer-events-none absolute top-3 right-3 h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+    </div>
+    <p class="mt-1 text-xs text-slate-400"><%= t("menu.search_hint") %></p>
+  <% end %>
+  </form>
+
+  <% if @query.present? %>
+    <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
+      <%= t("menu.results_for", query: @query) %>
+    </p>
+  <% end %>
+
+  <div data-loading-target class="mt-6 space-y-8">
+    <% if @categories.empty? %>
+      <%= render "layouts/empty_state", title: t("menu.empty_title"), message: @query.present? ? t("menu.empty_search") : t("menu.empty_menu") %>
+    <% else %>
+      <% @categories.each do |category, products| %>
+        <section aria-label="<%= category.name %>">
+          <h2 class="flex items-baseline gap-2">
+            <span class="text-lg font-semibold"><%= category.name %></span>
+            <span class="text-xs text-slate-400"><%= t("menu.product_count", count: products.size) %></span>
+          </h2>
+
+          <ul class="mt-3 grid gap-3 sm:grid-cols-2">
+            <% products.each do |product| %>
+              <li class="card flex gap-3 p-3">
+                <% if product.image.attached? %>
+                  <%= image_tag product.image.variant(resize_to_fill: [ 96, 96 ]), class: "h-24 w-24 shrink-0 rounded-md object-cover" %>
+                <% else %>
+                  <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-300 dark:bg-slate-800" aria-hidden="true">
+                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 3h18v18H3z" opacity="0"/>
+                      <circle cx="12" cy="12" r="9"/>
+                      <circle cx="9" cy="9" r="1.5" fill="currentColor"/>
+                    </svg>
+                  </div>
+                <% end %>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="font-medium"><%= product.name %></p>
+                    <p class="shrink-0 font-semibold"><%= format_money(product.price) %></p>
+                  </div>
+                  <% if product.description.present? %>
+                    <p class="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400"><%= product.description %></p>
+                  <% end %>
+                  <p class="mt-1 text-xs text-slate-400">
+                    <% parts = [] %>
+                    <% parts << t("menu.variants_count", count: product.product_variants.size) if product.product_variants.any? %>
+                    <% parts << t("menu.addon_groups_count", count: product.product_addon_groups.size) if product.product_addon_groups.any? %>
+                    <%= parts.join(" · ") %>
+                  </p>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+    <% end %>
+  </div>
+</div>

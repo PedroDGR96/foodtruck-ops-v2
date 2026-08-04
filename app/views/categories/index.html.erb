@@ -1,0 +1,30 @@
+<div class="flex items-center justify-between">
+  <h1 class="text-2xl font-bold"><%= t("categories.index.title") %></h1>
+  <%= link_to t("categories.index.new"), new_category_path, class: "btn btn-primary" %>
+</div>
+
+<% if @categories.any? %>
+  <ul class="mt-6 divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+    <% @categories.each do |category| %>
+      <li class="flex items-center justify-between gap-4 px-4 py-3">
+        <div class="min-w-0">
+          <p class="font-medium"><%= category.name %></p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            <%= t("categories.index.products_count", count: category.products.size) %>
+          </p>
+        </div>
+        <div class="flex shrink-0 items-center gap-3">
+          <% unless category.active? %>
+            <span class="badge badge-warning"><%= t("common.inactive") %></span>
+          <% end %>
+          <span class="text-sm text-slate-500 dark:text-slate-400"><%= t("categories.index.position", position: category.position) %></span>
+          <%= link_to t("common.edit"), edit_category_path(category), class: "text-sm underline" %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <div class="mt-6">
+    <%= render "layouts/empty_state", title: t("categories.index.empty_title"), message: t("categories.index.empty_message"), action: link_to(t("categories.index.new"), new_category_path, class: "btn btn-primary") %>
+  </div>
+<% end %>

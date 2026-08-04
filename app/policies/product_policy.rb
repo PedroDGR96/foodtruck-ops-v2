@@ -1,0 +1,2 @@
+class ProductPolicy < MenuRecordPolicy
+end

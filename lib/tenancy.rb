@@ -14,15 +14,16 @@ module Tenancy
     caught = nil
     Current.set(business: business) do
       ActiveRecord::Base.transaction(requires_new: true) do
-        set_local!(business_id)
+        previous = current_business_id
         begin
+          set_local!(business_id)
           caught = catch(:warden) do
             result = yield
             rethrow = true
             nil
           end
         ensure
-          reset_local!
+          restore_business_id(previous)
         end
       end
       throw :warden, caught unless rethrow
@@ -30,9 +31,21 @@ module Tenancy
     result
   end
 
+  def current_business_id
+    ActiveRecord::Base.connection.select_value("SELECT current_setting('app.business_id', true)")
+  end
+
   def set_local!(business_id)
     quoted_id = ActiveRecord::Base.connection.quote(business_id)
     ActiveRecord::Base.connection.execute("SET LOCAL app.business_id = #{quoted_id}")
+  end
+
+  def restore_business_id(previous)
+    if previous.present?
+      set_local!(previous)
+    else
+      reset_local!
+    end
   end
 
   def reset_local!

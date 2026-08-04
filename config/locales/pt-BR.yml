@@ -16,6 +16,34 @@ pt-BR:
         timezone: "Fuso horário"
         currency: "Moeda"
         active: "Ativo"
+      category:
+        name: "Nome"
+        position: "Posição"
+        active: "Ativa"
+      product:
+        name: "Nome"
+        category_id: "Categoria"
+        description: "Descrição"
+        price: "Preço"
+        status: "Status"
+        position: "Posição"
+        image: "Imagem"
+      product_variant:
+        name: "Nome"
+        price: "Preço"
+        stock: "Estoque"
+        active: "Ativa"
+      product_addon_group:
+        name: "Nome"
+        multiple: "Permitir mais de um"
+        min_select: "Mínimo"
+        max_select: "Máximo"
+        position: "Posição"
+        active: "Ativo"
+      product_addon:
+        name: "Nome"
+        price: "Preço"
+        active: "Ativo"
 
   common:
     save: "Salvar"
@@ -37,6 +65,7 @@ pt-BR:
     loading: "Carregando…"
     dismiss: "Fechar"
     skip_to_content: "Ir para o conteúdo"
+    included: "Incluído"
 
   roles:
     owner: "proprietário"
@@ -83,6 +112,129 @@ pt-BR:
       title: "Configurações da empresa"
       submit: "Salvar configurações"
     updated: "Configurações salvas."
+
+  categories:
+    index:
+      title: "Cardápio"
+      new: "Nova categoria"
+      products_count:
+        one: "1 produto"
+        other: "%{count} produtos"
+      position: "Posição %{position}"
+      empty_title: "Nenhuma categoria"
+      empty_message: "Comece criando uma categoria, como “Lanches” ou “Bebidas”."
+    new:
+      title: "Nova categoria"
+      submit: "Criar categoria"
+    edit:
+      title: "Editar categoria"
+      submit: "Salvar categoria"
+    created: "Categoria %{name} criada."
+    updated: "Categoria %{name} atualizada."
+    discarded: "Categoria %{name} arquivada."
+
+  products:
+    index:
+      title: "Produtos"
+      new: "Novo produto"
+      name: "Nome"
+      category: "Categoria"
+      price: "Preço"
+      status: "Status"
+      empty_title: "Nenhum produto"
+      empty_message: "Adicione o primeiro produto do seu cardápio."
+    show:
+      category: "Categoria"
+      price: "Preço"
+      status: "Status"
+      position: "Posição"
+      description: "Descrição"
+      image: "Imagem"
+      no_image: "Sem imagem"
+      variants_title: "Variações"
+      new_variant: "Nova variação"
+      variant_price: "A partir de %{price}"
+      variant_stock: "Estoque: %{stock}"
+      no_variants: "Nenhuma variação cadastrada."
+      addon_groups_title: "Extras"
+      new_addon_group: "Novo grupo de extras"
+      selection_range: "%{min} a %{max} por item"
+      no_addon_groups: "Nenhum grupo de extras cadastrado."
+      new_addon: "Novo extra"
+      discard: "Arquivar"
+      discard_confirm: "Arquivar este produto? Ele deixará de aparecer no cardápio."
+    new:
+      title: "Novo produto"
+      submit: "Criar produto"
+    edit:
+      title: "Editar produto"
+      submit: "Salvar produto"
+    created: "Produto %{name} criado."
+    updated: "Produto %{name} atualizado."
+    discarded: "Produto %{name} arquivado."
+    status:
+      available: "Disponível"
+      unavailable: "Indisponível"
+
+  product_variants:
+    new:
+      title: "Nova variação para %{product}"
+      submit: "Criar variação"
+    edit:
+      title: "Editar variação de %{product}"
+      submit: "Salvar variação"
+    form:
+      price_hint: "Preço (opcional)"
+      price_placeholder: "Usa o preço do produto"
+      stock_hint: "Estoque (opcional)"
+      stock_placeholder: "Sem controle de estoque"
+    created: "Variação %{name} criada."
+    updated: "Variação %{name} atualizada."
+    discarded: "Variação %{name} arquivada."
+
+  product_addon_groups:
+    new:
+      title: "Novo grupo de extras para %{product}"
+      submit: "Criar grupo"
+    edit:
+      title: "Editar grupo de extras de %{product}"
+      submit: "Salvar grupo"
+    form:
+      multiple_hint: "Permitir escolher mais de um extra"
+      max_select_hint: "Limite máximo (opcional)"
+      max_select_placeholder: "Sem limite"
+    created: "Grupo de extras %{name} criado."
+    updated: "Grupo de extras %{name} atualizado."
+    discarded: "Grupo de extras %{name} arquivado."
+
+  product_addons:
+    new:
+      title: "Novo extra em %{group}"
+      submit: "Criar extra"
+    edit:
+      title: "Editar extra de %{group}"
+      submit: "Salvar extra"
+    created: "Extra %{name} criado."
+    updated: "Extra %{name} atualizado."
+    discarded: "Extra %{name} arquivado."
+
+  menu:
+    title: "Cardápio"
+    search_placeholder: "Buscar produtos…"
+    search_hint: "Pressione “/” para buscar"
+    results_for: "Resultados para “%{query}”"
+    empty_title: "Nenhum produto"
+    empty_search: "Nenhum produto corresponde à sua busca."
+    empty_menu: "O cardápio ainda está vazio."
+    product_count:
+      one: "1 item"
+      other: "%{count} itens"
+    variants_count:
+      one: "1 variação"
+      other: "%{count} variações"
+    addon_groups_count:
+      one: "1 grupo de extras"
+      other: "%{count} grupos de extras"
 
   errors:
     forbidden:
