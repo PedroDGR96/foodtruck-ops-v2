@@ -9,16 +9,25 @@ module Tenancy
 
     business = business_or_id.respond_to?(:id) ? business_or_id : Business.find(business_id)
 
+    result = nil
+    rethrow = false
+    caught = nil
     Current.set(business: business) do
       ActiveRecord::Base.transaction(requires_new: true) do
         set_local!(business_id)
         begin
-          yield
+          caught = catch(:warden) do
+            result = yield
+            rethrow = true
+            nil
+          end
         ensure
           reset_local!
         end
       end
+      throw :warden, caught unless rethrow
     end
+    result
   end
 
   def set_local!(business_id)

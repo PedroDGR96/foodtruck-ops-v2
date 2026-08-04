@@ -30,7 +30,14 @@ module App
     config.autoload_lib(ignore: %w[assets tasks generators])
     config.active_job.queue_adapter = :sidekiq
     config.active_record.schema_format = :sql
-    config.middleware.insert_before 0, TenantMiddleware
+    config.middleware.insert_after Warden::Manager, TenantMiddleware
+
+    # Load routes at boot so Devise mappings exist before the Warden::Manager is
+    # first built; otherwise request-time proxies dup a config that has no scope
+    # strategies registered (see config/initializers/devise_warden_fix.rb).
+    config.after_initialize do
+      Rails.application.reload_routes!
+    end
 
     # Configuration for the application, engines, and railties goes here.
     #

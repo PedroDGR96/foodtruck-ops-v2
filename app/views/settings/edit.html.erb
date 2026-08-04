@@ -1,0 +1,37 @@
+<div class="mx-auto max-w-md">
+  <h1 class="text-2xl font-bold">Business settings</h1>
+
+  <%= form_with(model: @business, url: settings_path, class: "mt-6") do |f| %>
+    <% if @business.errors.any? %>
+      <div class="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-700">
+        <ul>
+          <% @business.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="mb-4">
+      <%= f.label :name, class: "block text-sm font-medium" %>
+      <%= f.text_field :name, class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
+    </div>
+
+    <div class="mb-4">
+      <%= f.label :timezone, class: "block text-sm font-medium" %>
+      <%= f.time_zone_select :timezone, nil, {}, class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
+    </div>
+
+    <div class="mb-4">
+      <%= f.label :currency, class: "block text-sm font-medium" %>
+      <%= f.text_field :currency, class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
+    </div>
+
+    <div class="mb-6">
+      <%= f.label :active, class: "flex items-center gap-2 text-sm font-medium" %>
+      <%= f.check_box :active, class: "rounded border-slate-300" %>
+    </div>
+
+    <%= f.submit "Save settings", class: "w-full rounded-md bg-slate-900 px-3 py-2 font-medium text-white" %>
+  <% end %>
+</div>

@@ -1,0 +1,16 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 70,
+      "fingerprint": "d7ffc23039dbc820caebf1d1eeba8f83cfa3653f9a28f95979a7d1f6e974f77f",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/users_controller.rb",
+      "line": 48,
+      "code": "params.require(:user).permit(:name, :email, :role, :password, :password_confirmation, :active)",
+      "confidence": "Medium",
+      "note": "Intended: the owner role manages users, including assigning the role enum and toggling the active flag. Only the owner role can reach these actions (Pundit policy UsersPolicy#create?/update?), and role values are constrained by the User role enum. No self-service path exists for these params."
+    }
+  ],
+  "updated": "2026-08-04 00:10:00 +0000"
+}

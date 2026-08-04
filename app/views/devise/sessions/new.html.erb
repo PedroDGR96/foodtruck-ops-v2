@@ -1,0 +1,18 @@
+<div class="mx-auto mt-16 max-w-sm">
+  <h1 class="text-2xl font-bold">FoodTruck Ops</h1>
+  <h2 class="mt-1 text-sm text-slate-500">Log in to your workspace</h2>
+
+  <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+    <div class="mt-6 mb-4">
+      <%= f.label :email, class: "block text-sm font-medium text-slate-700" %>
+      <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
+    </div>
+
+    <div class="mb-6">
+      <%= f.label :password, class: "block text-sm font-medium text-slate-700" %>
+      <%= f.password_field :password, autocomplete: "current-password", class: "mt-1 w-full rounded-md border border-slate-300 px-3 py-2" %>
+    </div>
+
+    <%= f.submit "Log in", class: "w-full rounded-md bg-slate-900 px-3 py-2 font-medium text-white" %>
+  <% end %>
+</div>

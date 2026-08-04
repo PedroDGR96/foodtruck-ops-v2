@@ -1,9 +1,16 @@
 module ApplicationCable
   class Connection < ActionCable::Connection::Base
-    identified_by :business
+    identified_by :business, :current_user
 
     def connect
-      self.business = Current.business || reject_unauthorized_connection
+      self.current_user = find_verified_user
+      self.business = current_user.business
+    end
+
+    private
+
+    def find_verified_user
+      env["warden"]&.user || reject_unauthorized_connection
     end
   end
 end

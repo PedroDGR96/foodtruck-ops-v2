@@ -55,6 +55,25 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: audit_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.audit_logs (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    action character varying NOT NULL,
+    resource character varying NOT NULL,
+    resource_id character varying,
+    actor_id uuid,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.audit_logs FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: businesses; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -92,10 +111,20 @@ CREATE TABLE public.users (
     role character varying DEFAULT 'owner'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
+    encrypted_password character varying DEFAULT ''::character varying NOT NULL,
+    reset_password_token character varying,
+    reset_password_sent_at timestamp(6) without time zone,
+    sign_in_count integer DEFAULT 0 NOT NULL,
+    current_sign_in_at timestamp(6) without time zone,
+    last_sign_in_at timestamp(6) without time zone,
+    current_sign_in_ip character varying,
+    last_sign_in_ip character varying,
+    failed_attempts integer DEFAULT 0 NOT NULL,
+    unlock_token character varying,
+    locked_at timestamp(6) without time zone,
+    active boolean DEFAULT true NOT NULL,
     CONSTRAINT users_role_is_valid CHECK (((role)::text = ANY (ARRAY[('owner'::character varying)::text, ('cashier'::character varying)::text, ('kitchen'::character varying)::text])))
 );
-
-ALTER TABLE ONLY public.users FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -104,6 +133,14 @@ ALTER TABLE ONLY public.users FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_logs
+    ADD CONSTRAINT audit_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -131,6 +168,27 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: index_audit_logs_on_action; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_audit_logs_on_action ON public.audit_logs USING btree (action);
+
+
+--
+-- Name: index_audit_logs_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_audit_logs_on_business_id ON public.audit_logs USING btree (business_id);
+
+
+--
+-- Name: index_audit_logs_on_business_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_audit_logs_on_business_id_and_created_at ON public.audit_logs USING btree (business_id, created_at);
+
+
+--
 -- Name: index_users_on_business_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -138,17 +196,39 @@ CREATE INDEX index_users_on_business_id ON public.users USING btree (business_id
 
 
 --
--- Name: index_users_on_business_id_and_email; Type: INDEX; Schema: public; Owner: -
+-- Name: index_users_on_email; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_users_on_business_id_and_email ON public.users USING btree (business_id, email);
+CREATE UNIQUE INDEX index_users_on_email ON public.users USING btree (email);
 
 
 --
--- Name: users users_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+-- Name: index_users_on_reset_password_token; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE TRIGGER users_set_business_id BEFORE INSERT ON public.users FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+CREATE UNIQUE INDEX index_users_on_reset_password_token ON public.users USING btree (reset_password_token);
+
+
+--
+-- Name: index_users_on_unlock_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_unlock_token ON public.users USING btree (unlock_token);
+
+
+--
+-- Name: audit_logs audit_logs_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER audit_logs_set_business_id BEFORE INSERT ON public.audit_logs FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: audit_logs fk_rails_5973e49273; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_logs
+    ADD CONSTRAINT fk_rails_5973e49273 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
 
 
 --
@@ -160,17 +240,17 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users tenant_isolation; Type: POLICY; Schema: public; Owner: -
+-- Name: audit_logs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
-CREATE POLICY tenant_isolation ON public.users USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
-
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: users; Type: ROW SECURITY; Schema: public; Owner: -
+-- Name: audit_logs tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON public.audit_logs USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
 
 --
 -- PostgreSQL database dump complete
@@ -179,6 +259,9 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260803231900'),
+('20260803231459'),
+('20260803231458'),
 ('20260803201000'),
 ('20260803200000');
 

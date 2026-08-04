@@ -3,14 +3,26 @@ require Rails.root.join("app/channels/application_cable/channel")
 require Rails.root.join("app/channels/application_cable/connection")
 
 RSpec.describe "Application Cable tenancy" do
-  it "binds a connection to the current business" do
+  it "binds a connection to the authenticated user's business" do
     business = create(:business)
+    user = Tenancy.with_business(business) { create(:user, business: business) }
     connection = ApplicationCable::Connection.allocate
-    allow(connection).to receive(:business=)
+    warden = double("warden", user: user)
+    allow(connection).to receive(:env).and_return({ "warden" => warden })
 
-    Current.set(business: business) { connection.connect }
+    connection.connect
 
-    expect(connection).to have_received(:business=).with(business)
+    expect(connection.current_user).to eq(user)
+    expect(connection.business).to eq(business)
+  end
+
+  it "rejects unauthenticated connections" do
+    connection = ApplicationCable::Connection.allocate
+    allow(connection).to receive(:env).and_return({ "warden" => double("warden", user: nil) })
+    allow(connection).to receive(:logger).and_return(double("logger", error: nil))
+
+    expect { connection.connect }
+      .to raise_error(ActionCable::Connection::Authorization::UnauthorizedError)
   end
 
   it "wraps subscription and message execution in the business context" do

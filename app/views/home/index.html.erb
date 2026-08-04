@@ -1,0 +1,15 @@
+<h1 class="text-3xl font-bold">Welcome, <%= current_user.name %></h1>
+
+<p class="mt-4 text-slate-600">
+  You are signed in as <span class="font-medium"><%= current_user.role %></span> for
+  <span class="font-medium"><%= Current.business.name %></span>.
+</p>
+
+<nav class="mt-8 flex gap-4">
+  <% if current_user.owner? %>
+    <%= link_to "Manage staff", users_path, class: "rounded-md bg-slate-900 px-4 py-2 text-white" %>
+    <%= link_to "Business settings", edit_settings_path, class: "rounded-md border border-slate-300 px-4 py-2" %>
+  <% else %>
+    <span class="text-sm text-slate-400">Cashier and kitchen surfaces arrive with the point-of-sale milestone.</span>
+  <% end %>
+</nav>

@@ -1,12 +1,6 @@
 # This file should ensure the existence of records required to run the application in every environment (production,
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
 business = Business.find_or_create_by!(name: "FoodTruck Ops") do |record|
   record.currency = "BRL"
   record.timezone = "America/Sao_Paulo"
@@ -14,8 +8,20 @@ business = Business.find_or_create_by!(name: "FoodTruck Ops") do |record|
 end
 
 Tenancy.with_business(business) do
-  User.find_or_create_by!(email: "owner@foodtruck.local") do |user|
-    user.name = "FoodTruck Owner"
-    user.role = "owner"
+  owner_password = ENV.fetch("OWNER_PASSWORD", "password123")
+
+  {
+    "owner@foodtruck.local" => { name: "FoodTruck Owner", role: "owner" },
+    "cashier@foodtruck.local" => { name: "Cashier", role: "cashier" },
+    "kitchen@foodtruck.local" => { name: "Kitchen Staff", role: "kitchen" }
+  }.each do |email, attributes|
+    user = User.find_or_initialize_by(email: email)
+    user.name = attributes[:name]
+    user.role = attributes[:role]
+    if user.encrypted_password.blank?
+      user.password = owner_password
+      user.password_confirmation = owner_password
+    end
+    user.save!
   end
 end
