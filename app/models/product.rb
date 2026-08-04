@@ -10,6 +10,7 @@ class Product < ApplicationRecord
   has_one_attached :image
   has_many :product_variants, dependent: :restrict_with_exception
   has_many :product_addon_groups, dependent: :restrict_with_exception
+  has_many :product_addons, through: :product_addon_groups
 
   validates :name, presence: true
   validates :name, uniqueness: { scope: :business_id }

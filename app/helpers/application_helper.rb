@@ -23,4 +23,21 @@ module ApplicationHelper
     base = "rounded-md px-3 py-1.5 text-sm font-medium"
     active ? "#{base} bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300" : "#{base} text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
   end
+
+  def order_type_options
+    Order.order_types.keys.map { |key| [ t("orders.order_types.#{key}"), key ] }
+  end
+
+  def order_status_badge_class(status)
+    {
+      draft: "badge-secondary", open: "badge-info", partially_paid: "badge-warning",
+      paid: "badge-success", in_kitchen: "badge-info", ready: "badge-success",
+      completed: "badge-success", cancelled: "badge-danger", refunded: "badge-danger",
+      pending: "badge-secondary", in_progress: "badge-info", done: "badge-success"
+    }.fetch(status.to_sym, "badge-secondary")
+  end
+
+  def payment_method_label(method)
+    t("orders.payment_methods.#{method}")
+  end
 end

@@ -37,6 +37,10 @@
     @apply bg-brand-600 text-white hover:bg-brand-700;
   }
 
+  .btn-sm {
+    @apply px-2.5 py-1.5 text-xs;
+  }
+
   .btn-secondary {
     @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
   }
@@ -67,6 +71,14 @@
 
   .badge-success {
     @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300;
+  }
+
+  .badge-info {
+    @apply bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300;
+  }
+
+  .badge-secondary {
+    @apply bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300;
   }
 
   .badge-warning {

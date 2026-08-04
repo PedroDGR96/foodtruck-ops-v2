@@ -6,6 +6,20 @@ Rails.application.routes.draw do
 
   get "menu", to: "menu#show", as: :menu
 
+  resource :pos, only: :show, controller: "pos" do
+    post "cart", action: :add_item
+    patch "cart/:id", action: :update_item
+    delete "cart/:id", action: :remove_item
+    post "confirm", action: :confirm
+  end
+
+  resources :orders, only: %i[index show] do
+    post :cancel, on: :member
+    post :force_cancel, on: :member
+    post :refund, on: :member
+    resources :payments, only: %i[new create]
+  end
+
   resources :categories, except: :show
   resources :products do
     resources :product_variants, except: %i[index show]

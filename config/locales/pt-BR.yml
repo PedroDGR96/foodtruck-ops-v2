@@ -11,6 +11,18 @@ pt-BR:
         password: "Senha"
         password_confirmation: "Confirmação de senha"
         active: "Ativo"
+      order:
+        subtotal: "Subtotal"
+        tax: "Imposto"
+        total: "Total"
+        payment_status: "Pagamento"
+        order_type: "Tipo"
+        status: "Status"
+        notes: "Observações"
+      payment:
+        amount: "Valor"
+        method: "Forma de pagamento"
+        gateway_reference: "Referência"
       business:
         name: "Nome"
         timezone: "Fuso horário"
@@ -44,6 +56,18 @@ pt-BR:
         name: "Nome"
         price: "Preço"
         active: "Ativo"
+    errors:
+      models:
+        order:
+          attributes:
+            total:
+              inconsistent: "não confere com subtotal e impostos"
+            payment_status:
+              inconsistent: "não confere com o total pago"
+        payment:
+          attributes:
+            amount:
+              exceeds_order_total: "não pode exceder o saldo restante do pedido"
 
   common:
     save: "Salvar"
@@ -80,6 +104,8 @@ pt-BR:
       menu: "Cardápio"
       staff: "Equipe"
       settings: "Configurações"
+      pos: "Caixa"
+      orders: "Pedidos"
 
   home:
     title: "Bem-vindo, %{name}"
@@ -240,6 +266,96 @@ pt-BR:
     forbidden:
       title: "Acesso negado (403)"
       message: "Você não tem permissão para realizar esta ação."
+
+  orders:
+    title: "Pedidos"
+    detail: "Pedido"
+    number: "Nº"
+    back: "Voltar"
+    back_to: "Voltar ao pedido"
+    created_at: "Criado em"
+    subtotal: "Subtotal"
+    tax: "Imposto"
+    total: "Total"
+    balance_due: "Saldo a pagar"
+    already_paid: "Pago"
+    order_type: "Tipo"
+    status: "Status"
+    payment_status: "Pagamento"
+    ticket: "Comanda"
+    actions: "Ações"
+    payments: "Pagamentos"
+    events: "Histórico"
+    no_payments: "Nenhum pagamento registrado."
+    no_events: "Nenhum evento registrado."
+    none: "Nenhum pedido até agora."
+    method: "Forma de pagamento"
+    amount: "Valor"
+    gateway_reference: "Referência"
+    gateway_reference_hint: "ID da transação (opcional)"
+    collect_payment: "Receber pagamento"
+    pay: "Pagar"
+    cancel_order: "Cancelar pedido"
+    refund: "Reembolsar"
+    refund_confirm: "Deseja reembolsar todos os pagamentos deste pedido?"
+    confirmed: "Pedido confirmado. Receba o pagamento."
+    paid: "Pagamento recebido. Pedido enviado para a cozinha."
+    partial_payment: "Pagamento parcial registrado."
+    cancelled: "Pedido cancelado."
+    cancelled_override: "Pedido cancelado com estorno dos pagamentos."
+    refunded: "Pedido reembolsado."
+    cannot_cancel: "Este pedido não pode ser cancelado no estado atual."
+    cannot_refund: "Este pedido não pode ser reembolsado no estado atual."
+    statuses:
+      draft: "Rascunho"
+      open: "Aberto"
+      partially_paid: "Pago parcialmente"
+      paid: "Pago"
+      in_kitchen: "Na cozinha"
+      ready: "Pronto"
+      completed: "Concluído"
+      cancelled: "Cancelado"
+      refunded: "Reembolsado"
+    payment_statuses:
+      pending: "Pendente"
+      partially_paid: "Parcial"
+      paid: "Pago"
+      refunded: "Reembolsado"
+    kitchen_statuses:
+      pending: "Aguardando"
+      in_progress: "Em preparo"
+      done: "Pronto"
+    order_types:
+      local: "Local"
+      delivery: "Entrega"
+      pickup: "Retirada"
+    payment_methods:
+      cash: "Dinheiro"
+      pix: "Pix"
+      card: "Cartão"
+    events_list:
+      confirmed: "Pedido confirmado"
+      paid: "Pagamento recebido"
+      partially_paid: "Pagamento parcial"
+      cancelled: "Pedido cancelado"
+      refunded: "Pedido reembolsado"
+      discarded: "Rascunho descartado"
+      cooking_started: "Início do preparo"
+      ready: "Pronto para retirada"
+      completed: "Pedido concluído"
+
+  pos:
+    title: "Caixa"
+    cart: "Carrinho"
+    search_placeholder: "Buscar produtos…"
+    no_products: "Nenhum produto disponível."
+    add: "Adicionar"
+    update: "Atualizar"
+    remove: "Remover"
+    confirm: "Confirmar pedido"
+    quantity_for: "Quantidade de %{name}"
+    empty_cart: "O carrinho está vazio. Adicione produtos para começar."
+    added: "%{name} adicionado ao pedido."
 
   time:
     formats:

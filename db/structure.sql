@@ -209,6 +209,115 @@ ALTER TABLE ONLY public.categories FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: order_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.order_events (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    order_id uuid NOT NULL,
+    user_id uuid,
+    event character varying NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.order_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: order_item_addons; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.order_item_addons (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    order_item_id uuid NOT NULL,
+    product_addon_id uuid,
+    name character varying NOT NULL,
+    price numeric(12,2) DEFAULT 0.0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT order_item_addons_price_non_negative CHECK ((price >= (0)::numeric))
+);
+
+ALTER TABLE ONLY public.order_item_addons FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: order_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.order_items (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    order_id uuid NOT NULL,
+    product_id uuid,
+    product_variant_id uuid,
+    product_name character varying NOT NULL,
+    variant_name character varying,
+    unit_price numeric(12,2) DEFAULT 0.0 NOT NULL,
+    quantity integer DEFAULT 1 NOT NULL,
+    line_total numeric(12,2) DEFAULT 0.0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT order_items_line_total_non_negative CHECK ((line_total >= (0)::numeric)),
+    CONSTRAINT order_items_quantity_positive CHECK ((quantity > 0)),
+    CONSTRAINT order_items_unit_price_non_negative CHECK ((unit_price >= (0)::numeric))
+);
+
+ALTER TABLE ONLY public.order_items FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: orders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.orders (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    user_id uuid,
+    customer_id uuid,
+    order_type character varying DEFAULT 'local'::character varying NOT NULL,
+    status character varying DEFAULT 'draft'::character varying NOT NULL,
+    kitchen_status character varying DEFAULT 'pending'::character varying NOT NULL,
+    payment_status character varying DEFAULT 'pending'::character varying NOT NULL,
+    subtotal numeric(12,2) DEFAULT 0.0 NOT NULL,
+    tax numeric(12,2) DEFAULT 0.0 NOT NULL,
+    total numeric(12,2) DEFAULT 0.0 NOT NULL,
+    notes text,
+    lock_version integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT orders_subtotal_non_negative CHECK ((subtotal >= (0)::numeric)),
+    CONSTRAINT orders_tax_non_negative CHECK ((tax >= (0)::numeric)),
+    CONSTRAINT orders_total_non_negative CHECK ((total >= (0)::numeric))
+);
+
+ALTER TABLE ONLY public.orders FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.payments (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    order_id uuid NOT NULL,
+    method character varying NOT NULL,
+    amount numeric(12,2) DEFAULT 0.0 NOT NULL,
+    status character varying DEFAULT 'succeeded'::character varying NOT NULL,
+    gateway_reference character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT payments_amount_non_negative CHECK ((amount >= (0)::numeric))
+);
+
+ALTER TABLE ONLY public.payments FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: product_addon_groups; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -408,6 +517,46 @@ ALTER TABLE ONLY public.categories
 
 
 --
+-- Name: order_events order_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_events
+    ADD CONSTRAINT order_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: order_item_addons order_item_addons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_item_addons
+    ADD CONSTRAINT order_item_addons_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: order_items order_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT order_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: payments payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payments_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: product_addon_groups product_addon_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -523,6 +672,146 @@ CREATE UNIQUE INDEX index_categories_on_business_id_and_name ON public.categorie
 --
 
 CREATE INDEX index_categories_on_business_id_and_position ON public.categories USING btree (business_id, "position");
+
+
+--
+-- Name: index_order_events_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_events_on_business_id ON public.order_events USING btree (business_id);
+
+
+--
+-- Name: index_order_events_on_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_events_on_order_id ON public.order_events USING btree (order_id);
+
+
+--
+-- Name: index_order_events_on_order_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_events_on_order_id_and_created_at ON public.order_events USING btree (order_id, created_at);
+
+
+--
+-- Name: index_order_events_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_events_on_user_id ON public.order_events USING btree (user_id);
+
+
+--
+-- Name: index_order_item_addons_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_item_addons_on_business_id ON public.order_item_addons USING btree (business_id);
+
+
+--
+-- Name: index_order_item_addons_on_order_item_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_item_addons_on_order_item_id ON public.order_item_addons USING btree (order_item_id);
+
+
+--
+-- Name: index_order_item_addons_on_product_addon_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_item_addons_on_product_addon_id ON public.order_item_addons USING btree (product_addon_id);
+
+
+--
+-- Name: index_order_items_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_items_on_business_id ON public.order_items USING btree (business_id);
+
+
+--
+-- Name: index_order_items_on_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_items_on_order_id ON public.order_items USING btree (order_id);
+
+
+--
+-- Name: index_order_items_on_order_id_and_product_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_items_on_order_id_and_product_id ON public.order_items USING btree (order_id, product_id);
+
+
+--
+-- Name: index_order_items_on_product_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_items_on_product_id ON public.order_items USING btree (product_id);
+
+
+--
+-- Name: index_order_items_on_product_variant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_order_items_on_product_variant_id ON public.order_items USING btree (product_variant_id);
+
+
+--
+-- Name: index_orders_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_orders_on_business_id ON public.orders USING btree (business_id);
+
+
+--
+-- Name: index_orders_on_business_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_orders_on_business_id_and_created_at ON public.orders USING btree (business_id, created_at);
+
+
+--
+-- Name: index_orders_on_business_id_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_orders_on_business_id_and_status ON public.orders USING btree (business_id, status);
+
+
+--
+-- Name: index_orders_on_business_id_and_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_orders_on_business_id_and_user_id ON public.orders USING btree (business_id, user_id);
+
+
+--
+-- Name: index_orders_on_customer_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_orders_on_customer_id ON public.orders USING btree (customer_id);
+
+
+--
+-- Name: index_orders_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_orders_on_user_id ON public.orders USING btree (user_id);
+
+
+--
+-- Name: index_payments_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_business_id ON public.payments USING btree (business_id);
+
+
+--
+-- Name: index_payments_on_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_order_id ON public.payments USING btree (order_id);
 
 
 --
@@ -659,6 +948,41 @@ CREATE TRIGGER categories_set_business_id BEFORE INSERT ON public.categories FOR
 
 
 --
+-- Name: order_events order_events_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER order_events_set_business_id BEFORE INSERT ON public.order_events FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: order_item_addons order_item_addons_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER order_item_addons_set_business_id BEFORE INSERT ON public.order_item_addons FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: order_items order_items_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER order_items_set_business_id BEFORE INSERT ON public.order_items FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: orders orders_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER orders_set_business_id BEFORE INSERT ON public.orders FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: payments payments_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER payments_set_business_id BEFORE INSERT ON public.payments FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
 -- Name: product_addon_groups product_addon_groups_set_business_id; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -687,11 +1011,35 @@ CREATE TRIGGER products_set_business_id BEFORE INSERT ON public.products FOR EAC
 
 
 --
+-- Name: orders fk_rails_105a300374; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT fk_rails_105a300374 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: order_events fk_rails_21d02ca34e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_events
+    ADD CONSTRAINT fk_rails_21d02ca34e FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: product_addons fk_rails_3f312f5c47; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.product_addons
     ADD CONSTRAINT fk_rails_3f312f5c47 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: order_item_addons fk_rails_46bab3fae0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_item_addons
+    ADD CONSTRAINT fk_rails_46bab3fae0 FOREIGN KEY (order_item_id) REFERENCES public.order_items(id);
 
 
 --
@@ -719,11 +1067,27 @@ ALTER TABLE ONLY public.product_addon_groups
 
 
 --
+-- Name: order_item_addons fk_rails_638c785368; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_item_addons
+    ADD CONSTRAINT fk_rails_638c785368 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
 -- Name: products fk_rails_64b1679e02; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.products
     ADD CONSTRAINT fk_rails_64b1679e02 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: payments fk_rails_6af949464b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_6af949464b FOREIGN KEY (order_id) REFERENCES public.orders(id);
 
 
 --
@@ -751,11 +1115,43 @@ ALTER TABLE ONLY public.active_storage_variant_records
 
 
 --
+-- Name: order_items fk_rails_a64865ed76; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT fk_rails_a64865ed76 FOREIGN KEY (product_variant_id) REFERENCES public.product_variants(id);
+
+
+--
+-- Name: order_events fk_rails_b965cef937; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_events
+    ADD CONSTRAINT fk_rails_b965cef937 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
 -- Name: active_storage_attachments fk_rails_c3b3935057; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.active_storage_attachments
     ADD CONSTRAINT fk_rails_c3b3935057 FOREIGN KEY (blob_id) REFERENCES public.active_storage_blobs(id);
+
+
+--
+-- Name: order_items fk_rails_c5148c6bf8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT fk_rails_c5148c6bf8 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: order_events fk_rails_d231296bb6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_events
+    ADD CONSTRAINT fk_rails_d231296bb6 FOREIGN KEY (order_id) REFERENCES public.orders(id);
 
 
 --
@@ -772,6 +1168,46 @@ ALTER TABLE ONLY public.product_addon_groups
 
 ALTER TABLE ONLY public.product_variants
     ADD CONSTRAINT fk_rails_dae52f850b FOREIGN KEY (product_id) REFERENCES public.products(id);
+
+
+--
+-- Name: order_items fk_rails_e3cb28f071; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT fk_rails_e3cb28f071 FOREIGN KEY (order_id) REFERENCES public.orders(id);
+
+
+--
+-- Name: order_items fk_rails_f1a29ddd47; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT fk_rails_f1a29ddd47 FOREIGN KEY (product_id) REFERENCES public.products(id);
+
+
+--
+-- Name: order_item_addons fk_rails_f5dc39ae33; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_item_addons
+    ADD CONSTRAINT fk_rails_f5dc39ae33 FOREIGN KEY (product_addon_id) REFERENCES public.product_addons(id);
+
+
+--
+-- Name: orders fk_rails_f868b47f6a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT fk_rails_f868b47f6a FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: payments fk_rails_fade6fd17c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_fade6fd17c FOREIGN KEY (business_id) REFERENCES public.businesses(id);
 
 
 --
@@ -801,6 +1237,36 @@ ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: order_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.order_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: order_item_addons; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.order_item_addons ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: order_items; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: orders; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: payments; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: product_addon_groups; Type: ROW SECURITY; Schema: public; Owner: -
@@ -841,6 +1307,41 @@ CREATE POLICY tenant_isolation ON public.categories USING ((business_id = (curre
 
 
 --
+-- Name: order_events tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.order_events USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: order_item_addons tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.order_item_addons USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: order_items tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.order_items USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: orders tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.orders USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: payments tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.payments USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
 -- Name: product_addon_groups tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -875,6 +1376,11 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260804020004'),
+('20260804020003'),
+('20260804020002'),
+('20260804020001'),
+('20260804020000'),
 ('20260804010005'),
 ('20260804010004'),
 ('20260804010003'),

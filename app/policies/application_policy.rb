@@ -11,4 +11,16 @@ class ApplicationPolicy
   def owner?
     user.owner?
   end
+
+  def cashier?
+    user.cashier?
+  end
+
+  def kitchen?
+    user.kitchen?
+  end
+
+  def staff?
+    owner? || cashier? || kitchen?
+  end
 end

@@ -1,0 +1,153 @@
+require "rails_helper"
+
+RSpec.describe Order do
+  let(:business) { create(:business) }
+
+  around do |example|
+    Tenancy.with_business(business) { example.run }
+  end
+
+  def within_tenant(&block)
+    Tenancy.with_business(business, &block)
+  end
+
+  describe "tenancy" do
+    it "is scoped to the current business" do
+      other = create(:business)
+      order = within_tenant { create(:order, business: business) }
+
+      Tenancy.with_business(other) { expect(Order.pluck(:id)).to be_empty }
+      Tenancy.with_business(business) { expect(Order.pluck(:id)).to eq([ order.id ]) }
+    end
+  end
+
+  describe "statuses" do
+    it "defaults to draft with pending payment and kitchen statuses" do
+      order = within_tenant { create(:order, business: business) }
+
+      expect(order).to be_draft
+      expect(order).to be_pending_payment
+      expect(order.kitchen_status).to eq("pending")
+      expect(order.payment_status).to eq("pending")
+    end
+
+    it "exposes the order type enum" do
+      order = within_tenant { create(:order, order_type: "pickup", business: business) }
+
+      expect(order).to be_pickup
+    end
+  end
+
+  describe "money aggregates" do
+    it "computes the paid amount from succeeded payments only" do
+      order = within_tenant do
+        create(:order, :open, business: business, total: 30.0, subtotal: 30.0).tap do |o|
+          create(:payment, order: o, amount: 20.0)
+          create(:payment, order: o, amount: 5.0, status: "refunded")
+        end
+      end
+
+      expect(order.paid_amount).to eq(20.0)
+    end
+
+    it "computes the balance due against the total" do
+      order = within_tenant do
+        create(:order, :open, business: business, total: 50.0, subtotal: 50.0).tap do |o|
+          create(:payment, order: o, amount: 15.0)
+        end
+      end
+
+      expect(order.balance_due).to eq(35.0)
+      expect(order).not_to be_fully_paid
+    end
+
+    it "is fully paid when payments reach the total" do
+      order = within_tenant do
+        create(:order, :open, business: business, total: 50.0, subtotal: 50.0).tap do |o|
+          create(:payment, order: o, amount: 50.0)
+        end
+      end
+
+      expect(order).to be_fully_paid
+      expect(order.balance_due).to eq(0.0)
+    end
+  end
+
+  describe "validations" do
+    it "rejects a total inconsistent with subtotal plus tax" do
+      order = within_tenant { build(:order, business: business, subtotal: 10.0, tax: 2.0, total: 13.0) }
+
+      expect(order).not_to be_valid
+      expect(order.errors[:total]).to include("não confere com subtotal e impostos")
+    end
+
+    it "accepts a consistent total" do
+      order = within_tenant { build(:order, business: business, subtotal: 10.0, tax: 2.0, total: 12.0) }
+
+      expect(order).to be_valid
+    end
+
+    it "rejects a negative total" do
+      order = within_tenant { build(:order, business: business, subtotal: -1.0) }
+
+      expect(order).not_to be_valid
+    end
+
+    it "rejects a paid status without matching payments" do
+      order = within_tenant { build(:order, business: business, status: "paid", payment_status: "paid", total: 30.0) }
+
+      expect(order).not_to be_valid
+      expect(order.errors[:payment_status]).to include("não confere com o total pago")
+    end
+  end
+
+  describe "scopes" do
+    it "lists recent orders newest first" do
+      first = within_tenant { create(:order, business: business) }
+      second = within_tenant { create(:order, business: business) }
+
+      expect(within_tenant { Order.recent.pluck(:id) }).to eq([ second.id, first.id ])
+    end
+
+    it "lists active paid/in_kitchen/ready orders" do
+      paid = within_tenant { create(:order, :paid, business: business) }
+      in_kitchen = within_tenant { create(:order, :in_kitchen, business: business) }
+      draft = within_tenant { create(:order, business: business) }
+
+      expect(within_tenant { Order.active.pluck(:id) }).to contain_exactly(paid.id, in_kitchen.id)
+      expect(within_tenant { Order.active.pluck(:id) }).not_to include(draft.id)
+    end
+  end
+
+  describe "totals recalculation" do
+    it "recomputes subtotal and total from line items" do
+      order = within_tenant do
+        create(:order, business: business).tap do |o|
+          product = create(:product, business: business, price: 10.0)
+          create(:order_item, order: o, product: product, quantity: 2, unit_price: 10.0)
+          o.update!(tax: 5.0)
+        end
+      end
+
+      order.recalculate_totals!
+
+      expect(order.subtotal).to eq(20.0)
+      expect(order.total).to eq(25.0)
+    end
+
+    it "includes add-ons in the recalculation" do
+      order = within_tenant do
+        create(:order, business: business).tap do |o|
+          product = create(:product, business: business, price: 10.0)
+          item = create(:order_item, order: o, product: product, quantity: 1, unit_price: 10.0)
+          create(:order_item_addon, order_item: item, price: 3.0)
+        end
+      end
+
+      order.recalculate_totals!
+
+      expect(order.subtotal).to eq(13.0)
+      expect(order.total).to eq(13.0)
+    end
+  end
+end

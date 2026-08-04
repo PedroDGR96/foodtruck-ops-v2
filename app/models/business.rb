@@ -5,6 +5,8 @@ class Business < ApplicationRecord
   has_many :product_variants, through: :products
   has_many :product_addon_groups, through: :products
   has_many :product_addons, through: :product_addon_groups
+  has_many :orders, dependent: :restrict_with_exception
+  has_many :payments, through: :orders
 
   validates :name, :currency, :timezone, presence: true
 end
