@@ -289,6 +289,8 @@ CREATE TABLE public.orders (
     lock_version integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
+    started_at timestamp(6) without time zone,
+    finished_at timestamp(6) without time zone,
     CONSTRAINT orders_subtotal_non_negative CHECK ((subtotal >= (0)::numeric)),
     CONSTRAINT orders_tax_non_negative CHECK ((tax >= (0)::numeric)),
     CONSTRAINT orders_total_non_negative CHECK ((total >= (0)::numeric))
@@ -1376,6 +1378,7 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260804050000'),
 ('20260804020004'),
 ('20260804020003'),
 ('20260804020002'),

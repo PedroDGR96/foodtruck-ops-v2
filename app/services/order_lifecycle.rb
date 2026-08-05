@@ -45,11 +45,11 @@ class OrderLifecycle
   end
 
   def start_cooking!
-    transition!("cooking_started", %i[paid], :in_kitchen, {}, kitchen_status: :in_progress)
+    transition!("cooking_started", %i[paid], :in_kitchen, {}, kitchen_status: :in_progress, started_at: Time.current)
   end
 
   def mark_ready!
-    transition!("ready", %i[in_kitchen], :ready, {}, kitchen_status: :done)
+    transition!("ready", %i[in_kitchen], :ready, {}, kitchen_status: :done, finished_at: Time.current)
   end
 
   def complete!

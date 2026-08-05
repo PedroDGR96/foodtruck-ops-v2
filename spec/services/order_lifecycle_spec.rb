@@ -116,6 +116,7 @@ RSpec.describe OrderLifecycle do
 
       expect(order).to be_in_kitchen
       expect(order.kitchen_status).to eq("in_progress")
+      expect(order.started_at).to be_within(2.seconds).of(Time.current)
     end
 
     it "marks a kitchen order as ready" do
@@ -125,6 +126,7 @@ RSpec.describe OrderLifecycle do
 
       expect(order).to be_ready
       expect(order.kitchen_status).to eq("done")
+      expect(order.finished_at).to be_within(2.seconds).of(Time.current)
     end
 
     it "completes a ready order" do
