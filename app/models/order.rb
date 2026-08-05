@@ -31,6 +31,11 @@ class Order < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
   scope :active, -> { where(status: %i[paid in_kitchen ready]) }
+  scope :kitchen_queue, -> do
+    where(status: %i[paid in_kitchen])
+      .includes(order_items: :order_item_addons)
+      .order(Arel.sql("CASE kitchen_status WHEN 'in_progress' THEN 0 ELSE 1 END"), created_at: :asc)
+  end
 
   def paid_amount
     payments.where(status: :succeeded).sum(:amount)

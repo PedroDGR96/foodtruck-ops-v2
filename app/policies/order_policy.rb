@@ -37,4 +37,12 @@ class OrderPolicy < ApplicationPolicy
   def refund?
     owner? || cashier?
   end
+
+  def start_cooking?
+    kitchen? || owner?
+  end
+
+  def mark_ready?
+    kitchen? || owner?
+  end
 end

@@ -106,6 +106,7 @@ pt-BR:
       settings: "Configurações"
       pos: "Caixa"
       orders: "Pedidos"
+      kitchen: "Cozinha"
 
   home:
     title: "Bem-vindo, %{name}"
@@ -356,6 +357,16 @@ pt-BR:
     quantity_for: "Quantidade de %{name}"
     empty_cart: "O carrinho está vazio. Adicione produtos para começar."
     added: "%{name} adicionado ao pedido."
+
+  kitchen:
+    title: "Cozinha"
+    empty: "Nenhum pedido aguardando preparo."
+    start: "Iniciar preparo"
+    ready_btn: "Marcar pronto"
+    started: "Preparo iniciado."
+    ready: "Pedido marcado como pronto."
+    cannot_start: "Este pedido não pode ser iniciado no estado atual."
+    cannot_ready: "Este pedido não pode ser marcado como pronto no estado atual."
 
   time:
     formats:
