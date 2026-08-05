@@ -7,6 +7,7 @@ class Business < ApplicationRecord
   has_many :product_addons, through: :product_addon_groups
   has_many :orders, dependent: :restrict_with_exception
   has_many :payments, through: :orders
+  has_many :customers, dependent: :restrict_with_exception
 
   validates :name, :currency, :timezone, presence: true
 end

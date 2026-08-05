@@ -209,6 +209,26 @@ ALTER TABLE ONLY public.categories FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: customers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.customers (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    name character varying NOT NULL,
+    phone character varying,
+    whatsapp character varying,
+    birthday date,
+    notes text,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.customers FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: order_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -517,6 +537,14 @@ ALTER TABLE ONLY public.categories
 
 
 --
+-- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: order_events order_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -675,6 +703,27 @@ CREATE INDEX index_categories_on_business_id_and_position ON public.categories U
 
 
 --
+-- Name: index_customers_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_customers_on_business_id ON public.customers USING btree (business_id);
+
+
+--
+-- Name: index_customers_on_business_id_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_customers_on_business_id_and_name ON public.customers USING btree (business_id, name);
+
+
+--
+-- Name: index_customers_on_business_id_and_phone; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_customers_on_business_id_and_phone ON public.customers USING btree (business_id, phone) WHERE ((phone IS NOT NULL) AND (discarded_at IS NULL));
+
+
+--
 -- Name: index_order_events_on_business_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -770,6 +819,13 @@ CREATE INDEX index_orders_on_business_id ON public.orders USING btree (business_
 --
 
 CREATE INDEX index_orders_on_business_id_and_created_at ON public.orders USING btree (business_id, created_at);
+
+
+--
+-- Name: index_orders_on_business_id_and_customer_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_orders_on_business_id_and_customer_id ON public.orders USING btree (business_id, customer_id);
 
 
 --
@@ -948,6 +1004,13 @@ CREATE TRIGGER categories_set_business_id BEFORE INSERT ON public.categories FOR
 
 
 --
+-- Name: customers customers_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER customers_set_business_id BEFORE INSERT ON public.customers FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
 -- Name: order_events order_events_set_business_id; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1024,6 +1087,14 @@ ALTER TABLE ONLY public.orders
 
 ALTER TABLE ONLY public.order_events
     ADD CONSTRAINT fk_rails_21d02ca34e FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: orders fk_rails_3dad120da9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT fk_rails_3dad120da9 FOREIGN KEY (customer_id) REFERENCES public.customers(id);
 
 
 --
@@ -1120,6 +1191,14 @@ ALTER TABLE ONLY public.active_storage_variant_records
 
 ALTER TABLE ONLY public.order_items
     ADD CONSTRAINT fk_rails_a64865ed76 FOREIGN KEY (product_variant_id) REFERENCES public.product_variants(id);
+
+
+--
+-- Name: customers fk_rails_b73113df4b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT fk_rails_b73113df4b FOREIGN KEY (business_id) REFERENCES public.businesses(id);
 
 
 --
@@ -1239,6 +1318,12 @@ ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: customers; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: order_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1304,6 +1389,13 @@ CREATE POLICY tenant_isolation ON public.audit_logs USING ((business_id = (curre
 --
 
 CREATE POLICY tenant_isolation ON public.categories USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: customers tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.customers USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
 
 
 --
@@ -1376,6 +1468,7 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260804040000'),
 ('20260804020004'),
 ('20260804020003'),
 ('20260804020002'),

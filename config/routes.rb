@@ -10,8 +10,12 @@ Rails.application.routes.draw do
     post "cart", action: :add_item
     patch "cart/:id", action: :update_item
     delete "cart/:id", action: :remove_item
+    post "customer", action: :set_customer
+    delete "customer", action: :clear_customer
     post "confirm", action: :confirm
   end
+
+  resources :customers
 
   resources :orders, only: %i[index show] do
     post :cancel, on: :member

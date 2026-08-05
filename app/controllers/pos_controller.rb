@@ -1,10 +1,10 @@
 class PosController < AuthenticatedController
-  before_action :set_draft_order, only: %i[show add_item update_item remove_item confirm]
+  before_action :set_draft_order, only: %i[show add_item update_item remove_item set_customer clear_customer confirm]
 
   def show
     authorize @draft_order, :create?
     @query = params[:query].to_s.strip
-    @menu = MenuQuery.call(business: Current.business, query: @query)
+    @menu = MenuQuery.call(business: Current.business, query: @query, eager_load: false)
   end
 
   def add_item
@@ -31,6 +31,30 @@ class PosController < AuthenticatedController
     redirect_to pos_path
   end
 
+  def set_customer
+    authorize @draft_order, :update?
+
+    if params[:customer_id].present?
+      customer = Current.business.customers.find(params[:customer_id])
+      OrderCart.set_customer(@draft_order, customer: customer)
+      notice = t("pos.customer_attached", name: customer.name)
+    else
+      OrderCart.quick_create_customer(@draft_order, customer_params)
+      notice = t("pos.customer_created", name: @draft_order.customer.name)
+    end
+    redirect_to pos_path, notice: notice
+  rescue OrderCart::CartClosedError => e
+    redirect_to pos_path, alert: e.message
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to pos_path, alert: e.record.errors.full_messages.to_sentence
+  end
+
+  def clear_customer
+    authorize @draft_order, :update?
+    OrderCart.clear_customer(@draft_order)
+    redirect_to pos_path
+  end
+
   def confirm
     authorize @draft_order, :confirm?
     return redirect_to(pos_path, alert: t("pos.empty_cart")) if @draft_order.order_items.empty?
@@ -43,5 +67,9 @@ class PosController < AuthenticatedController
 
   def set_draft_order
     @draft_order = OrderCart.draft_for(current_user)
+  end
+
+  def customer_params
+    params.require(:customer).permit(:name, :phone, :whatsapp, :birthday, :notes)
   end
 end

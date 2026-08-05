@@ -121,4 +121,63 @@ RSpec.describe OrderCart do
       expect(order.reload.total).to eq(0.0)
     end
   end
+
+  describe "#set_customer" do
+    it "attaches a customer from the same business" do
+      customer = within_tenant { create(:customer, business: business) }
+      order = within_tenant { create(:order, business: business) }
+
+      OrderCart.set_customer(order, customer: customer)
+
+      expect(order.reload.customer).to eq(customer)
+    end
+
+    it "refuses a customer from another business" do
+      foreign_customer = create(:customer)
+      order = within_tenant { create(:order, business: business) }
+
+      expect { OrderCart.set_customer(order, customer: foreign_customer) }
+        .to raise_error(OrderCart::CartClosedError)
+    end
+
+    it "refuses to attach a customer to a confirmed order" do
+      customer = within_tenant { create(:customer, business: business) }
+      order = within_tenant { create(:order, :open, business: business) }
+
+      expect { OrderCart.set_customer(order, customer: customer) }
+        .to raise_error(OrderCart::CartClosedError)
+    end
+  end
+
+  describe "#quick_create_customer" do
+    it "creates and attaches a customer mid-order" do
+      order = within_tenant { create(:order, business: business) }
+
+      OrderCart.quick_create_customer(order, name: "Maria", phone: "(11) 91234-5678")
+
+      expect(order.reload.customer).to be_present
+      expect(order.customer.name).to eq("Maria")
+      expect(order.customer.phone).to eq("11912345678")
+      expect(order.customer.business).to eq(business)
+    end
+
+    it "raises when the attributes are invalid" do
+      order = within_tenant { create(:order, business: business) }
+
+      expect { OrderCart.quick_create_customer(order, name: "") }
+        .to raise_error(ActiveRecord::RecordInvalid)
+      expect(order.reload.customer).to be_nil
+    end
+  end
+
+  describe "#clear_customer" do
+    it "detaches the customer from the order" do
+      customer = within_tenant { create(:customer, business: business) }
+      order = within_tenant { create(:order, business: business, customer: customer) }
+
+      OrderCart.clear_customer(order)
+
+      expect(order.reload.customer).to be_nil
+    end
+  end
 end
