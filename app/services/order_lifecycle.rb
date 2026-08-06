@@ -31,7 +31,7 @@ class OrderLifecycle
   def cancel!(force: false)
     if force
       cash_refunds = order.cash_payments_refundable
-      transition!("cancelled", %i[paid in_kitchen ready], :cancelled, override: true)
+      transition!("cancelled", %i[paid in_kitchen ready], :cancelled, { override: true })
       refund_payments!
       record_refund_movements!(cash_refunds)
       broadcast_remove
