@@ -23,6 +23,14 @@ pt-BR:
         amount: "Valor"
         method: "Forma de pagamento"
         gateway_reference: "Referência"
+      cash_register:
+        opening_amount: "Valor de abertura"
+        actual_closing_amount: "Valor em caixa"
+      cash_movement:
+        movement_type: "Tipo"
+        category: "Categoria"
+        amount: "Valor"
+        reason: "Motivo"
       business:
         name: "Nome"
         timezone: "Fuso horário"
@@ -74,6 +82,14 @@ pt-BR:
           attributes:
             amount:
               exceeds_order_total: "não pode exceder o saldo restante do pedido"
+        cash_register:
+          attributes:
+            opening_amount:
+              greater_than_or_equal_to: "não pode ser negativo"
+            actual_closing_amount:
+              blank: "informe o valor em caixa na conferência"
+            base:
+              already_open_shift: "já existe um turno de caixa aberto para este caixa"
 
   common:
     save: "Salvar"
@@ -107,11 +123,13 @@ pt-BR:
     toggle_dark: "Alternar tema"
     primary_nav: "Navegação principal"
     nav:
+      orders: "Pedidos"
+      cash_register: "Caixa"
+      customers: "Clientes"
       menu: "Cardápio"
       staff: "Equipe"
       settings: "Configurações"
       pos: "Caixa"
-      orders: "Pedidos"
 
   home:
     title: "Bem-vindo, %{name}"
@@ -375,6 +393,9 @@ pt-BR:
     customer_remove: "Remover"
     customer_attached: "Cliente %{name} vinculado ao pedido."
     customer_created: "Cliente %{name} criado e vinculado ao pedido."
+    shift_open: "Turno aberto em %{when}"
+    shift_closed_warning: "Nenhum turno aberto."
+    open_shift: "Abrir turno"
 
   customers:
     index:
@@ -405,6 +426,64 @@ pt-BR:
     created: "Cliente %{name} criado."
     updated: "Cliente %{name} atualizado."
     discarded: "Cliente %{name} arquivado."
+
+  cash_registers:
+    title: "Caixas"
+    shift: "Turno de caixa"
+    current_shift: "Turno atual"
+    history: "Histórico"
+    open_shift: "Abrir turno"
+    opened: "Turno aberto com sucesso."
+    closed: "Turno fechado."
+    movement_recorded: "Movimentação registrada."
+    opened_at: "Aberto em %{when}"
+    opened_at_short: "Aberto em"
+    closed_at_short: "Fechado em"
+    cashier: "Caixa"
+    status: "Status"
+    expected: "Esperado"
+    actual: "Contado"
+    drift: "Diferença"
+    cash_sales: "Vendas em dinheiro"
+    movements_balance: "Saldo de movimentações"
+    opening_amount: "Valor de abertura"
+    opening_hint: "Valor em caixa no início do turno"
+    actual_closing: "Valor contado no fechamento"
+    no_open_shift: "Nenhum turno aberto."
+    no_shifts: "Nenhum turno registrado."
+    no_movements: "Nenhuma movimentação registrada."
+    view_shift: "Ver turno"
+    back: "Voltar"
+    back_to_list: "Voltar à lista"
+    movements: "Movimentações"
+    when: "Quando"
+    category: "Categoria"
+    reason: "Motivo"
+    amount: "Valor"
+    movement_type: "Tipo"
+    record_movement: "Registrar movimentação"
+    save_movement: "Salvar movimentação"
+    close_title: "Fechar turno"
+    close_hint: "Valor esperado: %{expected}"
+    close_shift: "Fechar turno"
+    statuses:
+      open: "Aberto"
+      closed: "Fechado"
+      drifted: "Divergente"
+      reconciled: "Conferido"
+    categories:
+      refund: "Reembolso"
+      cash_drop: "Depósito"
+      payout: "Pagamento"
+      other_income: "Outra entrada"
+      other_expense: "Outra saída"
+    movement_types:
+      income: "Entrada"
+      expense: "Saída"
+    new:
+      title: "Abrir turno de caixa"
+    errors:
+      already_closed: "Este turno já foi fechado."
 
   time:
     formats:

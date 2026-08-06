@@ -35,6 +35,9 @@ class OrderPolicy < ApplicationPolicy
   end
 
   def refund?
-    owner? || cashier?
+    return false unless owner? || cashier?
+    return true unless record.refund_touches_closed_shift?
+
+    owner?
   end
 end

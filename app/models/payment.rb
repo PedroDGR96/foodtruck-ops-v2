@@ -6,9 +6,10 @@ class Payment < ApplicationRecord
   enum :status, { succeeded: "succeeded", refunded: "refunded" }, default: :succeeded
 
   belongs_to :order
+  belongs_to :cash_register, optional: true
 
   validates :amount, numericality: { greater_than: 0 }
-  validates_parent_business_for :order
+  validates_parent_business_for :order, :cash_register
   validate :cannot_exceed_order_balance
 
   scope :successful, -> { where(status: :succeeded) }

@@ -30,8 +30,10 @@ class OrderLifecycle
 
   def cancel!(force: false)
     if force
+      cash_refunds = order.cash_payments_refundable
       transition!("cancelled", %i[paid in_kitchen ready], :cancelled, override: true)
       refund_payments!
+      record_refund_movements!(cash_refunds)
       broadcast_remove
     else
       transition!("cancelled", %i[draft open], :cancelled)
@@ -39,8 +41,10 @@ class OrderLifecycle
   end
 
   def refund!
+    cash_refunds = order.cash_payments_refundable
     transition!("refunded", %i[paid partially_paid cancelled], :refunded)
     refund_payments!
+    record_refund_movements!(cash_refunds)
     broadcast_remove
   end
 
@@ -58,10 +62,13 @@ class OrderLifecycle
 
   # Records a payment leg, recomputes payment_status and advances the order to
   # partially_paid/paid as soon as the accumulated amount reaches the total.
+  # Cash payments are tied to the cashier's open shift so the drawer
+  # reconciliation can count them.
   def record_payment!(payment)
     raise IllegalTransition.new("payment", order.status) unless order.status.in?(%w[open partially_paid])
 
     payment.order = order
+    payment.cash_register ||= CashRegister.open.find_by(user: actor) if payment.cash? && actor
     payment.save!
 
     paid = order.payments.successful.sum(:amount)
@@ -91,6 +98,12 @@ class OrderLifecycle
   def refund_payments!
     order.payments.successful.update_all(status: :refunded)
     order.update_columns(payment_status: :refunded)
+  end
+
+  def record_refund_movements!(cash_refunds)
+    return if cash_refunds.empty?
+
+    CashRegisterLedger.record_refunds!(payments: cash_refunds, order: order, actor: actor)
   end
 
   def record_event(event, metadata)

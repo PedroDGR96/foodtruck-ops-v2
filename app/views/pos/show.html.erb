@@ -7,6 +7,19 @@
       <%= link_to t("orders.title"), orders_path, class: "btn btn-secondary" %>
     </div>
 
+    <% if current_user.cashier? || current_user.owner? %>
+      <% if @open_shift %>
+        <p class="mt-4 rounded-md border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-700 dark:border-brand-900 dark:bg-brand-950 dark:text-brand-300">
+          <%= t("pos.shift_open", when: format_datetime(@open_shift.opened_at)) %>
+        </p>
+      <% else %>
+        <p class="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          <%= t("pos.shift_closed_warning") %>
+          <%= link_to t("pos.open_shift"), new_cash_register_path, class: "font-semibold underline" %>
+        </p>
+      <% end %>
+    <% end %>
+
     <%= form_with url: pos_path, method: :get, class: "mt-4", role: "search" do |form| %>
       <div class="relative">
         <%= form.text_field :query, value: @query, id: "pos-search", autofocus: true, placeholder: t("pos.search_placeholder"), class: "input pr-10", autocomplete: "off", data: { shortcut: "/", shortcut_focus: "#pos-search" } %>

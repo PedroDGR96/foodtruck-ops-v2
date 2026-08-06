@@ -24,6 +24,11 @@ Rails.application.routes.draw do
     resources :payments, only: %i[new create]
   end
 
+  resources :cash_registers, only: %i[index show new create] do
+    post :close, on: :member
+    resources :cash_movements, only: %i[create]
+  end
+
   resources :categories, except: :show
   resources :products do
     resources :product_variants, except: %i[index show]

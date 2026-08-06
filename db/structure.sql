@@ -191,6 +191,56 @@ CREATE TABLE public.businesses (
 
 
 --
+-- Name: cash_movements; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cash_movements (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    cash_register_id uuid NOT NULL,
+    order_id uuid,
+    payment_id uuid,
+    created_by_id uuid,
+    movement_type character varying NOT NULL,
+    category character varying NOT NULL,
+    amount numeric(12,2) DEFAULT 0.0 NOT NULL,
+    reason character varying NOT NULL,
+    lock_version integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT cash_movements_amount_non_negative CHECK ((amount >= (0)::numeric)),
+    CONSTRAINT cash_movements_type_is_valid CHECK (((movement_type)::text = ANY (ARRAY[('income'::character varying)::text, ('expense'::character varying)::text])))
+);
+
+ALTER TABLE ONLY public.cash_movements FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: cash_registers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cash_registers (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    status character varying DEFAULT 'open'::character varying NOT NULL,
+    opened_at timestamp(6) without time zone NOT NULL,
+    closed_at timestamp(6) without time zone,
+    opening_amount numeric(12,2) DEFAULT 0.0 NOT NULL,
+    expected_closing_amount numeric(12,2),
+    actual_closing_amount numeric(12,2),
+    drift numeric(12,2),
+    reconciled boolean,
+    lock_version integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT cash_registers_opening_non_negative CHECK ((opening_amount >= (0)::numeric))
+);
+
+ALTER TABLE ONLY public.cash_registers FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: categories; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -309,6 +359,8 @@ CREATE TABLE public.orders (
     lock_version integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
+    started_at timestamp(6) without time zone,
+    finished_at timestamp(6) without time zone,
     CONSTRAINT orders_subtotal_non_negative CHECK ((subtotal >= (0)::numeric)),
     CONSTRAINT orders_tax_non_negative CHECK ((tax >= (0)::numeric)),
     CONSTRAINT orders_total_non_negative CHECK ((total >= (0)::numeric))
@@ -331,6 +383,7 @@ CREATE TABLE public.payments (
     gateway_reference character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
+    cash_register_id uuid,
     CONSTRAINT payments_amount_non_negative CHECK ((amount >= (0)::numeric))
 );
 
@@ -529,6 +582,22 @@ ALTER TABLE ONLY public.businesses
 
 
 --
+-- Name: cash_movements cash_movements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_movements
+    ADD CONSTRAINT cash_movements_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cash_registers cash_registers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_registers
+    ADD CONSTRAINT cash_registers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: categories categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -679,6 +748,97 @@ CREATE INDEX index_audit_logs_on_business_id ON public.audit_logs USING btree (b
 --
 
 CREATE INDEX index_audit_logs_on_business_id_and_created_at ON public.audit_logs USING btree (business_id, created_at);
+
+
+--
+-- Name: index_cash_movements_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_business_id ON public.cash_movements USING btree (business_id);
+
+
+--
+-- Name: index_cash_movements_on_business_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_business_id_and_created_at ON public.cash_movements USING btree (business_id, created_at);
+
+
+--
+-- Name: index_cash_movements_on_business_id_and_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_business_id_and_order_id ON public.cash_movements USING btree (business_id, order_id);
+
+
+--
+-- Name: index_cash_movements_on_cash_register_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_cash_register_id ON public.cash_movements USING btree (cash_register_id);
+
+
+--
+-- Name: index_cash_movements_on_cash_register_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_cash_register_id_and_created_at ON public.cash_movements USING btree (cash_register_id, created_at);
+
+
+--
+-- Name: index_cash_movements_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_created_by_id ON public.cash_movements USING btree (created_by_id);
+
+
+--
+-- Name: index_cash_movements_on_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_order_id ON public.cash_movements USING btree (order_id);
+
+
+--
+-- Name: index_cash_movements_on_payment_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_movements_on_payment_id ON public.cash_movements USING btree (payment_id);
+
+
+--
+-- Name: index_cash_registers_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_registers_on_business_id ON public.cash_registers USING btree (business_id);
+
+
+--
+-- Name: index_cash_registers_on_business_id_and_opened_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_registers_on_business_id_and_opened_at ON public.cash_registers USING btree (business_id, opened_at);
+
+
+--
+-- Name: index_cash_registers_on_business_id_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_registers_on_business_id_and_status ON public.cash_registers USING btree (business_id, status);
+
+
+--
+-- Name: index_cash_registers_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cash_registers_on_user_id ON public.cash_registers USING btree (user_id);
+
+
+--
+-- Name: index_cash_registers_one_open_shift; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_cash_registers_one_open_shift ON public.cash_registers USING btree (business_id, user_id) WHERE ((status)::text = 'open'::text);
 
 
 --
@@ -864,6 +1024,13 @@ CREATE INDEX index_payments_on_business_id ON public.payments USING btree (busin
 
 
 --
+-- Name: index_payments_on_cash_register_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_cash_register_id ON public.payments USING btree (cash_register_id);
+
+
+--
 -- Name: index_payments_on_order_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -997,6 +1164,20 @@ CREATE TRIGGER audit_logs_set_business_id BEFORE INSERT ON public.audit_logs FOR
 
 
 --
+-- Name: cash_movements cash_movements_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER cash_movements_set_business_id BEFORE INSERT ON public.cash_movements FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: cash_registers cash_registers_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER cash_registers_set_business_id BEFORE INSERT ON public.cash_registers FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
 -- Name: categories categories_set_business_id; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1082,6 +1263,14 @@ ALTER TABLE ONLY public.orders
 
 
 --
+-- Name: cash_movements fk_rails_1bd56f86b5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_movements
+    ADD CONSTRAINT fk_rails_1bd56f86b5 FOREIGN KEY (cash_register_id) REFERENCES public.cash_registers(id);
+
+
+--
 -- Name: order_events fk_rails_21d02ca34e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1095,6 +1284,19 @@ ALTER TABLE ONLY public.order_events
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT fk_rails_3dad120da9 FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+
+-- Name: cash_movements fk_rails_3244ed8937; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_movements
+    ADD CONSTRAINT fk_rails_3244ed8937 FOREIGN KEY (order_id) REFERENCES public.orders(id);
+
+--
+-- Name: payments fk_rails_397ed43c6d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_397ed43c6d FOREIGN KEY (cash_register_id) REFERENCES public.cash_registers(id);
 
 
 --
@@ -1162,6 +1364,14 @@ ALTER TABLE ONLY public.payments
 
 
 --
+-- Name: cash_movements fk_rails_6d01aba9ef; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_movements
+    ADD CONSTRAINT fk_rails_6d01aba9ef FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: product_addons fk_rails_733f99f579; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1175,6 +1385,14 @@ ALTER TABLE ONLY public.product_addons
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT fk_rails_798ddcc841 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: cash_registers fk_rails_7b6b1f3b1f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_registers
+    ADD CONSTRAINT fk_rails_7b6b1f3b1f FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -1226,6 +1444,22 @@ ALTER TABLE ONLY public.order_items
 
 
 --
+-- Name: cash_movements fk_rails_cc82f643e9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_movements
+    ADD CONSTRAINT fk_rails_cc82f643e9 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: cash_registers fk_rails_d0e08f4ceb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_registers
+    ADD CONSTRAINT fk_rails_d0e08f4ceb FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
 -- Name: order_events fk_rails_d231296bb6; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1255,6 +1489,14 @@ ALTER TABLE ONLY public.product_variants
 
 ALTER TABLE ONLY public.order_items
     ADD CONSTRAINT fk_rails_e3cb28f071 FOREIGN KEY (order_id) REFERENCES public.orders(id);
+
+
+--
+-- Name: cash_movements fk_rails_f0e568e304; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_movements
+    ADD CONSTRAINT fk_rails_f0e568e304 FOREIGN KEY (payment_id) REFERENCES public.payments(id);
 
 
 --
@@ -1310,6 +1552,18 @@ ALTER TABLE ONLY public.users
 --
 
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: cash_movements; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.cash_movements ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: cash_registers; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.cash_registers ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: categories; Type: ROW SECURITY; Schema: public; Owner: -
@@ -1382,6 +1636,20 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY tenant_isolation ON public.audit_logs USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: cash_movements tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.cash_movements USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: cash_registers tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.cash_registers USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
 
 
 --
@@ -1469,6 +1737,9 @@ SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
 ('20260804040000'),
+('20260804030002'),
+('20260804030001'),
+('20260804030000'),
 ('20260804020004'),
 ('20260804020003'),
 ('20260804020002'),

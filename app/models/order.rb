@@ -52,6 +52,17 @@ class Order < ApplicationRecord
     payment_status.in?(%w[pending partially_paid])
   end
 
+  # A refund of cash payments that were recorded in a closed shift changes that
+  # shift's books after the fact, so it needs owner authorization (see
+  # OrderPolicy and CashRegisterLedger).
+  def refund_touches_closed_shift?
+    cash_payments_refundable.any? { |payment| payment.cash_register&.closed? }
+  end
+
+  def cash_payments_refundable
+    payments.cash.successful.to_a
+  end
+
   def recalculate_totals!
     items = order_items.reset
     addon_totals = order_item_addons.group(:order_item_id).sum(:price)

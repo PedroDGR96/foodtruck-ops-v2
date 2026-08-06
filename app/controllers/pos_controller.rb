@@ -5,6 +5,7 @@ class PosController < AuthenticatedController
     authorize @draft_order, :create?
     @query = params[:query].to_s.strip
     @menu = MenuQuery.call(business: Current.business, query: @query, eager_load: false)
+    @open_shift = CashRegister.open.find_by(user: current_user) if current_user.cashier? || current_user.owner?
   end
 
   def add_item
