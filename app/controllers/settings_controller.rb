@@ -25,6 +25,6 @@ class SettingsController < AuthenticatedController
   private
 
   def business_params
-    params.require(:business).permit(:name, :timezone, :currency, :active)
+    params.require(:business).permit(:name, :timezone, :currency, :active, :delivery_fee)
   end
 end

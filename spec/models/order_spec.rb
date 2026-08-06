@@ -155,6 +155,52 @@ RSpec.describe Order do
     end
   end
 
+  describe "delivery" do
+    it "requires a delivery address when order_type is delivery" do
+      order = within_tenant { build(:order, :delivery, business: business, total: 5.0, subtotal: 0.0) }
+
+      expect(order).not_to be_valid
+      expect(order.errors[:delivery_address]).to be_present
+    end
+
+    it "is valid for delivery with an address" do
+      order = within_tenant do
+        build(:order, :delivery, business: business, total: 5.0, subtotal: 0.0).tap do |o|
+          o.build_delivery_address(street: "Rua X", city: "São Paulo", state: "SP")
+        end
+      end
+
+      expect(order).to be_valid
+    end
+
+    it "does not require an address for local orders" do
+      order = within_tenant { build(:order, business: business, total: 10.0, subtotal: 10.0) }
+
+      expect(order).to be_valid
+    end
+
+    it "rejects a total inconsistent with subtotal plus tax plus delivery_fee" do
+      order = within_tenant do
+        build(:order, :delivery, business: business, subtotal: 10.0, tax: 2.0, delivery_fee: 5.0, total: 20.0).tap do |o|
+          o.build_delivery_address(street: "Rua X", city: "São Paulo", state: "SP")
+        end
+      end
+
+      expect(order).not_to be_valid
+      expect(order.errors[:total]).to include("não confere com subtotal e impostos")
+    end
+
+    it "accepts a total consistent with subtotal plus tax plus delivery_fee" do
+      order = within_tenant do
+        build(:order, :delivery, business: business, subtotal: 10.0, tax: 2.0, delivery_fee: 5.0, total: 17.0).tap do |o|
+          o.build_delivery_address(street: "Rua X", city: "São Paulo", state: "SP")
+        end
+      end
+
+      expect(order).to be_valid
+    end
+  end
+
   describe "totals recalculation" do
     it "recomputes subtotal and total from line items" do
       order = within_tenant do

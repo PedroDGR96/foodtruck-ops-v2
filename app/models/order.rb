@@ -26,10 +26,13 @@ class Order < ApplicationRecord
   has_many :order_item_addons, through: :order_items
   has_many :payments, dependent: :restrict_with_exception
   has_many :order_events, dependent: :restrict_with_exception
+  has_one :delivery_address, dependent: :restrict_with_exception, validate: true
+  has_one :delivery, dependent: :restrict_with_exception
 
-  validates :subtotal, :tax, :total, numericality: { greater_than_or_equal_to: 0 }
+  validates :subtotal, :tax, :total, :delivery_fee, numericality: { greater_than_or_equal_to: 0 }
   validate :totals_consistent
   validate :payment_status_consistent
+  validate :delivery_address_required_for_delivery
   validates_parent_business_for :customer
 
   scope :recent, -> { order(created_at: :desc) }
@@ -70,7 +73,7 @@ class Order < ApplicationRecord
       ((item.unit_price + addon_totals.fetch(item.id, 0.0)).round(2) * item.quantity).round(2)
     end.round(2)
 
-    update_columns(subtotal: new_subtotal, total: (new_subtotal + tax).round(2))
+    update_columns(subtotal: new_subtotal, total: (new_subtotal + tax + delivery_fee).round(2))
   end
 
   private
@@ -78,8 +81,14 @@ class Order < ApplicationRecord
   def totals_consistent
     return unless persisted? && total_changed? || subtotal_changed?
 
-    expected = (subtotal + tax).round(2)
+    expected = (subtotal + tax + delivery_fee).round(2)
     errors.add(:total, :inconsistent) unless total == expected
+  end
+
+  def delivery_address_required_for_delivery
+    return unless delivery?
+
+    errors.add(:delivery_address, :blank) if delivery_address.nil?
   end
 
   def payment_status_consistent

@@ -60,8 +60,16 @@ class PosController < AuthenticatedController
     authorize @draft_order, :confirm?
     return redirect_to(pos_path, alert: t("pos.empty_cart")) if @draft_order.order_items.empty?
 
+    order_type = params.dig(:order, :order_type).presence || "local"
+    OrderCart.set_order_type(@draft_order, order_type, delivery_address_attributes: delivery_address_params)
+
     OrderLifecycle.new(@draft_order, current_user).confirm!
+    @draft_order.create_delivery! if @draft_order.delivery?
     redirect_to new_order_payment_path(@draft_order), notice: t("orders.confirmed")
+  rescue OrderCart::CartClosedError => e
+    redirect_to pos_path, alert: e.message
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to pos_path, alert: e.record.errors.full_messages.to_sentence
   end
 
   private
@@ -72,5 +80,13 @@ class PosController < AuthenticatedController
 
   def customer_params
     params.require(:customer).permit(:name, :phone, :whatsapp, :birthday, :notes)
+  end
+
+  def delivery_address_params
+    return nil unless params.dig(:order, :delivery_address).present?
+
+    params.require(:order).require(:delivery_address).permit(
+      :street, :number, :complement, :neighborhood, :city, :state, :zip, :reference
+    )
   end
 end

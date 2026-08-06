@@ -11,5 +11,9 @@ class Business < ApplicationRecord
   has_many :cash_registers, dependent: :restrict_with_exception
   has_many :cash_movements, dependent: :restrict_with_exception
 
+  has_many :delivery_addresses, dependent: :restrict_with_exception
+  has_many :deliveries, dependent: :restrict_with_exception
+
   validates :name, :currency, :timezone, presence: true
+  validates :delivery_fee, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 end

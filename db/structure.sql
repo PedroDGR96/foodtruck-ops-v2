@@ -186,7 +186,9 @@ CREATE TABLE public.businesses (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    menu_version integer DEFAULT 0 NOT NULL
+    menu_version integer DEFAULT 0 NOT NULL,
+    delivery_fee numeric(12,2),
+    CONSTRAINT businesses_delivery_fee_non_negative CHECK (((delivery_fee IS NULL) OR (delivery_fee >= (0)::numeric)))
 );
 
 
@@ -279,6 +281,47 @@ ALTER TABLE ONLY public.customers FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: deliveries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.deliveries (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    order_id uuid NOT NULL,
+    courier_name character varying,
+    status character varying DEFAULT 'pending'::character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT deliveries_status_is_valid CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'out_for_delivery'::character varying, 'delivered'::character varying])::text[])))
+);
+
+ALTER TABLE ONLY public.deliveries FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: delivery_addresses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.delivery_addresses (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    order_id uuid NOT NULL,
+    street character varying NOT NULL,
+    number character varying,
+    complement character varying,
+    neighborhood character varying,
+    city character varying NOT NULL,
+    state character varying NOT NULL,
+    zip character varying,
+    reference character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.delivery_addresses FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: order_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -361,6 +404,8 @@ CREATE TABLE public.orders (
     updated_at timestamp(6) without time zone NOT NULL,
     started_at timestamp(6) without time zone,
     finished_at timestamp(6) without time zone,
+    delivery_fee numeric(12,2) DEFAULT 0.0 NOT NULL,
+    CONSTRAINT orders_delivery_fee_non_negative CHECK ((delivery_fee >= (0)::numeric)),
     CONSTRAINT orders_subtotal_non_negative CHECK ((subtotal >= (0)::numeric)),
     CONSTRAINT orders_tax_non_negative CHECK ((tax >= (0)::numeric)),
     CONSTRAINT orders_total_non_negative CHECK ((total >= (0)::numeric))
@@ -611,6 +656,22 @@ ALTER TABLE ONLY public.categories
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: deliveries deliveries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.deliveries
+    ADD CONSTRAINT deliveries_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: delivery_addresses delivery_addresses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.delivery_addresses
+    ADD CONSTRAINT delivery_addresses_pkey PRIMARY KEY (id);
 
 
 --
@@ -881,6 +942,41 @@ CREATE INDEX index_customers_on_business_id_and_name ON public.customers USING b
 --
 
 CREATE UNIQUE INDEX index_customers_on_business_id_and_phone ON public.customers USING btree (business_id, phone) WHERE ((phone IS NOT NULL) AND (discarded_at IS NULL));
+
+
+--
+-- Name: index_deliveries_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_deliveries_on_business_id ON public.deliveries USING btree (business_id);
+
+
+--
+-- Name: index_deliveries_on_business_id_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_deliveries_on_business_id_and_status ON public.deliveries USING btree (business_id, status);
+
+
+--
+-- Name: index_deliveries_on_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_deliveries_on_order_id ON public.deliveries USING btree (order_id);
+
+
+--
+-- Name: index_delivery_addresses_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_delivery_addresses_on_business_id ON public.delivery_addresses USING btree (business_id);
+
+
+--
+-- Name: index_delivery_addresses_on_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_delivery_addresses_on_order_id ON public.delivery_addresses USING btree (order_id);
 
 
 --
@@ -1192,6 +1288,20 @@ CREATE TRIGGER customers_set_business_id BEFORE INSERT ON public.customers FOR E
 
 
 --
+-- Name: deliveries deliveries_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER deliveries_set_business_id BEFORE INSERT ON public.deliveries FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: delivery_addresses delivery_addresses_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER delivery_addresses_set_business_id BEFORE INSERT ON public.delivery_addresses FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
 -- Name: order_events order_events_set_business_id; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1271,6 +1381,22 @@ ALTER TABLE ONLY public.cash_movements
 
 
 --
+-- Name: delivery_addresses fk_rails_15246c44c0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.delivery_addresses
+    ADD CONSTRAINT fk_rails_15246c44c0 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: delivery_addresses fk_rails_1baa12114a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.delivery_addresses
+    ADD CONSTRAINT fk_rails_1baa12114a FOREIGN KEY (order_id) REFERENCES public.orders(id);
+
+
+--
 -- Name: order_events fk_rails_21d02ca34e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1297,6 +1423,14 @@ ALTER TABLE ONLY public.cash_movements
 
 ALTER TABLE ONLY public.payments
     ADD CONSTRAINT fk_rails_397ed43c6d FOREIGN KEY (cash_register_id) REFERENCES public.cash_registers(id);
+
+
+--
+-- Name: deliveries fk_rails_3eba625948; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.deliveries
+    ADD CONSTRAINT fk_rails_3eba625948 FOREIGN KEY (order_id) REFERENCES public.orders(id);
 
 
 --
@@ -1532,6 +1666,14 @@ ALTER TABLE ONLY public.payments
 
 
 --
+-- Name: deliveries fk_rails_fb5eb13f33; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.deliveries
+    ADD CONSTRAINT fk_rails_fb5eb13f33 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
 -- Name: products fk_rails_fb915499a4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1576,6 +1718,18 @@ ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: deliveries; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.deliveries ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: delivery_addresses; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.delivery_addresses ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: order_events; Type: ROW SECURITY; Schema: public; Owner: -
@@ -1667,6 +1821,20 @@ CREATE POLICY tenant_isolation ON public.customers USING ((business_id = (curren
 
 
 --
+-- Name: deliveries tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.deliveries USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: delivery_addresses tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.delivery_addresses USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
 -- Name: order_events tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1736,6 +1904,10 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260804130004'),
+('20260804130003'),
+('20260804130002'),
+('20260804130001'),
 ('20260804040000'),
 ('20260804030002'),
 ('20260804030001'),

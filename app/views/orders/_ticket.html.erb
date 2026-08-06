@@ -26,6 +26,9 @@
   <dl class="mt-2 space-y-1 border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
     <div class="flex justify-between"><dt><%= t("orders.subtotal") %></dt><dd><%= format_money(order.subtotal) %></dd></div>
     <div class="flex justify-between"><dt><%= t("orders.tax") %></dt><dd><%= format_money(order.tax) %></dd></div>
+    <% if order.delivery? %>
+      <div class="flex justify-between"><dt><%= t("orders.delivery_fee") %></dt><dd><%= format_money(order.delivery_fee) %></dd></div>
+    <% end %>
     <div class="flex justify-between font-semibold"><dt><%= t("orders.total") %></dt><dd><%= format_money(order.total) %></dd></div>
   </dl>
 
