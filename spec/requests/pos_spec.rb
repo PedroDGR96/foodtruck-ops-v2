@@ -93,4 +93,47 @@ RSpec.describe "Point of Sale", type: :request do
       expect(flash[:alert]).to be_present
     end
   end
+
+  describe "customer on the cart" do
+    before { login_as cashier, scope: :user }
+
+    it "attaches an existing customer to the draft order" do
+      cust = Tenancy.with_business(business) { create(:customer, business: business, name: "Maria Silva") }
+
+      post "/pos/customer", params: { customer_id: cust.id }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:notice]).to include("Maria Silva")
+      order = Tenancy.with_business(business) { Order.last }
+      expect(Tenancy.with_business(business) { order.reload.customer_id }).to eq(cust.id)
+    end
+
+    it "quick-creates a customer mid-order" do
+      post "/pos/customer", params: { customer: { name: "João Souza", phone: "(11) 98877-6655" } }
+
+      expect(response).to redirect_to(pos_path)
+      cust = Tenancy.with_business(business) { Customer.find_by(name: "João Souza") }
+      expect(Tenancy.with_business(business) { cust.phone }).to eq("11988776655")
+      order = Tenancy.with_business(business) { Order.last }
+      expect(Tenancy.with_business(business) { order.reload.customer_id }).to eq(cust.id)
+    end
+
+    it "refuses an invalid quick-create" do
+      post "/pos/customer", params: { customer: { name: "" } }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to be_present
+      expect(Tenancy.with_business(business) { Customer.count }).to eq(0)
+    end
+
+    it "removes the customer from the cart" do
+      cust = Tenancy.with_business(business) { create(:customer, business: business, name: "Maria Silva") }
+      post "/pos/customer", params: { customer_id: cust.id }
+      order = Tenancy.with_business(business) { Order.last }
+
+      delete "/pos/customer"
+
+      expect(Tenancy.with_business(business) { order.reload.customer_id }).to be_nil
+    end
+  end
 end

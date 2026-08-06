@@ -3,13 +3,14 @@
 # that includes the business menu version, which is bumped on every menu write
 # (see MenuInvalidatable), and the search term.
 class MenuQuery
-  def self.call(business:, query: "")
-    new(business, query).call
+  def self.call(business:, query: "", eager_load: true)
+    new(business, query, eager_load).call
   end
 
-  def initialize(business, query)
+  def initialize(business, query, eager_load = true)
     @business = business
     @query = query.to_s.strip
+    @eager_load = eager_load
   end
 
   def call
@@ -18,17 +19,17 @@ class MenuQuery
 
   private
 
-  attr_reader :business, :query
+  attr_reader :business, :query, :eager_load
 
   def cache_key
     version = Business.unscoped.where(id: business.id).pick(:menu_version) || 0
-    [ "menu", business.id, version, query ]
+    [ "menu", business.id, version, query, eager_load ]
   end
 
   def build_menu
     products = Product.available.ordered
-      .includes(:product_addon_groups, :product_variants, image_attachment: :blob)
       .where(category: business.categories.active)
+    products = products.includes(:product_addon_groups, :product_variants, image_attachment: :blob) if eager_load
     products = products.where("products.name ILIKE ?", "%#{query}%") if query.present?
 
     categories = business.categories.active.where(id: products.select(:category_id)).ordered

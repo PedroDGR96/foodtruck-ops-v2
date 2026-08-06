@@ -56,6 +56,12 @@ pt-BR:
         name: "Nome"
         price: "Preço"
         active: "Ativo"
+      customer:
+        name: "Nome"
+        phone: "Telefone"
+        whatsapp: "WhatsApp"
+        birthday: "Aniversário"
+        notes: "Observações"
     errors:
       models:
         order:
@@ -274,6 +280,7 @@ pt-BR:
     number: "Nº"
     back: "Voltar"
     back_to: "Voltar ao pedido"
+    customer: "Cliente"
     created_at: "Criado em"
     subtotal: "Subtotal"
     tax: "Imposto"
@@ -357,6 +364,48 @@ pt-BR:
     quantity_for: "Quantidade de %{name}"
     empty_cart: "O carrinho está vazio. Adicione produtos para começar."
     added: "%{name} adicionado ao pedido."
+    customer_label: "Cliente"
+    customer_attach: "Cliente do pedido"
+    customer_existing: "Cliente existente"
+    customer_select_placeholder: "Selecionar cliente…"
+    customer_attach_button: "Vincular"
+    customer_or: "ou crie um novo"
+    customer_create: "Criar cliente"
+    customer_name_placeholder: "Nome do cliente"
+    customer_profile: "Perfil"
+    customer_remove: "Remover"
+    customer_attached: "Cliente %{name} vinculado ao pedido."
+    customer_created: "Cliente %{name} criado e vinculado ao pedido."
+
+  customers:
+    index:
+      title: "Clientes"
+      new: "Novo cliente"
+      name: "Nome"
+      phone: "Telefone"
+      search_placeholder: "Buscar por nome ou telefone…"
+      empty_title: "Nenhum cliente"
+      empty_message: "Cadastre o primeiro cliente para atender mais rápido no caixa."
+    show:
+      back: "Voltar"
+      edit: "Editar"
+      orders_count: "Pedidos"
+      total_spent: "Total gasto"
+      average_spend: "Ticket médio"
+      history: "Histórico de compras"
+      order: "Pedido"
+      no_history: "Nenhuma compra registrada ainda."
+    new:
+      title: "Novo cliente"
+      submit: "Criar cliente"
+    edit:
+      title: "Editar cliente"
+      submit: "Salvar cliente"
+    form:
+      phone_placeholder: "(11) 91234-5678"
+    created: "Cliente %{name} criado."
+    updated: "Cliente %{name} atualizado."
+    discarded: "Cliente %{name} arquivado."
 
   kitchen:
     title: "Cozinha"

@@ -36,6 +36,7 @@ class Order < ApplicationRecord
       .includes(order_items: :order_item_addons)
       .order(Arel.sql("CASE kitchen_status WHEN 'in_progress' THEN 0 ELSE 1 END"), created_at: :asc)
   end
+  scope :purchases, -> { where.not(status: %i[draft cancelled refunded]) }
 
   def paid_amount
     payments.where(status: :succeeded).sum(:amount)

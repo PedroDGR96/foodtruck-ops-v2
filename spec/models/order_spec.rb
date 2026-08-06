@@ -119,6 +119,42 @@ RSpec.describe Order do
     end
   end
 
+  describe "customer" do
+    it "accepts a customer from the same business" do
+      customer = within_tenant { create(:customer, business: business) }
+
+      expect(within_tenant { build(:order, business: business, customer: customer) }).to be_valid
+    end
+
+    it "rejects a customer from another business" do
+      other = create(:business)
+      foreign_customer = Tenancy.with_business(other) { create(:customer, business: other) }
+
+      Tenancy.with_business(business) do
+        order = build(:order, business: business, customer: foreign_customer)
+        expect(order).not_to be_valid
+        expect(order.errors[:customer]).to be_present
+      end
+    end
+  end
+
+  describe "purchases scope" do
+    it "includes purchase-flow orders and excludes drafts, cancellations and refunds" do
+      paid = within_tenant do
+        create(:order, :open, business: business, total: 10.0, subtotal: 10.0).tap do |o|
+          create(:payment, order: o, amount: 10.0)
+          o.update!(status: :paid, payment_status: :paid)
+        end
+      end
+      open = within_tenant { create(:order, :open, business: business, total: 10.0, subtotal: 10.0) }
+      draft = within_tenant { create(:order, business: business) }
+      cancelled = within_tenant { create(:order, :cancelled, business: business, total: 10.0, subtotal: 10.0) }
+
+      expect(within_tenant { Order.purchases.pluck(:id) }).to contain_exactly(paid.id, open.id)
+      expect(within_tenant { Order.purchases.pluck(:id) }).not_to include(draft.id, cancelled.id)
+    end
+  end
+
   describe "totals recalculation" do
     it "recomputes subtotal and total from line items" do
       order = within_tenant do
