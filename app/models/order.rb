@@ -3,6 +3,7 @@
 # OrderLifecycle so every move is validated and audited.
 class Order < ApplicationRecord
   include BusinessScoped
+  include TenantChild
 
   enum :order_type, { local: "local", delivery: "delivery", pickup: "pickup" }, default: :local
   enum :status, {
@@ -20,6 +21,7 @@ class Order < ApplicationRecord
   enum :payment_status, { pending: "pending", partially_paid: "partially_paid", paid: "paid", refunded: "refunded" }, default: :pending, prefix: true
 
   belongs_to :user, optional: true
+  belongs_to :customer, optional: true
   has_many :order_items, dependent: :restrict_with_exception
   has_many :order_item_addons, through: :order_items
   has_many :payments, dependent: :restrict_with_exception
@@ -28,9 +30,11 @@ class Order < ApplicationRecord
   validates :subtotal, :tax, :total, numericality: { greater_than_or_equal_to: 0 }
   validate :totals_consistent
   validate :payment_status_consistent
+  validates_parent_business_for :customer
 
   scope :recent, -> { order(created_at: :desc) }
   scope :active, -> { where(status: %i[paid in_kitchen ready]) }
+  scope :purchases, -> { where.not(status: %i[draft cancelled refunded]) }
 
   def paid_amount
     payments.where(status: :succeeded).sum(:amount)

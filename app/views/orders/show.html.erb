@@ -17,6 +17,15 @@
       <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("orders.balance_due") %></dt><dd class="font-semibold"><%= format_money(@order.balance_due) %></dd></div>
     </dl>
 
+    <% if @order.customer %>
+      <div class="mt-4 card p-4">
+        <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("orders.customer") %></dt>
+        <dd class="font-medium">
+          <%= link_to @order.customer.name, customer_path(@order.customer), class: "hover:underline" %>
+        </dd>
+      </div>
+    <% end %>
+
     <%= render "orders/ticket", order: @order %>
 
     <div class="mt-6 card p-4">

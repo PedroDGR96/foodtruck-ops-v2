@@ -22,6 +22,18 @@ class OrderCart
     new(order).remove_item(item_id)
   end
 
+  def self.set_customer(order, customer:)
+    new(order).set_customer(customer)
+  end
+
+  def self.quick_create_customer(order, attributes)
+    new(order).quick_create_customer(attributes)
+  end
+
+  def self.clear_customer(order)
+    new(order).clear_customer
+  end
+
   def initialize(order)
     @order = order
   end
@@ -63,6 +75,31 @@ class OrderCart
   def remove_item(item_id)
     ensure_open_cart!
     find_item_in_cart(item_id).destroy!
+    order
+  end
+
+  # Attaches an existing customer to the cart order.
+  def set_customer(customer)
+    ensure_open_cart!
+    raise CartClosedError, "Cliente de outro estabelecimento" unless customer.business_id == order.business_id
+
+    order.update!(customer: customer)
+    order
+  end
+
+  # Builds a new customer from attributes (quick-create) and attaches it. The
+  # business is assigned by BusinessScoped from the current tenant.
+  def quick_create_customer(attributes)
+    ensure_open_cart!
+    customer = Customer.new(attributes)
+    customer.save!
+    order.update!(customer: customer)
+    order
+  end
+
+  def clear_customer
+    ensure_open_cart!
+    order.update!(customer: nil)
     order
   end
 

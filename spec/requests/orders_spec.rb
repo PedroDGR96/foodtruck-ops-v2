@@ -84,6 +84,24 @@ RSpec.describe "Orders", type: :request do
       expect(Tenancy.with_business(business) { paid_order.reload }).to be_cancelled
       expect(Tenancy.with_business(business) { paid_order.payment_status }).to eq("refunded")
     end
+
+    it "shows an error when cancelling an order that cannot be cancelled" do
+      login_as owner, scope: :user
+      paid_order = paid_order(status: "paid", total: 10.0)
+
+      post "/orders/#{paid_order.id}/cancel"
+
+      expect(response).to redirect_to(order_path(paid_order))
+    end
+
+    it "shows an error when force-cancelling an order that cannot be force-cancelled" do
+      login_as owner, scope: :user
+      open_order = order(status: "open")
+
+      post "/orders/#{open_order.id}/force_cancel"
+
+      expect(response).to redirect_to(order_path(open_order))
+    end
   end
 
   describe "refunds" do
@@ -95,6 +113,15 @@ RSpec.describe "Orders", type: :request do
 
       expect(response).to redirect_to(order_path(paid_order))
       expect(Tenancy.with_business(business) { paid_order.reload }).to be_refunded
+    end
+
+    it "shows an error when refunding an order that has not been paid" do
+      login_as cashier, scope: :user
+      open_order = order(status: "open")
+
+      post "/orders/#{open_order.id}/refund"
+
+      expect(response).to redirect_to(order_path(open_order))
     end
   end
 end

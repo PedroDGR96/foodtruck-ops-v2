@@ -1,0 +1,6 @@
+<%= content_for :title, t("customers.new.title") %>
+
+<div class="mx-auto max-w-md">
+  <h1 class="text-2xl font-bold"><%= t("customers.new.title") %></h1>
+  <%= render "customers/form", customer: @customer %>
+</div>
