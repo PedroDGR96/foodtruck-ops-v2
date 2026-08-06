@@ -10,11 +10,11 @@ RSpec.describe "Kitchen display", type: :request do
     Tenancy.with_business(business) { create(:user, role, business: business) }
   end
 
-  def paid_order(status: "paid", kitchen_status: "pending")
+  def paid_order(status: "paid", kitchen_status: "pending", **attrs)
     Tenancy.with_business(business) do
       o = create(:order, :open, business: business, total: 10.0, subtotal: 10.0)
       create(:payment, order: o, amount: 10.0)
-      o.update!(status: status, payment_status: :paid, kitchen_status: kitchen_status)
+      o.update!(status: status, payment_status: :paid, kitchen_status: kitchen_status, **attrs)
       o
     end
   end
@@ -41,10 +41,10 @@ RSpec.describe "Kitchen display", type: :request do
 
       get "/kitchen"
 
-      expect(response.body).to include("order_#{waiting.id}")
-      expect(response.body).to include("order_#{cooking.id}")
-      expect(response.body).not_to include("order_#{done.id}")
-      expect(response.body).not_to include("order_#{draft.id}")
+      expect(response.body).to include(%(id="order_#{waiting.id}"))
+      expect(response.body).to include(%(id="order_#{cooking.id}"))
+      expect(response.body).not_to include(%(id="order_#{done.id}"))
+      expect(response.body).not_to include(%(id="order_#{draft.id}"))
     end
   end
 
@@ -89,6 +89,30 @@ RSpec.describe "Kitchen display", type: :request do
       expect(response).to redirect_to("/kitchen")
       expect(flash[:alert]).to be_present
       expect(Tenancy.with_business(business) { order.reload }).not_to be_ready
+    end
+  end
+
+  describe "completed panel" do
+    before { login_as kitchen, scope: :user }
+
+    it "lists recently finished orders with the prep timer markup" do
+      done = paid_order(status: "ready", kitchen_status: "done")
+      Tenancy.with_business(business) { done.update!(finished_at: Time.current) }
+
+      get "/kitchen"
+
+      expect(response.body).to include("completed_order_#{done.id}")
+      expect(response.body).to include(I18n.t("kitchen.completed"))
+      expect(response.body).to include("Pronto às")
+    end
+
+    it "flags overdue tickets" do
+      paid_order(status: "in_kitchen", kitchen_status: "in_progress", started_at: 20.minutes.ago)
+
+      get "/kitchen"
+
+      expect(response.body).to include("is-overdue")
+      expect(response.body).to include(I18n.t("kitchen.overdue"))
     end
   end
 

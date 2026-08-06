@@ -4,6 +4,7 @@ class KitchenController < AuthenticatedController
   def show
     authorize :kitchen, :show?
     @orders = Current.business.orders.kitchen_queue
+    @completed = Current.business.orders.kitchen_completed
   end
 
   def start

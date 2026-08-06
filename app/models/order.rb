@@ -3,6 +3,7 @@
 # OrderLifecycle so every move is validated and audited.
 class Order < ApplicationRecord
   include BusinessScoped
+  include TenantChild
 
   enum :order_type, { local: "local", delivery: "delivery", pickup: "pickup" }, default: :local
   enum :status, {
@@ -20,6 +21,7 @@ class Order < ApplicationRecord
   enum :payment_status, { pending: "pending", partially_paid: "partially_paid", paid: "paid", refunded: "refunded" }, default: :pending, prefix: true
 
   belongs_to :user, optional: true
+  belongs_to :customer, optional: true
   has_many :order_items, dependent: :restrict_with_exception
   has_many :order_item_addons, through: :order_items
   has_many :payments, dependent: :restrict_with_exception
@@ -28,6 +30,7 @@ class Order < ApplicationRecord
   validates :subtotal, :tax, :total, numericality: { greater_than_or_equal_to: 0 }
   validate :totals_consistent
   validate :payment_status_consistent
+  validates_parent_business_for :customer
 
   scope :recent, -> { order(created_at: :desc) }
   scope :active, -> { where(status: %i[paid in_kitchen ready]) }
@@ -37,6 +40,11 @@ class Order < ApplicationRecord
       .order(Arel.sql("CASE kitchen_status WHEN 'in_progress' THEN 0 ELSE 1 END"), created_at: :asc)
   end
   scope :purchases, -> { where.not(status: %i[draft cancelled refunded]) }
+  scope :kitchen_completed, -> do
+    where(kitchen_status: :done, status: :ready)
+      .includes(order_items: :order_item_addons)
+      .order(created_at: :desc)
+  end
 
   def paid_amount
     payments.where(status: :succeeded).sum(:amount)
@@ -75,6 +83,7 @@ class Order < ApplicationRecord
 
   def payment_status_consistent
     return unless payment_status == "paid"
+    return unless Current.business
 
     errors.add(:payment_status, :inconsistent) if paid_amount < total
   end

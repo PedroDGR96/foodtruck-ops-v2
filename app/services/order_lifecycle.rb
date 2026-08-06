@@ -30,9 +30,10 @@ class OrderLifecycle
 
   def cancel!(force: false)
     if force
-      transition!("cancelled", %i[paid in_kitchen ready], :cancelled, override: true)
+      transition!("cancelled", %i[paid in_kitchen ready], :cancelled, { override: true })
       refund_payments!
       broadcast_remove
+      broadcast_kds_remove
     else
       transition!("cancelled", %i[draft open], :cancelled)
     end
@@ -42,14 +43,18 @@ class OrderLifecycle
     transition!("refunded", %i[paid partially_paid cancelled], :refunded)
     refund_payments!
     broadcast_remove
+    broadcast_kds_remove
   end
 
   def start_cooking!
-    transition!("cooking_started", %i[paid], :in_kitchen, {}, kitchen_status: :in_progress, started_at: Time.current)
+    transition!("cooking_started", %i[paid], :in_kitchen, {}, { kitchen_status: :in_progress, started_at: Time.current }, broadcast: false)
+    broadcast_kds_replace
   end
 
   def mark_ready!
-    transition!("ready", %i[in_kitchen], :ready, {}, kitchen_status: :done, finished_at: Time.current)
+    transition!("ready", %i[in_kitchen], :ready, {}, { kitchen_status: :done, finished_at: Time.current }, broadcast: false)
+    broadcast_kds_remove
+    broadcast_kds_completed
   end
 
   def complete!
@@ -67,10 +72,11 @@ class OrderLifecycle
     paid = order.payments.successful.sum(:amount)
     if paid >= order.total
       order.update_columns(payment_status: :paid)
-      transition!("paid", %i[open partially_paid], :paid, amount: payment.amount.to_s, method: payment.method)
+      transition!("paid", %i[open partially_paid], :paid, { amount: payment.amount.to_s, method: payment.method })
+      broadcast_kds_append
     elsif paid.positive?
       order.update_columns(payment_status: :partially_paid)
-      transition!("partially_paid", %i[open partially_paid], :partially_paid, amount: payment.amount.to_s, method: payment.method)
+      transition!("partially_paid", %i[open partially_paid], :partially_paid, { amount: payment.amount.to_s, method: payment.method })
     else
       order.update_columns(payment_status: :pending)
     end
@@ -78,14 +84,14 @@ class OrderLifecycle
 
   private
 
-  def transition!(event, from_states, to_status, metadata = {}, extra_columns = {})
+  def transition!(event, from_states, to_status, metadata = {}, extra_columns = {}, broadcast: true)
     unless from_states.include?(order.status.to_sym)
       raise IllegalTransition.new(event, order.status)
     end
 
     order.update!(status: to_status, **extra_columns)
     record_event(event, metadata)
-    broadcast_replace
+    broadcast_replace if broadcast
   end
 
   def refund_payments!
@@ -110,6 +116,40 @@ class OrderLifecycle
     Turbo::StreamsChannel.broadcast_remove_to(
       OrderChannel.stream_name(order.business_id),
       target: ActionView::RecordIdentifier.dom_id(order)
+    )
+  end
+
+  def broadcast_kds_append
+    Turbo::StreamsChannel.broadcast_append_to(
+      KitchenChannel.stream_name(order.business_id),
+      target: "kitchen-queue-#{order.order_type}",
+      partial: "kitchen/ticket",
+      locals: { order: order }
+    )
+  end
+
+  def broadcast_kds_replace
+    Turbo::StreamsChannel.broadcast_replace_to(
+      KitchenChannel.stream_name(order.business_id),
+      target: ActionView::RecordIdentifier.dom_id(order),
+      partial: "kitchen/ticket",
+      locals: { order: order }
+    )
+  end
+
+  def broadcast_kds_remove
+    Turbo::StreamsChannel.broadcast_remove_to(
+      KitchenChannel.stream_name(order.business_id),
+      target: ActionView::RecordIdentifier.dom_id(order)
+    )
+  end
+
+  def broadcast_kds_completed
+    Turbo::StreamsChannel.broadcast_prepend_to(
+      KitchenChannel.stream_name(order.business_id),
+      target: "kitchen-completed",
+      partial: "kitchen/completed_ticket",
+      locals: { order: order }
     )
   end
 end

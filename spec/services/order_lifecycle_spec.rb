@@ -220,8 +220,71 @@ RSpec.describe OrderLifecycle do
       expect(Turbo::StreamsChannel).to receive(:broadcast_remove_to)
         .with(OrderChannel.stream_name(business.id), anything)
         .and_call_original
+      expect(Turbo::StreamsChannel).to receive(:broadcast_remove_to)
+        .with(KitchenChannel.stream_name(business.id), anything)
+        .and_call_original
 
       lifecycle(order, owner).cancel!(force: true)
+    end
+
+    it "appends a kitchen ticket when the order is paid" do
+      order = build_order(:open, total: 30.0, subtotal: 30.0)
+      payment = order.payments.build(method: "pix", amount: 30.0)
+
+      expect(Turbo::StreamsChannel).to receive(:broadcast_append_to)
+        .with(KitchenChannel.stream_name(business.id), hash_including(target: "kitchen-queue-#{order.order_type}", partial: "kitchen/ticket"))
+        .and_call_original
+
+      lifecycle(order).record_payment!(payment)
+    end
+
+    it "replaces the kitchen ticket when cooking starts" do
+      order = build_order(:paid)
+
+      expect(Turbo::StreamsChannel).to receive(:broadcast_replace_to)
+        .with(KitchenChannel.stream_name(business.id), hash_including(partial: "kitchen/ticket"))
+        .and_call_original
+
+      lifecycle(order).start_cooking!
+    end
+
+    it "removes the ticket from the queue and prepends a completed ticket when ready" do
+      order = build_order(:in_kitchen)
+
+      expect(Turbo::StreamsChannel).to receive(:broadcast_remove_to)
+        .with(KitchenChannel.stream_name(business.id), anything)
+        .and_call_original
+      expect(Turbo::StreamsChannel).to receive(:broadcast_prepend_to)
+        .with(KitchenChannel.stream_name(business.id), hash_including(target: "kitchen-completed", partial: "kitchen/completed_ticket"))
+        .and_call_original
+
+      lifecycle(order).mark_ready!
+    end
+
+    it "removes the kitchen ticket when a kitchen order is force-cancelled" do
+      order = payable_order(:in_kitchen, total: 10.0)
+
+      expect(Turbo::StreamsChannel).to receive(:broadcast_remove_to)
+        .with(OrderChannel.stream_name(business.id), anything)
+        .and_call_original
+      expect(Turbo::StreamsChannel).to receive(:broadcast_remove_to)
+        .with(KitchenChannel.stream_name(business.id), anything)
+        .and_call_original
+
+      lifecycle(order, owner).cancel!(force: true)
+    end
+
+    it "removes the kitchen ticket when a kitchen order is refunded" do
+      order = payable_order(:paid, total: 10.0)
+
+      expect(Turbo::StreamsChannel).to receive(:broadcast_remove_to)
+        .with(OrderChannel.stream_name(business.id), anything)
+        .and_call_original
+      expect(Turbo::StreamsChannel).to receive(:broadcast_remove_to)
+        .with(KitchenChannel.stream_name(business.id), anything)
+        .and_call_original
+
+      lifecycle(order, owner).refund!
     end
   end
 end
