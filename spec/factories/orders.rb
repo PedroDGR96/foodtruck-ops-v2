@@ -43,5 +43,10 @@ FactoryBot.define do
     trait :cancelled do
       status { "cancelled" }
     end
+
+    trait :delivery do
+      order_type { "delivery" }
+      delivery_fee { 5.0 }
+    end
   end
 end

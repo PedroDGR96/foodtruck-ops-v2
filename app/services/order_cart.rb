@@ -34,6 +34,10 @@ class OrderCart
     new(order).clear_customer
   end
 
+  def self.set_order_type(order, order_type, delivery_address_attributes: nil)
+    new(order).set_order_type(order_type, delivery_address_attributes: delivery_address_attributes)
+  end
+
   def initialize(order)
     @order = order
   end
@@ -101,6 +105,36 @@ class OrderCart
     ensure_open_cart!
     order.update!(customer: nil)
     order
+  end
+
+  def set_order_type(order_type, delivery_address_attributes: nil)
+    ensure_open_cart!
+
+    if order_type == "delivery"
+      raise CartClosedError, "Endereço de entrega obrigatório" if delivery_address_attributes.blank?
+
+      order.build_delivery_address(delivery_address_attributes)
+      order.delivery_fee = order.business.delivery_fee || 0
+    else
+      order.delivery_address&.mark_for_destruction
+      order.delivery_fee = 0
+    end
+
+    order.order_type = order_type
+    recompute_totals_in_memory
+    order.save!
+    order
+  end
+
+  def recompute_totals_in_memory
+    items = order.order_items.reload
+    addon_totals = order.order_item_addons.group(:order_item_id).sum(:price)
+    new_subtotal = items.sum do |item|
+      ((item.unit_price + addon_totals.fetch(item.id, 0.0)).round(2) * item.quantity).round(2)
+    end.round(2)
+
+    order.subtotal = new_subtotal
+    order.total = (new_subtotal + order.tax + order.delivery_fee).round(2)
   end
 
   private

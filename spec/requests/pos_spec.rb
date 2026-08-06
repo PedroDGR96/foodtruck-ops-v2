@@ -92,6 +92,61 @@ RSpec.describe "Point of Sale", type: :request do
       expect(response).to redirect_to(pos_path)
       expect(flash[:alert]).to be_present
     end
+
+    it "confirms a delivery order with an address and creates a delivery record" do
+      product
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+      order = Tenancy.with_business(business) { Order.last }
+
+      Tenancy.with_business(business) do
+        business.update!(delivery_fee: 7.0)
+        order.update!(delivery_fee: 7.0, total: 19.5)
+      end
+
+      post "/pos/confirm", params: {
+        order: {
+          order_type: "delivery",
+          delivery_address: { street: "Rua A", number: "10", neighborhood: "Centro", city: "São Paulo", state: "SP" }
+        }
+      }
+
+      expect(response).to redirect_to(new_order_payment_path(order))
+      Tenancy.with_business(business) do
+        order.reload
+        expect(order).to be_open
+        expect(order).to be_delivery
+        expect(order.delivery_fee).to eq(7.0)
+        expect(order.delivery_address).to be_present
+        expect(order.delivery_address.street).to eq("Rua A")
+        expect(order.delivery).to be_present
+        expect(order.delivery).to be_pending
+      end
+    end
+
+    it "refuses to confirm a delivery without an address" do
+      product
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+
+      post "/pos/confirm", params: { order: { order_type: "delivery" } }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to be_present
+    end
+
+    it "refuses to confirm a delivery with an incomplete address" do
+      product
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+
+      post "/pos/confirm", params: {
+        order: {
+          order_type: "delivery",
+          delivery_address: { street: "Rua A" }
+        }
+      }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to be_present
+    end
   end
 
   describe "customer on the cart" do

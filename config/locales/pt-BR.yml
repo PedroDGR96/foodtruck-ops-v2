@@ -15,10 +15,23 @@ pt-BR:
         subtotal: "Subtotal"
         tax: "Imposto"
         total: "Total"
+        delivery_fee: "Taxa de entrega"
         payment_status: "Pagamento"
         order_type: "Tipo"
         status: "Status"
         notes: "Observações"
+      delivery_address:
+        street: "Logradouro"
+        number: "Número"
+        complement: "Complemento"
+        neighborhood: "Bairro"
+        city: "Cidade"
+        state: "UF"
+        zip: "CEP"
+        reference: "Referência"
+      delivery:
+        courier_name: "Entregador"
+        status: "Status"
       payment:
         amount: "Valor"
         method: "Forma de pagamento"
@@ -27,6 +40,7 @@ pt-BR:
         name: "Nome"
         timezone: "Fuso horário"
         currency: "Moeda"
+        delivery_fee: "Taxa de entrega"
         active: "Ativo"
       category:
         name: "Nome"
@@ -70,6 +84,8 @@ pt-BR:
               inconsistent: "não confere com subtotal e impostos"
             payment_status:
               inconsistent: "não confere com o total pago"
+            delivery_address:
+              blank: "é obrigatório para pedidos de entrega"
         payment:
           attributes:
             amount:
@@ -283,8 +299,10 @@ pt-BR:
     created_at: "Criado em"
     subtotal: "Subtotal"
     tax: "Imposto"
+    delivery_fee: "Taxa de entrega"
     total: "Total"
     balance_due: "Saldo a pagar"
+    delivery: "Entrega"
     already_paid: "Pago"
     order_type: "Tipo"
     status: "Status"
@@ -336,6 +354,10 @@ pt-BR:
       local: "Local"
       delivery: "Entrega"
       pickup: "Retirada"
+    delivery_statuses:
+      pending: "Pendente"
+      out_for_delivery: "Em entrega"
+      delivered: "Entregue"
     payment_methods:
       cash: "Dinheiro"
       pix: "Pix"
