@@ -146,6 +146,8 @@ pt-BR:
       staff: "Equipe"
       settings: "Configurações"
       pos: "Caixa"
+      orders: "Pedidos"
+      kitchen: "Cozinha"
 
   home:
     title: "Bem-vindo, %{name}"
@@ -506,6 +508,24 @@ pt-BR:
       title: "Abrir turno de caixa"
     errors:
       already_closed: "Este turno já foi fechado."
+
+  kitchen:
+    title: "Cozinha"
+    start: "Iniciar preparo"
+    ready_btn: "Marcar pronto"
+    started: "Preparo iniciado."
+    ready: "Pedido marcado como pronto."
+    cannot_start: "Este pedido não pode ser iniciado no estado atual."
+    cannot_ready: "Este pedido não pode ser marcado como pronto no estado atual."
+    prep_time: "Preparo: %{elapsed}"
+    overdue: "Atrasado"
+    completed: "Concluídos recentemente"
+    none_completed: "Nenhum pedido concluído ainda."
+    none_in_type: "Nenhum pedido aguardando neste tipo."
+    finished_at: "Pronto às %{time}"
+    sound_on: "Som ligado"
+    sound_off: "Som desligado"
+    sound_hint: "Ative o som para receber um alerta quando novos pedidos chegarem."
 
   time:
     formats:

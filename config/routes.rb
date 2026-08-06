@@ -29,6 +29,10 @@ Rails.application.routes.draw do
     resources :cash_movements, only: %i[create]
   end
 
+  get "kitchen", to: "kitchen#show"
+  post "kitchen/orders/:id/start", to: "kitchen#start", as: :kitchen_start
+  post "kitchen/orders/:id/done", to: "kitchen#done", as: :kitchen_done
+
   resources :categories, except: :show
   resources :products do
     resources :product_variants, except: %i[index show]

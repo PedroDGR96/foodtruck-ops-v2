@@ -14,6 +14,11 @@ FactoryBot.define do
       Tenancy.with_business(order.business) { order.save! }
     end
 
+    factory :paid_order do
+      status { "paid" }
+      payment_status { "paid" }
+    end
+
     trait :open do
       status { "open" }
     end

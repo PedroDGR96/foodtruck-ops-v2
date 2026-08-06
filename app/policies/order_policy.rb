@@ -40,4 +40,12 @@ class OrderPolicy < ApplicationPolicy
 
     owner?
   end
+
+  def start_cooking?
+    kitchen? || owner?
+  end
+
+  def mark_ready?
+    kitchen? || owner?
+  end
 end
