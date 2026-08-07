@@ -141,6 +141,7 @@ pt-BR:
     nav:
       orders: "Pedidos"
       cash_register: "Caixa"
+      daily_report: "Relatório"
       customers: "Clientes"
       menu: "Cardápio"
       staff: "Equipe"
@@ -526,6 +527,30 @@ pt-BR:
     sound_on: "Som ligado"
     sound_off: "Som desligado"
     sound_hint: "Ative o som para receber um alerta quando novos pedidos chegarem."
+  daily_reports:
+    title: "Relatório diário"
+    date: "Data"
+    date_hint: "Relatório do dia"
+    total_orders: "Pedidos"
+    gross_total: "Vendas brutas"
+    refund_total: "Reembolsos"
+    net_total: "Total líquido"
+    by_method: "Vendas por forma de pagamento"
+    by_product: "Vendas por produto"
+    product: "Produto"
+    quantity: "Quantidade"
+    total: "Total"
+    method: "Forma de pagamento"
+    no_orders: "Nenhum pedido registrado neste dia."
+    no_products: "Nenhuma venda de produto registrada."
+    no_methods: "Nenhum pagamento registrado."
+    shifts: "Turnos do dia"
+    cashier: "Caixa"
+    opened_at: "Aberto em"
+    closed_at: "Fechado em"
+    status: "Status"
+    no_shifts: "Nenhum turno registrado neste dia."
+    net_hint: "Vendas brutas menos reembolsos"
 
   time:
     formats:

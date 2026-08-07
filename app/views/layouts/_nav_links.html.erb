@@ -2,6 +2,7 @@
   <%= link_to t("home.title_short"), root_path, class: nav_link_class(request.path == root_path) %>
   <%= link_to t("layouts.nav.pos"), pos_path, class: nav_link_class(request.path == pos_path) %>
   <%= link_to t("layouts.nav.cash_register"), cash_registers_path, class: nav_link_class(request.path.start_with?(cash_registers_path)) %>
+  <%= link_to t("layouts.nav.daily_report"), daily_report_path, class: nav_link_class(request.path.start_with?(daily_report_path)) %>
   <%= link_to t("layouts.nav.orders"), orders_path, class: nav_link_class(request.path.start_with?(orders_path)) %>
   <%= link_to t("layouts.nav.customers"), customers_path, class: nav_link_class(request.path.start_with?(customers_path)) %>
   <%= link_to t("layouts.nav.menu"), categories_path, class: nav_link_class(request.path.start_with?(categories_path)) %>

@@ -3,6 +3,7 @@ Rails.application.routes.draw do
 
   resources :users, only: %i[index new create edit update]
   resource :settings, only: %i[edit update]
+  resource :daily_report, only: :show
 
   get "menu", to: "menu#show", as: :menu
 
