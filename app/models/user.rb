@@ -20,6 +20,9 @@ class User < ApplicationRecord
     unscoped { super }
   end
 
+  # API tokens for this user (JSON:API bearer auth)
+  has_many :tokens, dependent: :destroy
+
   def active_for_authentication?
     super && active?
   end

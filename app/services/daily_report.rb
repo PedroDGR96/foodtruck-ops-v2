@@ -57,5 +57,6 @@ class DailyReport
     business.cash_registers
             .where("opened_at < ? AND (closed_at IS NULL OR closed_at > ?)", window.last, window.first)
             .order(opened_at: :asc)
+            .to_a
   end
 end

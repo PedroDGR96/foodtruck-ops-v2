@@ -42,6 +42,27 @@ Rails.application.routes.draw do
     end
   end
 
+  # JSON:API v1 — bearer-token auth, JSON only
+  namespace :api do
+    namespace :v1, defaults: { format: :json } do
+      resources :categories, only: %i[index show create update]
+      resources :products, only: %i[index show create update]
+      resources :customers, only: %i[index show create update]
+      resources :orders, only: %i[index show create] do
+        post :cancel, on: :member
+        post :force_cancel, on: :member
+        post :refund, on: :member
+      end
+      resources :cash_registers, only: %i[index show create] do
+        get :active, on: :collection
+        post :close, on: :member
+      end
+    end
+  end
+
+  mount Rswag::Ui::Engine => "/api-docs"
+  mount Rswag::Api::Engine => "/api-docs"
+
   root to: "home#index"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

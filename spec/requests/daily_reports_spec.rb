@@ -8,6 +8,14 @@ RSpec.describe "Daily Reports", type: :request do
     Tenancy.with_business(business) { create(:user, role, business: business) }
   end
 
+  def create_paid_order(business, total:, created_at:)
+    order = create(:order, business: business, subtotal: total, tax: 0, delivery_fee: 0, total: total,
+                           created_at: created_at)
+    yield order if block_given?
+    order.update!(status: "paid", payment_status: "paid")
+    order
+  end
+
   def login(role)
     user = staff(role)
     login_as user, scope: :user
@@ -47,11 +55,11 @@ RSpec.describe "Daily Reports", type: :request do
 
       Tenancy.with_business(business) do
         product = create(:product, business: business, name: "Burger", price: 25.0)
-        order = create(:order, :paid, business: business, total: 50.0, subtotal: 50.0, tax: 0, delivery_fee: 0,
-                                        created_at: zone.local(2026, 8, 4, 12, 0))
-        create(:order_item, order: order, product: product, product_name: "Burger", unit_price: 25.0,
-                             quantity: 2, line_total: 50.0)
-        create(:payment, order: order, amount: 50.0, method: "cash", status: "succeeded")
+        create_paid_order(business, total: 50.0, created_at: zone.local(2026, 8, 4, 12, 0)) do |order|
+          create(:order_item, order: order, product: product, product_name: "Burger", unit_price: 25.0,
+                               quantity: 2, line_total: 50.0)
+          create(:payment, order: order, amount: 50.0, method: "cash", status: "succeeded")
+        end
       end
 
       get daily_report_path(date: "2026-08-04")
@@ -75,8 +83,9 @@ RSpec.describe "Daily Reports", type: :request do
       login(:owner)
 
       Tenancy.with_business(business) do
-        create(:order, :paid, business: business, total: 100.0, subtotal: 100.0, tax: 0, delivery_fee: 0,
-                                created_at: zone.local(2026, 7, 15, 10, 0))
+        create_paid_order(business, total: 100.0, created_at: zone.local(2026, 7, 15, 10, 0)) do |order|
+          create(:payment, order: order, amount: 100.0, method: "cash", status: "succeeded")
+        end
       end
 
       get daily_report_path(date: "2026-07-15")
