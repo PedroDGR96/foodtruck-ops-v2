@@ -1,15 +1,14 @@
 # app/controllers/daily_reports_controller.rb
 class DailyReportsController < ApplicationController
+  before_action :set_daily_report, only: [ :show ]
+
   def show
-    authorize DailyReport
-    @report = DailyReport.call(Current.business, date_param)
+    authorize :daily_report, :show?
   end
 
   private
 
-  def date_param
-    Date.parse(params[:date])
-  rescue Date::Error, TypeError
-    Date.current
+  def set_daily_report
+    @report = DailyReport.call(current_user.business, params[:date]&.to_date)
   end
 end

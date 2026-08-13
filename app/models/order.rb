@@ -104,6 +104,7 @@ class Order < ApplicationRecord
   def payment_status_consistent
     return unless payment_status == "paid"
     return unless Current.business
+    return if payments.empty?
 
     errors.add(:payment_status, :inconsistent) if paid_amount < total
   end

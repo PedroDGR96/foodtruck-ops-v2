@@ -329,7 +329,7 @@ CREATE TABLE public.integration_settings (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     business_id uuid NOT NULL,
     provider_key character varying NOT NULL,
-    credentials jsonb DEFAULT '{}'::jsonb,
+    credentials jsonb,
     enabled boolean DEFAULT true NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
@@ -2038,8 +2038,8 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260809020000'),
 ('20260807120001'),
-('20260807000000'),
 ('20260804130004'),
 ('20260804130003'),
 ('20260804130002'),

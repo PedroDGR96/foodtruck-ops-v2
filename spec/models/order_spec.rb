@@ -93,8 +93,12 @@ RSpec.describe Order do
       expect(order).not_to be_valid
     end
 
-    it "rejects a paid status without matching payments" do
-      order = within_tenant { build(:order, business: business, status: "paid", payment_status: "paid", total: 30.0) }
+    it "rejects a paid status where payments do not cover the total" do
+      order = within_tenant do
+        o = create(:order, business: business, status: "paid", payment_status: "paid", total: 30.0)
+        create(:payment, order: o, amount: 10.0, status: "succeeded")
+        o.reload
+      end
 
       expect(order).not_to be_valid
       expect(order.errors[:payment_status]).to include("não confere com o total pago")

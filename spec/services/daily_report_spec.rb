@@ -107,16 +107,17 @@ RSpec.describe DailyReport do
     end
 
     it "includes shifts that overlap the day window" do
-      cashier = with_business { create(:user, :cashier, business: business) }
+      Tenancy.with_business(business) do
+        cashier = create(:user, :cashier, business: business)
 
-      shift = with_business do
-        create(:cash_register, :open, business: business, user: cashier,
-               opened_at: zone.local(2026, 8, 4, 9, 0))
+        shift = create(:cash_register, :open, business: business, user: cashier,
+                       opened_at: zone.local(2026, 8, 4, 9, 0))
+
+        report = described_class.call(business, date)
+
+        # Compare IDs — the report contains materialized model instances.
+        expect(report[:shifts].map(&:id)).to include(shift.id)
       end
-
-      report = with_business { described_class.call(business, date) }
-
-      expect(report[:shifts]).to include(shift)
     end
 
     it "excludes orders outside the day window" do

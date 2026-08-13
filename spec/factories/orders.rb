@@ -9,14 +9,10 @@ FactoryBot.define do
     subtotal { 0 }
     tax { 0 }
     total { 0 }
+    delivery_fee { 0 }
 
     to_create do |order|
       Tenancy.with_business(order.business) { order.save! }
-    end
-
-    factory :paid_order do
-      status { "paid" }
-      payment_status { "paid" }
     end
 
     trait :open do
