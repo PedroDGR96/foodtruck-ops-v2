@@ -34,6 +34,10 @@
     </div>
   </dl>
 
+  <% if @report[:total_count].zero? %>
+    <p class="mt-4 text-sm text-slate-500 dark:text-slate-400"><%= t("daily_reports.no_orders") %></p>
+  <% end %>
+
   <div class="mt-6 grid gap-6 lg:grid-cols-2">
     <section aria-label="<%= t("daily_reports.by_method") %>" class="card overflow-hidden">
       <h2 class="border-b border-slate-200 px-4 py-3 text-lg font-semibold dark:border-slate-800"><%= t("daily_reports.by_method") %></h2>

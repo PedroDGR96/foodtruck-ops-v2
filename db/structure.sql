@@ -211,7 +211,7 @@ CREATE TABLE public.cash_movements (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     CONSTRAINT cash_movements_amount_non_negative CHECK ((amount >= (0)::numeric)),
-    CONSTRAINT cash_movements_type_is_valid CHECK (((movement_type)::text = ANY (ARRAY[('income'::character varying)::text, ('expense'::character varying)::text])))
+    CONSTRAINT cash_movements_type_is_valid CHECK (((movement_type)::text = ANY ((ARRAY['income'::character varying, 'expense'::character varying])::text[])))
 );
 
 ALTER TABLE ONLY public.cash_movements FORCE ROW LEVEL SECURITY;
@@ -319,6 +319,23 @@ CREATE TABLE public.delivery_addresses (
 );
 
 ALTER TABLE ONLY public.delivery_addresses FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: integration_settings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.integration_settings (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    provider_key character varying NOT NULL,
+    credentials jsonb,
+    enabled boolean DEFAULT true NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.integration_settings FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -675,6 +692,14 @@ ALTER TABLE ONLY public.delivery_addresses
 
 
 --
+-- Name: integration_settings integration_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integration_settings
+    ADD CONSTRAINT integration_settings_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: order_events order_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -977,6 +1002,20 @@ CREATE INDEX index_delivery_addresses_on_business_id ON public.delivery_addresse
 --
 
 CREATE UNIQUE INDEX index_delivery_addresses_on_order_id ON public.delivery_addresses USING btree (order_id);
+
+
+--
+-- Name: index_integration_settings_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_integration_settings_on_business_id ON public.integration_settings USING btree (business_id);
+
+
+--
+-- Name: index_integration_settings_on_business_id_and_provider_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_integration_settings_on_business_id_and_provider_key ON public.integration_settings USING btree (business_id, provider_key);
 
 
 --
@@ -1302,6 +1341,13 @@ CREATE TRIGGER delivery_addresses_set_business_id BEFORE INSERT ON public.delive
 
 
 --
+-- Name: integration_settings integration_settings_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER integration_settings_set_business_id BEFORE INSERT ON public.integration_settings FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
 -- Name: order_events order_events_set_business_id; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1373,11 +1419,11 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: cash_movements fk_rails_1bd56f86b5; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: integration_settings fk_rails_10f8876694; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.cash_movements
-    ADD CONSTRAINT fk_rails_1bd56f86b5 FOREIGN KEY (cash_register_id) REFERENCES public.cash_registers(id);
+ALTER TABLE ONLY public.integration_settings
+    ADD CONSTRAINT fk_rails_10f8876694 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
 
 
 --
@@ -1397,6 +1443,14 @@ ALTER TABLE ONLY public.delivery_addresses
 
 
 --
+-- Name: cash_movements fk_rails_1bd56f86b5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cash_movements
+    ADD CONSTRAINT fk_rails_1bd56f86b5 FOREIGN KEY (cash_register_id) REFERENCES public.cash_registers(id);
+
+
+--
 -- Name: order_events fk_rails_21d02ca34e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1405,17 +1459,12 @@ ALTER TABLE ONLY public.order_events
 
 
 --
--- Name: orders fk_rails_3dad120da9; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT fk_rails_3dad120da9 FOREIGN KEY (customer_id) REFERENCES public.customers(id);
-
 -- Name: cash_movements fk_rails_3244ed8937; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.cash_movements
     ADD CONSTRAINT fk_rails_3244ed8937 FOREIGN KEY (order_id) REFERENCES public.orders(id);
+
 
 --
 -- Name: payments fk_rails_397ed43c6d; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -1423,6 +1472,14 @@ ALTER TABLE ONLY public.cash_movements
 
 ALTER TABLE ONLY public.payments
     ADD CONSTRAINT fk_rails_397ed43c6d FOREIGN KEY (cash_register_id) REFERENCES public.cash_registers(id);
+
+
+--
+-- Name: orders fk_rails_3dad120da9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT fk_rails_3dad120da9 FOREIGN KEY (customer_id) REFERENCES public.customers(id);
 
 
 --
@@ -1732,6 +1789,12 @@ ALTER TABLE public.deliveries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.delivery_addresses ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: integration_settings; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.integration_settings ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: order_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1835,6 +1898,13 @@ CREATE POLICY tenant_isolation ON public.delivery_addresses USING ((business_id 
 
 
 --
+-- Name: integration_settings tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.integration_settings USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
 -- Name: order_events tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1904,6 +1974,7 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260809020000'),
 ('20260804130004'),
 ('20260804130003'),
 ('20260804130002'),
