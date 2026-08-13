@@ -51,7 +51,7 @@ class OrderLifecycle
   end
 
   def start_cooking!
-    transition!("cooking_started", %i[paid], :in_kitchen, {}, { kitchen_status: :in_progress, started_at: Time.current }, broadcast: false)
+    transition!("cooking_started", %i[paid partially_paid], :in_kitchen, {}, { kitchen_status: :in_progress, started_at: Time.current }, broadcast: false)
     broadcast_kds_replace
   end
 
