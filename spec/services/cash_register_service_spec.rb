@@ -33,6 +33,15 @@ RSpec.describe CashRegisterService do
 
       expect(register.reload).to be_closed
     end
+
+    it "rejects a blank closing amount instead of closing at zero" do
+      register = within_tenant { create(:cash_register, :open, business: business, user: cashier) }
+
+      expect { described_class.close!(register: register, actual_closing_amount: "", actor: cashier) }
+        .to raise_error(ActiveRecord::RecordInvalid)
+
+      expect(register.reload).to be_open
+    end
   end
 
   describe ".record_movement!" do

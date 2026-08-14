@@ -103,6 +103,13 @@ RSpec.describe "Cash Registers", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it "rejects a blank closing amount instead of closing at zero" do
+      post close_cash_register_path(register), params: { cash_register: { actual_closing_amount: "" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(Tenancy.with_business(business) { register.reload }).to be_open
+    end
   end
 
   describe "POST /cash_registers/:id/cash_movements" do

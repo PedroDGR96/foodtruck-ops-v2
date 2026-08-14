@@ -30,10 +30,13 @@ class CashRegister < ApplicationRecord
   def close!(actual_closing_amount:, actor: nil)
     raise ShiftError, I18n.t("cash_registers.errors.already_closed") if closed?
 
-    self.actual_closing_amount = actual_closing_amount.to_d
+    amount = actual_closing_amount.to_s.strip.presence&.to_d
+    self.actual_closing_amount = amount
     self.expected_closing_amount = expected_closing
-    self.drift = (self.actual_closing_amount - expected_closing_amount).round(2)
-    self.reconciled = drift.zero?
+    if amount
+      self.drift = (amount - expected_closing_amount).round(2)
+      self.reconciled = drift.zero?
+    end
     self.closed_at = Time.current
     self.status = :closed
 
