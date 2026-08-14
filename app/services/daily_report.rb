@@ -39,7 +39,7 @@ class DailyReport
   end
 
   def by_method(orders)
-    Payment.where(order_id: orders.select(:id), status: :succeeded)
+    Payment.includes(:order).where(order_id: orders.select(:id), status: :succeeded)
            .group(:method)
            .sum(:amount)
            .transform_values(&:to_d)
