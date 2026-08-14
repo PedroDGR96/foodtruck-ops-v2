@@ -53,10 +53,35 @@ RSpec.describe MockMessagingProvider, type: :model do
       expect(results.map { |r| r[:success] }).to eq([ true, true ])
     end
 
+    it "sends sms messages and reports a cost per segment count" do
+      results = described_class.bulk_send(settings: {}, messages: [ { type: "sms", to: "55119", body: "x" * 161 } ])
+
+      expect(results.first[:success]).to be true
+      expect(results.first[:cost]).to eq(0.10)
+    end
+
     it "returns a failure for an unknown message type" do
       results = described_class.bulk_send(settings: {}, messages: [ { type: "carrier_pigeon", to: "x", body: "Hi" } ])
 
       expect(results.first[:success]).to be false
+    end
+
+    it "returns a failure for a message missing a required field" do
+      results = described_class.bulk_send(settings: {}, messages: [ { type: "whatsapp", to: "55119" } ])
+
+      expect(results.first[:success]).to be false
+      expect(results.first[:message]).to include("Malformed")
+    end
+
+    it "keeps processing the rest of the batch after a malformed message" do
+      messages = [
+        { type: "whatsapp", to: "55119" },
+        { type: "sms", to: "55119", body: "Hi" }
+      ]
+
+      results = described_class.bulk_send(settings: {}, messages: messages)
+
+      expect(results.map { |r| r[:success] }).to eq([ false, true ])
     end
   end
 end

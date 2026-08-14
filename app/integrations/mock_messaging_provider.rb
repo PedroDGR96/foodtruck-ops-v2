@@ -33,6 +33,8 @@ class MockMessagingProvider < MessagingProvider
       else
         { success: false, message: "Unsupported message type: #{message[:type]}" }
       end
+    rescue KeyError => e
+      { success: false, message: "Malformed message: #{e.message}" }
     end
   end
 
