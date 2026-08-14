@@ -22,7 +22,7 @@ class MenuQuery
   attr_reader :business, :query, :eager_load
 
   def cache_key
-    version = Business.unscoped.where(id: business.id).pick(:menu_version) || 0
+    version = Business.find(business.id)&.menu_version || 0
     [ "menu", business.id, version, query, eager_load ]
   end
 
