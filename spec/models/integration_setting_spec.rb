@@ -47,9 +47,7 @@ RSpec.describe IntegrationSetting, type: :model do
         setting = create(:integration_setting, business: business,
                                   credentials: { api_key: "plaintext-secret" })
 
-        raw = IntegrationSetting.connection.select_value(
-          "SELECT credentials FROM integration_settings WHERE id = #{IntegrationSetting.connection.quote(setting.id)}"
-        )
+        raw = IntegrationSetting.find(setting.id).read_attribute_before_type_cast("credentials")
         expect(raw).to include("plaintext-secret")
         expect(setting.credentials).to eq("api_key" => "plaintext-secret")
       end
