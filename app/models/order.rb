@@ -65,6 +65,10 @@ class Order < ApplicationRecord
     payment_status.in?(%w[pending partially_paid])
   end
 
+  def paid?
+    status == "paid"
+  end
+
   # A refund of cash payments that were recorded in a closed shift changes that
   # shift's books after the fact, so it needs owner authorization (see
   # OrderPolicy and CashRegisterLedger).

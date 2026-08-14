@@ -547,6 +547,25 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tokens (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    scope character varying NOT NULL,
+    name character varying NOT NULL,
+    token_digest character varying NOT NULL,
+    expires_at timestamp(6) without time zone,
+    last_used_at timestamp(6) without time zone,
+    active boolean DEFAULT true NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -777,6 +796,14 @@ ALTER TABLE ONLY public.products
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: tokens tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tokens
+    ADD CONSTRAINT tokens_pkey PRIMARY KEY (id);
 
 
 --
@@ -1264,6 +1291,27 @@ CREATE INDEX index_products_on_category_id_and_position ON public.products USING
 
 
 --
+-- Name: index_tokens_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tokens_on_business_id ON public.tokens USING btree (business_id);
+
+
+--
+-- Name: index_tokens_on_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_tokens_on_token_digest ON public.tokens USING btree (token_digest);
+
+
+--
+-- Name: index_tokens_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tokens_on_user_id ON public.tokens USING btree (user_id);
+
+
+--
 -- Name: index_users_on_business_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1603,6 +1651,14 @@ ALTER TABLE ONLY public.order_items
 
 
 --
+-- Name: tokens fk_rails_ac8a5d0441; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tokens
+    ADD CONSTRAINT fk_rails_ac8a5d0441 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: customers fk_rails_b73113df4b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1640,6 +1696,14 @@ ALTER TABLE ONLY public.order_items
 
 ALTER TABLE ONLY public.cash_movements
     ADD CONSTRAINT fk_rails_cc82f643e9 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: tokens fk_rails_ceb21ae632; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tokens
+    ADD CONSTRAINT fk_rails_ceb21ae632 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
 
 
 --
@@ -1975,6 +2039,7 @@ SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
 ('20260809020000'),
+('20260807120001'),
 ('20260804130004'),
 ('20260804130003'),
 ('20260804130002'),
