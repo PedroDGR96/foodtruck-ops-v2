@@ -31,7 +31,7 @@ class OrderLifecycle
   def cancel!(force: false)
     if force
       cash_refunds = order.cash_payments_refundable
-      transition!("cancelled", %i[paid in_kitchen ready], :cancelled, { override: true })
+      transition!("cancelled", %i[paid in_kitchen ready partially_paid cancelled], :cancelled, { override: true })
       refund_payments!
       record_refund_movements!(cash_refunds)
       broadcast_remove
@@ -118,7 +118,7 @@ class OrderLifecycle
 
   def broadcast_replace
     Turbo::StreamsChannel.broadcast_replace_to(
-      OrderChannel.stream_name(order.business_id),
+      OrderChannel.stream_name(Current.business.id),
       target: ActionView::RecordIdentifier.dom_id(order),
       partial: "orders/ticket",
       locals: { order: order }
@@ -127,14 +127,14 @@ class OrderLifecycle
 
   def broadcast_remove
     Turbo::StreamsChannel.broadcast_remove_to(
-      OrderChannel.stream_name(order.business_id),
+      OrderChannel.stream_name(Current.business.id),
       target: ActionView::RecordIdentifier.dom_id(order)
     )
   end
 
   def broadcast_kds_append
     Turbo::StreamsChannel.broadcast_append_to(
-      KitchenChannel.stream_name(order.business_id),
+      KitchenChannel.stream_name(Current.business.id),
       target: "kitchen-queue-#{order.order_type}",
       partial: "kitchen/ticket",
       locals: { order: order }
@@ -143,7 +143,7 @@ class OrderLifecycle
 
   def broadcast_kds_replace
     Turbo::StreamsChannel.broadcast_replace_to(
-      KitchenChannel.stream_name(order.business_id),
+      KitchenChannel.stream_name(Current.business.id),
       target: ActionView::RecordIdentifier.dom_id(order),
       partial: "kitchen/ticket",
       locals: { order: order }
@@ -152,14 +152,14 @@ class OrderLifecycle
 
   def broadcast_kds_remove
     Turbo::StreamsChannel.broadcast_remove_to(
-      KitchenChannel.stream_name(order.business_id),
+      KitchenChannel.stream_name(Current.business.id),
       target: ActionView::RecordIdentifier.dom_id(order)
     )
   end
 
   def broadcast_kds_completed
     Turbo::StreamsChannel.broadcast_prepend_to(
-      KitchenChannel.stream_name(order.business_id),
+      KitchenChannel.stream_name(Current.business.id),
       target: "kitchen-completed",
       partial: "kitchen/completed_ticket",
       locals: { order: order }

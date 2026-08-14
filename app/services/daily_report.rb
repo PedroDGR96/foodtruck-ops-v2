@@ -39,7 +39,7 @@ class DailyReport
   end
 
   def by_method(orders)
-    Payment.where(order_id: orders.select(:id), status: :succeeded)
+    Payment.includes(:order).where(order_id: orders.select(:id), status: :succeeded)
            .group(:method)
            .sum(:amount)
            .transform_values(&:to_d)
@@ -49,7 +49,7 @@ class DailyReport
     OrderItem.where(order_id: orders.select(:id))
              .group(:product_name)
              .pluck(:product_name, Arel.sql("SUM(quantity)"), Arel.sql("SUM(line_total)"))
-             .map { |name, qty, total| Row.new(product_name: name, quantity: qty, total: total.to_d) }
+             .map { |name, qty, total| Row.new(product_name: name, quantity: qty.to_d, total: total.to_d) }
              .sort_by { |row| -row.total }
   end
 
