@@ -6,6 +6,7 @@ class PosController < AuthenticatedController
     @query = params[:query].to_s.strip
     @menu = MenuQuery.call(business: Current.business, query: @query, eager_load: false)
     @open_shift = CashRegister.open.find_by(user: current_user) if current_user.cashier? || current_user.owner?
+    eager_load_cart_items
   end
 
   def add_item
@@ -76,6 +77,10 @@ class PosController < AuthenticatedController
 
   def set_draft_order
     @draft_order = OrderCart.draft_for(current_user)
+  end
+
+  def eager_load_cart_items
+    @draft_order = Current.business.orders.includes(order_items: :order_item_addons).find(@draft_order.id)
   end
 
   def customer_params

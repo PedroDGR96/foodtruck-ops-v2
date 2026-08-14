@@ -70,6 +70,25 @@ RSpec.describe "Point of Sale", type: :request do
 
       expect(Tenancy.with_business(business) { order.order_items.empty? }).to be(true)
     end
+
+    it "eager-loads cart items and addons so rendering the POS is not N+1" do
+      product
+      small = select_count { get "/pos" }
+
+      group = Tenancy.with_business(business) do
+        create(:product_addon_group, business: business, product: product)
+      end
+      addons = Tenancy.with_business(business) do
+        create_list(:product_addon, 3, business: business, product_addon_group: group)
+      end
+      addons.each do |addon|
+        post "/pos/cart", params: { product_id: product.id, quantity: 1, addon_ids: [ addon.id ] }
+      end
+      big = select_count { get "/pos" }
+
+      expect(response).to have_http_status(:ok)
+      expect(big - small).to be <= 4
+    end
   end
 
   describe "confirmation" do
