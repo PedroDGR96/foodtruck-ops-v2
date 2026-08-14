@@ -5,7 +5,7 @@ class CashRegistersController < AuthenticatedController
     authorize CashRegister
     @today = BusinessDay.window(Current.business)
     @current_shift = CashRegister.open.find_by(user: current_user)
-    @registers = Current.business.cash_registers.order(opened_at: :desc).limit(30)
+    @registers = Current.business.cash_registers.includes(:user).order(opened_at: :desc).limit(30)
   end
 
   def show

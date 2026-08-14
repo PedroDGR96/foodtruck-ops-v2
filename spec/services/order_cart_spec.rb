@@ -74,6 +74,30 @@ RSpec.describe OrderCart do
       expect { OrderCart.add_item(order, product: product) }
         .to raise_error(OrderCart::CartClosedError)
     end
+
+    it "refuses a variant that belongs to a different product" do
+      product = within_tenant { create(:product, business: business) }
+      other_product = within_tenant { create(:product, business: business) }
+      variant = within_tenant { create(:product_variant, business: business, product: other_product) }
+      order = within_tenant { create(:order, business: business) }
+
+      expect { OrderCart.add_item(order, product: product, variant: variant) }
+        .to raise_error(OrderCart::CartClosedError, /pertence/)
+    end
+
+    it "snapshots addon names and prices when adding with addons" do
+      product = within_tenant { create(:product, business: business) }
+      group = within_tenant { create(:product_addon_group, business: business, product: product) }
+      addon = within_tenant { create(:product_addon, business: business, product_addon_group: group, price: 2.5) }
+      order = within_tenant { create(:order, business: business) }
+
+      OrderCart.add_item(order, product: product, addons: [ addon ])
+
+      item = order.order_items.first
+      expect(item.order_item_addons.size).to eq(1)
+      expect(item.order_item_addons.first.name).to eq(addon.name)
+      expect(item.order_item_addons.first.price).to eq(2.5)
+    end
   end
 
   describe "#update_quantity" do

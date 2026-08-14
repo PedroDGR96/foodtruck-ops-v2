@@ -19,6 +19,19 @@ RSpec.describe "Cash Registers", type: :request do
         logout(:user)
       end
     end
+
+    it "loads the shift history without querying per-register users" do
+      login_as owner, scope: :user
+      Tenancy.with_business(business) { create(:cash_register, :closed, business: business) }
+      get cash_registers_path
+      small = select_count { get cash_registers_path }
+
+      Tenancy.with_business(business) { create_list(:cash_register, 2, :closed, business: business) }
+      big = select_count { get cash_registers_path }
+
+      expect(response).to have_http_status(:ok)
+      expect(big - small).to be <= 1
+    end
   end
 
   describe "GET /cash_registers/:id" do

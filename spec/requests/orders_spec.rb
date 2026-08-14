@@ -14,6 +14,17 @@ RSpec.describe "Orders", type: :request do
     @order ||= Tenancy.with_business(business) { create(:order, business: business, **attrs) }
   end
 
+  def delivery_order(business)
+    Tenancy.with_business(business) do
+      order = build(:order, :delivery, business: business)
+      order.build_delivery_address(
+        street: "Rua X", number: "1", neighborhood: "Centro", city: "São Paulo", state: "SP"
+      )
+      order.save!
+      order
+    end
+  end
+
   def paid_order(status:, total:)
     Tenancy.with_business(business) do
       o = create(:order, :open, business: business, total: total, subtotal: total)
@@ -32,6 +43,20 @@ RSpec.describe "Orders", type: :request do
         expect(response).to have_http_status(:ok)
         logout(:user)
       end
+    end
+
+    it "loads the order list without querying per-order deliveries" do
+      login_as cashier, scope: :user
+      delivery_order(business)
+      get orders_path
+      small = select_count { get orders_path }
+
+      delivery_order(business)
+      delivery_order(business)
+      big = select_count { get orders_path }
+
+      expect(response).to have_http_status(:ok)
+      expect(big - small).to be <= 1
     end
 
     it "shows an order with its items, payments and events" do
