@@ -59,4 +59,46 @@ RSpec.describe "Kitchen display flow", type: :system do
     expect(sound).to have_content(I18n.t("kitchen.sound_off"))
     expect(page).not_to have_selector("audio[autoplay]")
   end
+
+  it "shows customer and address for a delivery order and counts the rail" do
+    within_tenant do
+      maria = create(:customer, business: business, name: "Maria Silva")
+      o = create(:order, :open, business: business, customer: maria,
+        total: 12.0, subtotal: 10.0, delivery_fee: 2.0)
+      o.order_type = "delivery"
+      o.build_delivery_address(
+        street: "Rua Augusta", number: "455", neighborhood: "Consolação",
+        city: "São Paulo", state: "SP"
+      )
+      o.save!
+      create(:payment, order: o, amount: 12.0)
+      o.update!(status: "in_kitchen", payment_status: :paid, kitchen_status: "in_progress")
+    end
+
+    visit "/kitchen"
+
+    expect(page).to have_content(I18n.t("kitchen.customer"))
+    expect(page).to have_content("Maria Silva")
+    expect(page).to have_content(I18n.t("kitchen.address"))
+    expect(page).to have_content("Rua Augusta, 455")
+    expect(page).to have_content("Consolação, São Paulo - SP")
+    expect(page).to have_css("#kitchen-queue-delivery")
+    expect(page).to have_content("(1)")
+  end
+
+  it "shows addons on completed tickets" do
+    within_tenant do
+      product = create(:product, business: business, price: 5.0)
+      o = create(:order, :open, business: business, total: 7.5, subtotal: 7.5)
+      item = create(:order_item, order: o, product: product, product_name: "X-Burger",
+        unit_price: 5.0, quantity: 1, line_total: 7.5)
+      create(:order_item_addon, order_item: item, name: "Queijo", price: 2.5)
+      create(:payment, order: o, amount: 7.5)
+      o.update!(status: "ready", payment_status: :paid, kitchen_status: "done", finished_at: Time.current)
+    end
+
+    visit "/kitchen"
+
+    expect(page).to have_content("+ Queijo")
+  end
 end

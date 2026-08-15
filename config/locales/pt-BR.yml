@@ -547,6 +547,9 @@ pt-BR:
     sound_on: "Som ligado"
     sound_off: "Som desligado"
     sound_hint: "Ative o som para receber um alerta quando novos pedidos chegarem."
+    customer: "Cliente"
+    address: "Endereço"
+    no_customer: "Sem cliente"
   daily_reports:
     title: "Relatório diário"
     date: "Data"
