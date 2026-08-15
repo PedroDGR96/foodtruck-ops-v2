@@ -437,7 +437,10 @@ pt-BR:
     customer_created: "Cliente %{name} criado e vinculado ao pedido."
     shift_open: "Turno aberto em %{when}"
     shift_closed_warning: "Nenhum turno aberto."
+    shift_required: "Abra um turno de caixa antes de confirmar o pedido."
     open_shift: "Abrir turno"
+    product_not_found: "Produto não encontrado."
+    customer_not_found: "Cliente não encontrado."
 
   customers:
     index:

@@ -1,5 +1,6 @@
 class PosController < AuthenticatedController
   before_action :set_draft_order, only: %i[show add_item update_item remove_item set_customer clear_customer confirm]
+  before_action :require_open_shift, only: %i[confirm]
 
   def show
     authorize @draft_order, :create?
@@ -19,6 +20,8 @@ class PosController < AuthenticatedController
     redirect_to pos_path, notice: t("pos.added", name: product.name)
   rescue OrderCart::CartClosedError => e
     redirect_to pos_path, alert: e.message
+  rescue ActiveRecord::RecordNotFound
+    redirect_to pos_path, alert: t("pos.product_not_found")
   end
 
   def update_item
@@ -47,6 +50,8 @@ class PosController < AuthenticatedController
     redirect_to pos_path, notice: notice
   rescue OrderCart::CartClosedError => e
     redirect_to pos_path, alert: e.message
+  rescue ActiveRecord::RecordNotFound
+    redirect_to pos_path, alert: t("pos.customer_not_found")
   rescue ActiveRecord::RecordInvalid => e
     redirect_to pos_path, alert: e.record.errors.full_messages.to_sentence
   end
@@ -77,6 +82,12 @@ class PosController < AuthenticatedController
 
   def set_draft_order
     @draft_order = OrderCart.draft_for(current_user)
+  end
+
+  def require_open_shift
+    return if CashRegister.open.find_by(user: current_user)
+
+    redirect_to pos_path, alert: t("pos.shift_required")
   end
 
   def eager_load_cart_items

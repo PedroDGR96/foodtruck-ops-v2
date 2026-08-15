@@ -49,6 +49,15 @@ RSpec.describe "Point of Sale", type: :request do
       expect(order.total).to eq(25.0)
     end
 
+    it "redirects with an alert when the product does not exist" do
+      post "/pos/cart", params: { product_id: 0, quantity: 1 }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq(I18n.t("pos.product_not_found"))
+      order = Tenancy.with_business(business) { Order.last }
+      expect(Tenancy.with_business(business) { order.order_items.size }).to eq(0)
+    end
+
     it "updates the quantity of an existing line" do
       product
       post "/pos/cart", params: { product_id: product.id, quantity: 1 }
@@ -92,7 +101,10 @@ RSpec.describe "Point of Sale", type: :request do
   end
 
   describe "confirmation" do
-    before { login_as cashier, scope: :user }
+    before do
+      login_as cashier, scope: :user
+      Tenancy.with_business(business) { create(:cash_register, :open, user: cashier, business: business) }
+    end
 
     it "confirms a non-empty cart and redirects to payment" do
       product
@@ -110,6 +122,18 @@ RSpec.describe "Point of Sale", type: :request do
 
       expect(response).to redirect_to(pos_path)
       expect(flash[:alert]).to be_present
+    end
+
+    it "refuses to confirm without an open shift" do
+      product
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+
+      Tenancy.with_business(business) { CashRegister.open.update_all(status: :closed) }
+
+      post "/pos/confirm", params: { order: { order_type: "local" } }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq(I18n.t("pos.shift_required"))
     end
 
     it "confirms a delivery order with an address and creates a delivery record" do

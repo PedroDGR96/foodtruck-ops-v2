@@ -55,6 +55,6 @@ class CashRegistersController < AuthenticatedController
   end
 
   def actual_closing_amount_param
-    params.fetch(:cash_register).fetch(:actual_closing_amount)
+    params.dig(:cash_register, :actual_closing_amount)
   end
 end

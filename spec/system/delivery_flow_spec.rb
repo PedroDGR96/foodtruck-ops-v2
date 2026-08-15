@@ -8,6 +8,7 @@ RSpec.describe "Cashier delivery flow", type: :system do
     driven_by :rack_test
     login_as cashier, scope: :user
     Tenancy.with_business(business) { business.update!(delivery_fee: 8.0) }
+    Tenancy.with_business(business) { create(:cash_register, :open, user: cashier, business: business) }
   end
 
   def with_tenancy(&block)

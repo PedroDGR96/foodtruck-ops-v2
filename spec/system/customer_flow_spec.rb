@@ -7,6 +7,7 @@ RSpec.describe "Cashier customer flow", type: :system do
   before do
     driven_by :rack_test
     login_as cashier, scope: :user
+    Tenancy.with_business(business) { create(:cash_register, :open, user: cashier, business: business) }
   end
 
   def with_tenancy(&block)
