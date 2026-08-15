@@ -22,7 +22,7 @@ class MenuQuery
   attr_reader :business, :query, :eager_load
 
   def cache_key
-    version = Business.find(business.id)&.menu_version || 0
+    version = Business.where(id: business.id).pick(:menu_version) || 0
     [ "menu", business.id, version, query, eager_load ]
   end
 
@@ -30,11 +30,15 @@ class MenuQuery
     products = Product.available.ordered
       .where(category: business.categories.active)
     products = products.includes(:product_addon_groups, :product_variants, image_attachment: :blob) if eager_load
-    products = products.where("products.name ILIKE ?", "%#{query}%") if query.present?
+    products = products.where("products.name ILIKE ?", "%#{sanitize_like(query)}%") if query.present?
 
     categories = business.categories.active.where(id: products.select(:category_id)).ordered
     categories.map do |category|
       [ category, products.select { |product| product.category_id == category.id } ]
     end
+  end
+
+  def sanitize_like(term)
+    ActiveRecord::Base.sanitize_sql_like(term)
   end
 end

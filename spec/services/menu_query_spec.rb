@@ -54,6 +54,18 @@ RSpec.describe MenuQuery, type: :service do
     expect(menu.flat_map { |_c, products| products.map(&:name) }).to contain_exactly("X-Burger", "X-Burger Bacon")
   end
 
+  it "escapes LIKE wildcards in the search term" do
+    lanches = with_business { Category.find_by(name: "Lanches") }
+    with_business { create(:product, business: business, category: lanches, name: "Promo 100%") }
+    with_business { create(:product, business: business, category: lanches, name: "Promo 100") }
+    with_business { create(:product, business: business, category: lanches, name: "A_sa") }
+
+    expect(MenuQuery.call(business: business, query: "100%").flat_map { |_c, products| products.map(&:name) })
+      .to contain_exactly("Promo 100%")
+    expect(MenuQuery.call(business: business, query: "A_sa").flat_map { |_c, products| products.map(&:name) })
+      .to contain_exactly("A_sa")
+  end
+
   it "invalidates the cached menu when a menu record changes" do
     lanches = with_business { Category.find_by(name: "Lanches") }
     with_business { create(:product, business: business, category: lanches, name: "X-Burger") }
