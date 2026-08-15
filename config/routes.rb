@@ -23,15 +23,11 @@ Rails.application.routes.draw do
     post :force_cancel, on: :member
     post :refund, on: :member
     resources :payments, only: %i[new create]
-    get "checkout/:order_id", to: "order_payment#show", as: "new_order_payment"
-    post "checkout/:order_id", to: "order_payment#create", as: "create_order_payment"
-    get "checkout_step/:step/:order_id", to: "order_payment#show", as: "checkout_step"
   end
 
-  resources :order_payment, only: [:new, :create], controller: "order_payment" do
-    # New action for showing the payment form; create is routed above
-  end
-
+  get "checkout/:order_id", to: "order_payment#show", as: "checkout"
+  post "checkout/:order_id", to: "order_payment#create"
+  get "checkout/:order_id/step/:step", to: "order_payment#show", as: "checkout_step"
   resources :cash_registers, only: %i[index show new create] do
     post :close, on: :member
     resources :cash_movements, only: %i[create]

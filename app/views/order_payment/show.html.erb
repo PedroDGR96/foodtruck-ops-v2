@@ -1,40 +1,41 @@
-<h1>PAYMENT FOR ORDER <%= @order.number %></h1>
+<h1>PAYMENT FOR ORDER #<%= @order.id %></h1>
 
-<p><strong>Status:</strong> <span class="payment-status-<%= @order.payment_status %>"><%= @order.human_attribute(:payment_status) %></span></p>
+<p><strong>Status:</strong> <span class="payment-status-<%= @order.payment_status %>"><%= t("orders.payment_statuses.#{@order.payment_status}") %></span></p>
 
 <div class="summary">
   <div class="row"><span class="label">Remaining due:</span><span class="value"><%= number_to_currency(@order.balance_due) %></span></div>
   <div class="row"><span class="label">Amount to pay now:</span><span class="value value-highlight"><%= number_to_currency(@payment.amount) %></span></div>
 </div>
 
-<% unless @order.payment_status.in?([:paid, :refunded]) %>
- <%= form_with model: @payment, url: create_order_payment_path(@order), method: :post do |form| %>
-   <div class="form-group">
-     <%= form.label :amount, "Amount" %><br>
-     <%= form.text_field :amount, step: 0.01, size: 8, value: @payment.amount.round(2) %>
-     <small>(Recommended: <%= number_to_currency(@payment.amount) %>)</small>
-   </div>
+<% unless @order.payment_status.in?(%w[paid refunded]) %>
+  <%= form_with model: @payment, url: checkout_path(@order), method: :post do |form| %>
+    <div class="form-group">
+      <%= form.label :amount, "Amount" %><br>
+      <%= form.text_field :amount, step: 0.01, size: 8, value: @payment.amount.round(2) %>
+      <small>(Recommended: <%= number_to_currency(@payment.amount) %>)</small>
+    </div>
 
-   <div class="form-actions">
-     <%= form.submit "Confirm Payment", class: "btn btn-primary" %>
-     <%= link_to "Cancel Order & Return", orders_path, class: "btn btn-secondary" %>
-   </div>
- <% else %>
- <p>This order has already been paid. No further payment is required.</p>
- <% end %>
+    <div class="form-actions">
+      <%= form.submit "Confirm Payment", class: "btn btn-primary" %>
+      <%= link_to "Cancel Order & Return", orders_path, class: "btn btn-secondary" %>
+    </div>
+  <% end %>
+<% else %>
+  <p>This order has already been paid. No further payment is required.</p>
+<% end %>
 
 <hr>
 <h3>Payment History</h3>
 <% if @order.payments.successful.any? %>
   <table class="payments-table">
     <thead>
-      <tr><th method></th><th status></th><th>Amount</th><th>Time</th></tr>
+      <tr><th>Method</th><th>Status</th><th>Amount</th><th>Time</th></tr>
     </thead>
     <tbody>
-      <% @order.payments.successful.includes(:cash_register).each do |p| %>
+      <% @order.payments.successful.order(created_at: :desc).each do |p| %>
         <tr>
-          <td class="method method-<%= p.method %>"><%= p.human_attribute(:method) %></td>
-          <td><%= p.human_attribute(:status) %></td>
+          <td class="method method-<%= p.method %>"><%= payment_method_label(p.method) %></td>
+          <td><%= t("orders.payment_statuses.#{p.status}") %></td>
           <td><%= number_to_currency(p.amount) %></td>
           <td><%= l(p.created_at, format: :short) %></td>
         </tr>
@@ -42,5 +43,5 @@
     </tbody>
   </table>
 <% else %>
- <p>No payments recorded yet.</p>
+  <p>No payments recorded yet.</p>
 <% end %>
