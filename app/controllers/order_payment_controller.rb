@@ -7,7 +7,7 @@ class OrderPaymentController < AuthenticatedController
     if [@step, @step + 1].cover?(@order.payment_status.to_s)
       @payment = build_payment_for_step(@order, @step)
     else
-      redirect_to checkout_path(@order), alert: "Invalid payment step"
+      redirect_to new_order_payment_path(@order), alert: "Invalid payment step"
     end
   end
 
@@ -18,12 +18,12 @@ class OrderPaymentController < AuthenticatedController
 
     if amount > 0
       record_payment(order.id, amount)
-      redirect_to checkout_step_path(step: @step + 1, order_id: order.id), notice: "Payment recorded"
+      redirect_to new_order_payment_path(order), notice: "Payment recorded"
     else
-      redirect_to checkout_step_path(step: @step, order_id: order.id), alert: "Amount must be greater than zero"
+      redirect_to new_order_payment_path(order), alert: "Amount must be greater than zero"
     end
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to checkout_step_path(step: @step, order_id: params[:order_id]), alert: e.record.errors.full_messages.to_sentence
+    redirect_to new_order_payment_path(order), alert: e.record.errors.full_messages.to_sentence
   end
 
   private
