@@ -154,10 +154,13 @@ pt-BR:
     title: "Bem-vindo, %{name}"
     title_short: "Início"
     signed_in_as: "Você está conectado como %{role} da empresa %{business}."
-    manage_staff: "Gerenciar equipe"
-    business_settings: "Configurações da empresa"
-    placeholder: "As telas de caixa e cozinha chegam com o marco de ponto de venda."
-    empty_title: "Bem-vindo, %{role}"
+    today_gross: "Faturamento de hoje"
+    today_orders: "Pedidos de hoje"
+    active_orders: "Pedidos em andamento"
+    kitchen_queue: "Fila da cozinha"
+    shift_open: "Turno de caixa aberto desde %{since}."
+    shift_closed: "Você não tem um turno de caixa aberto."
+    quick_actions: "Atalhos"
 
   sessions:
     sign_in: "Entrar"
