@@ -211,7 +211,7 @@ CREATE TABLE public.cash_movements (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     CONSTRAINT cash_movements_amount_non_negative CHECK ((amount >= (0)::numeric)),
-    CONSTRAINT cash_movements_type_is_valid CHECK (((movement_type)::text = ANY ((ARRAY['income'::character varying, 'expense'::character varying])::text[])))
+    CONSTRAINT cash_movements_type_is_valid CHECK (((movement_type)::text = ANY (ARRAY[('income'::character varying)::text, ('expense'::character varying)::text])))
 );
 
 ALTER TABLE ONLY public.cash_movements FORCE ROW LEVEL SECURITY;
@@ -292,7 +292,7 @@ CREATE TABLE public.deliveries (
     status character varying DEFAULT 'pending'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT deliveries_status_is_valid CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'out_for_delivery'::character varying, 'delivered'::character varying])::text[])))
+    CONSTRAINT deliveries_status_is_valid CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('out_for_delivery'::character varying)::text, ('delivered'::character varying)::text])))
 );
 
 ALTER TABLE ONLY public.deliveries FORCE ROW LEVEL SECURITY;
