@@ -76,7 +76,7 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
 
       get checkout_path(order)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("This order has already been paid")
+      expect(response.body).to include("Este pedido já foi pago")
     end
   end
 
@@ -88,7 +88,7 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
 
       post checkout_path(order), params: { payment: { amount: 40.0 } }
 
-      expect(response).to redirect_to(checkout_path(order))
+      expect(response).to redirect_to(order_path(order))
       expect(order_state(order)).to be_paid
       expect(payment_count(order)).to eq(1)
     end
@@ -103,6 +103,7 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
 
       post checkout_path(order), params: { payment: { amount: 25.0 } }
 
+      expect(response).to redirect_to(order_path(order))
       expect(order_state(order)).to be_paid
     end
 
@@ -113,6 +114,18 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
 
       expect(response).to redirect_to(checkout_path(order))
       expect(order_state(order)).to be_open
+    end
+
+    it "records the payment with the selected method" do
+      order = open_order
+
+      post checkout_path(order), params: { payment: { method: "pix", amount: 40.0 } }
+
+      expect(response).to redirect_to(order_path(order))
+      expect(order_state(order)).to be_paid
+      payment = Tenancy.with_business(business) { order.payments.last }
+      expect(payment.method).to eq("pix")
+      expect(payment.amount).to eq(40.0)
     end
 
     it "redirects with an alert when the amount is zero" do
@@ -133,6 +146,23 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
       expect(response).to redirect_to(checkout_path(order))
       expect(flash[:alert]).to be_present
       expect(payment_count(order)).to eq(0)
+    end
+
+    it "redirects with an alert when the order no longer accepts payment" do
+      order = open_order
+      post checkout_path(order), params: { payment: { amount: 15.0 } }
+      expect(order_state(order)).to be_partially_paid
+
+      Tenancy.with_business(business) do
+        OrderLifecycle.new(order, cashier).start_cooking!
+      end
+      expect(order_state(order)).to be_in_kitchen
+
+      post checkout_path(order), params: { payment: { amount: 25.0 } }
+
+      expect(response).to redirect_to(checkout_path(order))
+      expect(flash[:alert]).to eq(I18n.t("orders.cannot_pay"))
+      expect(payment_count(order)).to eq(1)
     end
 
     it "redirects with an alert for an already paid order" do

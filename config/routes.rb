@@ -22,7 +22,6 @@ Rails.application.routes.draw do
     post :cancel, on: :member
     post :force_cancel, on: :member
     post :refund, on: :member
-    resources :payments, only: %i[new create]
   end
 
   get "checkout/:order_id", to: "order_payment#show", as: "checkout"

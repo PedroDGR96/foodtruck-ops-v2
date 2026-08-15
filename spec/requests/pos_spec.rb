@@ -101,7 +101,7 @@ RSpec.describe "Point of Sale", type: :request do
 
       post "/pos/confirm", params: { order: { order_type: "local" } }
 
-      expect(response).to redirect_to(new_order_payment_path(order))
+      expect(response).to redirect_to(checkout_path(order))
       expect(Tenancy.with_business(business) { order.reload }).to be_open
       expect(Tenancy.with_business(business) { order.order_events.last.event }).to eq("confirmed")
     end
@@ -129,7 +129,7 @@ RSpec.describe "Point of Sale", type: :request do
         }
       }
 
-      expect(response).to redirect_to(new_order_payment_path(order))
+      expect(response).to redirect_to(checkout_path(order))
       Tenancy.with_business(business) do
         order.reload
         expect(order).to be_open

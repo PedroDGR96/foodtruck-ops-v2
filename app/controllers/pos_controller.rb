@@ -66,7 +66,7 @@ class PosController < AuthenticatedController
 
     OrderLifecycle.new(@draft_order, current_user).confirm!
     @draft_order.create_delivery! if @draft_order.delivery?
-    redirect_to new_order_payment_path(@draft_order), notice: t("orders.confirmed")
+    redirect_to checkout_path(@draft_order), notice: t("orders.confirmed")
   rescue OrderCart::CartClosedError => e
     redirect_to pos_path, alert: e.message
   rescue ActiveRecord::RecordInvalid => e

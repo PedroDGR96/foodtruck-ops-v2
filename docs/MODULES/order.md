@@ -121,6 +121,11 @@ payment, recomputes `payment_status`, and advances the order to
 `partially_paid`/`paid` when the accumulated amount reaches `total`. Refunds
 mark successful payments `refunded` and set `payment_status = refunded`.
 
+The checkout flow (`OrderPaymentController`, `/checkout/:id`) is the single
+payment surface: it shows the recommended step amount, a method selector
+(`cash`/`pix`/`card`), the payment history, and posts to `record_payment!`.
+A full payment redirects to the order ticket; a partial one stays on checkout.
+
 ## Real-time
 
 `OrderLifecycle` broadcasts Turbo Streams (`broadcast_replace_to`/`broadcast_remove_to`)
@@ -129,5 +134,6 @@ open ticket board updates live for every transition.
 
 ## Routes
 
-`/orders` (index/show), cancel/force_cancel/refund on a member, nested
-`/orders/:id/payments/new` (create), and the POS surface under `/pos`.
+`/orders` (index/show), cancel/force_cancel/refund on a member, checkout
+(`/checkout/:order_id`, `GET` form + `POST` payment), and the POS surface
+under `/pos` (confirm redirects into checkout).

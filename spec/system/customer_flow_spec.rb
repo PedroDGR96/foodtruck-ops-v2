@@ -40,7 +40,7 @@ RSpec.describe "Cashier customer flow", type: :system do
     expect(page).to have_content("Pedido confirmado")
 
     fill_in "payment_amount", with: "15.00"
-    click_button "Pagar"
+    click_button "Confirmar pagamento"
     expect(page).to have_content("Pagamento recebido")
 
     click_link "João Souza"

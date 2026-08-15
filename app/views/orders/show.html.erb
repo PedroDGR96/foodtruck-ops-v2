@@ -89,7 +89,7 @@
     <div class="card space-y-3 p-4">
       <h2 class="text-lg font-semibold"><%= t("orders.actions") %></h2>
       <% if @order.pending_payment? && policy(@order).pay? %>
-        <%= link_to t("orders.collect_payment"), new_order_payment_path(@order), class: "btn btn-primary w-full" %>
+        <%= link_to t("orders.collect_payment"), checkout_path(@order), class: "btn btn-primary w-full" %>
       <% end %>
       <% if policy(@order).cancel? %>
         <%= button_to t("orders.cancel_order"), cancel_order_path(@order), method: :post, class: "btn btn-secondary w-full" %>
