@@ -98,6 +98,46 @@ RSpec.describe OrderCart do
       expect(item.order_item_addons.first.name).to eq(addon.name)
       expect(item.order_item_addons.first.price).to eq(2.5)
     end
+
+    it "merges repeated adds with the same addon set" do
+      product = within_tenant { create(:product, business: business, price: 10.0) }
+      group = within_tenant { create(:product_addon_group, business: business, product: product) }
+      addon = within_tenant { create(:product_addon, business: business, product_addon_group: group, price: 2.0) }
+      order = within_tenant { create(:order, business: business) }
+
+      OrderCart.add_item(order, product: product, addons: [ addon ], quantity: 1)
+      OrderCart.add_item(order, product: product, addons: [ addon ], quantity: 2)
+
+      expect(order.order_items.size).to eq(1)
+      expect(order.order_items.first.quantity).to eq(3)
+    end
+
+    it "keeps different addon sets on separate lines" do
+      product = within_tenant { create(:product, business: business, price: 10.0) }
+      group = within_tenant { create(:product_addon_group, business: business, product: product) }
+      cheese = within_tenant { create(:product_addon, business: business, product_addon_group: group, name: "Queijo", price: 2.0) }
+      bacon = within_tenant { create(:product_addon, business: business, product_addon_group: group, name: "Bacon", price: 3.0) }
+      order = within_tenant { create(:order, business: business) }
+
+      OrderCart.add_item(order, product: product, addons: [ cheese ])
+      OrderCart.add_item(order, product: product, addons: [ bacon ])
+
+      expect(order.order_items.size).to eq(2)
+    end
+
+    it "keeps a plain add on a separate line from an addon line" do
+      product = within_tenant { create(:product, business: business, price: 10.0) }
+      group = within_tenant { create(:product_addon_group, business: business, product: product) }
+      cheese = within_tenant { create(:product_addon, business: business, product_addon_group: group, name: "Queijo", price: 2.0) }
+      order = within_tenant { create(:order, business: business) }
+
+      OrderCart.add_item(order, product: product, addons: [ cheese ])
+      OrderCart.add_item(order, product: product)
+
+      expect(order.order_items.size).to eq(2)
+      expect(order.order_items.first.quantity).to eq(1)
+      expect(order.order_items.last.quantity).to eq(1)
+    end
   end
 
   describe "#update_quantity" do

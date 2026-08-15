@@ -48,13 +48,10 @@ class OrderCart
 
     quantity = [ quantity.to_i, 1 ].max
     addons = Array(addons)
+    addon_ids = addons.map(&:id).to_set
 
-    existing = if order.order_items.loaded?
-        order.order_items.to_a.find { |item| item.product_id == product.id && item.product_variant_id == variant&.id }
-    else
-        order.order_items.find_by(product_id: product.id, product_variant_id: variant&.id)
-    end
-    if existing && addons.empty?
+    existing = find_existing_line(product, variant)
+    if existing && same_addon_set?(existing, addon_ids)
       existing.update!(quantity: existing.quantity + quantity)
     else
       build_new_item(product, quantity, variant, addons)
@@ -154,6 +151,18 @@ class OrderCart
     else
       order.order_items.find(item_id)
     end
+  end
+
+  def find_existing_line(product, variant)
+    if order.order_items.loaded?
+      order.order_items.to_a.find { |item| item.product_id == product.id && item.product_variant_id == variant&.id }
+    else
+      order.order_items.find_by(product_id: product.id, product_variant_id: variant&.id)
+    end
+  end
+
+  def same_addon_set?(item, addon_ids)
+    item.order_item_addons.map(&:product_addon_id).to_set == addon_ids
   end
 
   def ensure_same_business!(product, variant)
