@@ -32,6 +32,11 @@ group :development, :test do
   gem "selenium-webdriver"
   gem "simplecov", require: false
   gem "bullet"
+  gem "rails-controller-testing"
+end
+
+group :development do
+  gem "web-console"
 end
 
 group :development do

@@ -25,6 +25,9 @@ Rails.application.routes.draw do
     resources :payments, only: %i[new create]
   end
 
+  get "checkout/:order_id", to: "order_payment#show", as: "checkout"
+  post "checkout/:order_id", to: "order_payment#create"
+  get "checkout/:order_id/step/:step", to: "order_payment#show", as: "checkout_step"
   resources :cash_registers, only: %i[index show new create] do
     post :close, on: :member
     resources :cash_movements, only: %i[create]
