@@ -1,5 +1,7 @@
 business = Business.find_by!(name: "FoodTruck Ops")
 Tenancy.with_business(business) do
+  business.update!(delivery_fee: 8.00) unless business.delivery_fee.present?
+
   category = Category.find_or_create_by!(name: "Lanches") do |c|
     c.business = business
   end
@@ -78,6 +80,37 @@ Tenancy.with_business(business) do
     OrderLifecycle.new(completed, kitchen_user).start_cooking!
     OrderLifecycle.new(completed, kitchen_user).mark_ready!
     OrderLifecycle.new(completed, cashier).complete!
+  end
+
+  # Seed one delivery order (once) so the kitchen delivery rail and the order
+  # ticket show the address. Tagged via gateway_reference for idempotency.
+  unless business.payments.exists?(gateway_reference: "demo_delivery")
+    kitchen_user = User.find_by!(email: "kitchen@foodtruck.local")
+    maria = Customer.find_or_create_by!(business: business, phone: "11912345678") do |c|
+      c.name = "Maria Silva"
+    end
+
+    delivery_order = business.orders.build(customer: maria)
+    [ x_burger, batata_frita ].each do |product|
+      delivery_order.order_items.build(
+        product: product, product_name: product.name, unit_price: product.price, quantity: 1
+      )
+    end
+    delivery_order.order_type = "delivery"
+    delivery_order.delivery_fee = business.delivery_fee
+    delivery_order.subtotal = delivery_order.order_items.sum { |item| (item.unit_price * item.quantity).round(2) }
+    delivery_order.total = (delivery_order.subtotal + delivery_order.delivery_fee).round(2)
+    delivery_order.build_delivery_address(
+      street: "Rua Augusta", number: "455", neighborhood: "Consolação",
+      city: "São Paulo", state: "SP", zip: "01304-000"
+    )
+    delivery_order.save!
+    OrderLifecycle.new(delivery_order, cashier).confirm!
+    delivery_order.create_delivery!
+    OrderLifecycle.new(delivery_order, cashier).record_payment!(
+      delivery_order.payments.build(method: "pix", amount: delivery_order.total, gateway_reference: "demo_delivery")
+    )
+    OrderLifecycle.new(delivery_order, kitchen_user).start_cooking!
   end
 
   puts "Demo data ensured: category=#{category.name}, products=#{products.size}, " \
