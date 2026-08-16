@@ -13,6 +13,7 @@
           <th class="px-4 py-3 font-medium"><%= t("orders.number") %></th>
           <th class="px-4 py-3 font-medium"><%= t("orders.order_type") %></th>
           <th class="px-4 py-3 font-medium"><%= t("orders.status") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("orders.payment_status") %></th>
           <th class="px-4 py-3 text-right font-medium"><%= t("orders.total") %></th>
           <th class="px-4 py-3 font-medium"><%= t("orders.created_at") %></th>
         </tr>
@@ -28,6 +29,9 @@
               <% else %>
                 <span class="badge <%= order_status_badge_class(order.status) %>"><%= t("orders.statuses.#{order.status}") %></span>
               <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="badge <%= order_status_badge_class(order.payment_status) %>"><%= t("orders.payment_statuses.#{order.payment_status}") %></span>
             </td>
             <td class="px-4 py-3 text-right font-semibold"><%= format_money(order.total) %></td>
             <td class="px-4 py-3 text-slate-500 dark:text-slate-400"><%= format_datetime(order.created_at) %></td>

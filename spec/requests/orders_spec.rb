@@ -45,6 +45,30 @@ RSpec.describe "Orders", type: :request do
       end
     end
 
+    it "shows each order's payment status on the list" do
+      login_as cashier, scope: :user
+      paid_delivery = Tenancy.with_business(business) do
+        order = build(:order, :delivery, business: business, total: 100.0, subtotal: 95.0, payment_status: :paid)
+        order.build_delivery_address(
+          street: "Rua Augusta", number: "455", neighborhood: "Consolação",
+          city: "São Paulo", state: "SP"
+        )
+        order.save!
+        order
+      end
+      partial = Tenancy.with_business(business) do
+        create(:order, :open, business: business, total: 50.0, subtotal: 50.0, payment_status: :partially_paid)
+      end
+
+      get orders_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(I18n.t("orders.payment_statuses.paid"))
+      expect(response.body).to include(I18n.t("orders.payment_statuses.partially_paid"))
+      expect(response.body).to include("##{paid_delivery.id}")
+      expect(response.body).to include("##{partial.id}")
+    end
+
     it "loads the order list without querying per-order deliveries" do
       login_as cashier, scope: :user
       delivery_order(business)
