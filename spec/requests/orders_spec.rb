@@ -173,4 +173,75 @@ RSpec.describe "Orders", type: :request do
       expect(response).to redirect_to(order_path(open_order))
     end
   end
+
+  describe "delivery status" do
+    it "marks a delivery out for delivery" do
+      login_as cashier, scope: :user
+      dlv = delivery_order(business)
+      Tenancy.with_business(business) { dlv.create_delivery!(courier_name: "Carlos") }
+
+      post "/orders/#{dlv.id}/out_for_delivery"
+
+      expect(response).to redirect_to(order_path(dlv))
+      expect(Tenancy.with_business(business) { dlv.delivery.reload.status }).to eq("out_for_delivery")
+    end
+
+    it "marks a delivery as delivered" do
+      login_as cashier, scope: :user
+      dlv = delivery_order(business)
+      Tenancy.with_business(business) do
+        dlv.create_delivery!(courier_name: "Carlos")
+        dlv.delivery.update!(status: :out_for_delivery)
+      end
+
+      post "/orders/#{dlv.id}/delivered"
+
+      expect(response).to redirect_to(order_path(dlv))
+      expect(Tenancy.with_business(business) { dlv.delivery.reload.status }).to eq("delivered")
+    end
+
+    it "shows an alert when the order has no delivery record" do
+      login_as cashier, scope: :user
+      dlv = delivery_order(business)
+
+      post "/orders/#{dlv.id}/out_for_delivery"
+
+      expect(response).to redirect_to(order_path(dlv))
+    end
+
+    it "refuses kitchen staff" do
+      login_as kitchen, scope: :user
+      dlv = delivery_order(business)
+      Tenancy.with_business(business) { dlv.create_delivery!(courier_name: "Carlos") }
+
+      post "/orders/#{dlv.id}/out_for_delivery"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "shows an alert when the delivery status cannot be updated" do
+      login_as cashier, scope: :user
+      dlv = delivery_order(business)
+      Tenancy.with_business(business) { dlv.create_delivery!(courier_name: "Carlos") }
+      allow_any_instance_of(Delivery).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(dlv.delivery))
+
+      post "/orders/#{dlv.id}/out_for_delivery"
+
+      expect(response).to redirect_to(order_path(dlv))
+    end
+
+    it "shows an alert when marking delivered fails" do
+      login_as cashier, scope: :user
+      dlv = delivery_order(business)
+      Tenancy.with_business(business) do
+        dlv.create_delivery!(courier_name: "Carlos")
+        dlv.delivery.update!(status: :out_for_delivery)
+      end
+      allow_any_instance_of(Delivery).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(dlv.delivery))
+
+      post "/orders/#{dlv.id}/delivered"
+
+      expect(response).to redirect_to(order_path(dlv))
+    end
+  end
 end

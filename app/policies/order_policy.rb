@@ -41,6 +41,14 @@ class OrderPolicy < ApplicationPolicy
     owner?
   end
 
+  def mark_out_for_delivery?
+    owner? || cashier?
+  end
+
+  def mark_delivered?
+    owner? || cashier?
+  end
+
   def start_cooking?
     kitchen? || owner?
   end

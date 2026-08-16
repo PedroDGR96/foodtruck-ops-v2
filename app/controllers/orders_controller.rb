@@ -1,5 +1,5 @@
 class OrdersController < AuthenticatedController
-  before_action :set_order, only: %i[show cancel force_cancel refund]
+  before_action :set_order, only: %i[show cancel force_cancel refund out_for_delivery delivered]
 
   def index
     authorize Order
@@ -33,6 +33,26 @@ class OrdersController < AuthenticatedController
     redirect_to @order, notice: t("orders.refunded")
   rescue OrderLifecycle::IllegalTransition
     redirect_to @order, alert: t("orders.cannot_refund")
+  end
+
+  def out_for_delivery
+    authorize @order, :mark_out_for_delivery?
+    return redirect_to(@order, alert: t("orders.delivery_not_updated")) unless @order.delivery
+
+    @order.delivery.update!(status: :out_for_delivery)
+    redirect_to @order, notice: t("orders.delivery_out_notice")
+  rescue ActiveRecord::RecordInvalid
+    redirect_to @order, alert: t("orders.delivery_not_updated")
+  end
+
+  def delivered
+    authorize @order, :mark_delivered?
+    return redirect_to(@order, alert: t("orders.delivery_not_updated")) unless @order.delivery
+
+    @order.delivery.update!(status: :delivered)
+    redirect_to @order, notice: t("orders.delivery_delivered_notice")
+  rescue ActiveRecord::RecordInvalid
+    redirect_to @order, alert: t("orders.delivery_not_updated")
   end
 
   private

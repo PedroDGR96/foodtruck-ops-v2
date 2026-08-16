@@ -368,6 +368,11 @@ pt-BR:
     refunded: "Pedido reembolsado."
     cannot_cancel: "Este pedido não pode ser cancelado no estado atual."
     cannot_refund: "Este pedido não pode ser reembolsado no estado atual."
+    mark_out_for_delivery: "Sair para entrega"
+    mark_delivered: "Marcar entregue"
+    delivery_out_notice: "Pedido saiu para entrega."
+    delivery_delivered_notice: "Pedido entregue."
+    delivery_not_updated: "Não foi possível atualizar o status da entrega."
     statuses:
       draft: "Rascunho"
       open: "Aberto"

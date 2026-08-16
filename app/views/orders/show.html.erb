@@ -46,6 +46,14 @@
           <div class="mt-2 text-sm">
             <span class="badge <%= order_status_badge_class(@order.delivery.status) %>"><%= t("orders.delivery_statuses.#{@order.delivery.status}") %></span>
           </div>
+          <div class="mt-3 space-y-2">
+            <% if @order.delivery.status == "pending" && policy(@order).mark_out_for_delivery? %>
+              <%= button_to t("orders.mark_out_for_delivery"), out_for_delivery_order_path(@order), method: :post, class: "btn btn-secondary w-full" %>
+            <% end %>
+            <% if @order.delivery.status == "out_for_delivery" && policy(@order).mark_delivered? %>
+              <%= button_to t("orders.mark_delivered"), delivered_order_path(@order), method: :post, class: "btn btn-success w-full" %>
+            <% end %>
+          </div>
         <% end %>
       </div>
     <% end %>
