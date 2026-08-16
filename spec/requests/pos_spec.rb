@@ -80,6 +80,60 @@ RSpec.describe "Point of Sale", type: :request do
       expect(Tenancy.with_business(business) { order.order_items.empty? }).to be(true)
     end
 
+    it "redirects with an alert when updating a line that does not exist" do
+      product
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+
+      patch "/pos/cart/0", params: { quantity: 3 }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq(I18n.t("pos.item_not_found"))
+    end
+
+    it "redirects with an alert when removing a line that does not exist" do
+      product
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+
+      delete "/pos/cart/0"
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq(I18n.t("pos.item_not_found"))
+    end
+
+    it "degrades gracefully when the cart is closed mid-operation" do
+      product
+      allow(OrderCart).to receive(:add_item).and_raise(OrderCart::CartClosedError, "fechado")
+      allow(OrderCart).to receive(:update_quantity).and_raise(OrderCart::CartClosedError, "fechado")
+      allow(OrderCart).to receive(:remove_item).and_raise(OrderCart::CartClosedError, "fechado")
+
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq("fechado")
+
+      patch "/pos/cart/#{Tenancy.with_business(business) { product.id }}", params: { quantity: 3 }
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq("fechado")
+
+      delete "/pos/cart/#{Tenancy.with_business(business) { product.id }}"
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq("fechado")
+    end
+
+    it "degrades gracefully when the item cannot be saved" do
+      product
+      invalid = Tenancy.with_business(business) do
+        item = OrderItem.new(order: Order.last, product_name: "", unit_price: -1, quantity: 0)
+        item.valid?
+        item
+      end
+      allow(OrderCart).to receive(:add_item).and_raise(ActiveRecord::RecordInvalid, invalid)
+
+      post "/pos/cart", params: { product_id: product.id, quantity: 1 }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to be_present
+    end
+
     it "eager-loads cart items and addons so rendering the POS is not N+1" do
       product
       small = select_count { get "/pos" }
@@ -232,6 +286,23 @@ RSpec.describe "Point of Sale", type: :request do
       delete "/pos/customer"
 
       expect(Tenancy.with_business(business) { order.reload.customer_id }).to be_nil
+    end
+
+    it "redirects with an alert when the customer does not exist" do
+      post "/pos/customer", params: { customer_id: 0 }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq(I18n.t("pos.customer_not_found"))
+    end
+
+    it "degrades gracefully when attaching a customer fails" do
+      cust = Tenancy.with_business(business) { create(:customer, business: business, name: "Maria Silva") }
+      allow(OrderCart).to receive(:set_customer).and_raise(OrderCart::CartClosedError, "fechado")
+
+      post "/pos/customer", params: { customer_id: cust.id }
+
+      expect(response).to redirect_to(pos_path)
+      expect(flash[:alert]).to eq("fechado")
     end
   end
 end

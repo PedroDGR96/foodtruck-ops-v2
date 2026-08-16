@@ -22,18 +22,28 @@ class PosController < AuthenticatedController
     redirect_to pos_path, alert: e.message
   rescue ActiveRecord::RecordNotFound
     redirect_to pos_path, alert: t("pos.product_not_found")
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to pos_path, alert: e.record.errors.full_messages.to_sentence
   end
 
   def update_item
     authorize @draft_order, :update?
     OrderCart.update_quantity(@draft_order, params[:id], params[:quantity])
     redirect_to pos_path
+  rescue OrderCart::CartClosedError => e
+    redirect_to pos_path, alert: e.message
+  rescue ActiveRecord::RecordNotFound
+    redirect_to pos_path, alert: t("pos.item_not_found")
   end
 
   def remove_item
     authorize @draft_order, :update?
     OrderCart.remove_item(@draft_order, params[:id])
     redirect_to pos_path
+  rescue OrderCart::CartClosedError => e
+    redirect_to pos_path, alert: e.message
+  rescue ActiveRecord::RecordNotFound
+    redirect_to pos_path, alert: t("pos.item_not_found")
   end
 
   def set_customer

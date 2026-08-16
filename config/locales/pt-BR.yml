@@ -440,6 +440,7 @@ pt-BR:
     shift_required: "Abra um turno de caixa antes de confirmar o pedido."
     open_shift: "Abrir turno"
     product_not_found: "Produto não encontrado."
+    item_not_found: "Item não encontrado no pedido."
     customer_not_found: "Cliente não encontrado."
 
   customers:
