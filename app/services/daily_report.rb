@@ -49,9 +49,9 @@ class DailyReport
   def by_product(orders)
     OrderItem.where(order_id: orders.select(:id))
              .group(:product_name)
+             .order(Arel.sql("SUM(line_total) DESC"))
              .pluck(:product_name, Arel.sql("SUM(quantity)"), Arel.sql("SUM(line_total)"))
              .map { |name, qty, total| Row.new(product_name: name, quantity: qty.to_d, total: total.to_d) }
-             .sort_by { |row| -row.total }
   end
 
   def shifts(window)
