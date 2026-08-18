@@ -72,6 +72,7 @@ class OrderLifecycle
   def record_payment!(payment)
     raise IllegalTransition.new("payment", order.status) unless order.status.in?(%w[open partially_paid])
 
+    ActiveRecord::Base.transaction do
     payment.order = order
     payment.cash_register ||= CashRegister.open.find_by(user: actor) if payment.cash? && actor
     payment.save!
@@ -91,6 +92,7 @@ class OrderLifecycle
       transition!("partially_paid", %i[open partially_paid], :partially_paid, { amount: payment.amount.to_s, method: payment.method })
     else
       order.update_columns(payment_status: :pending)
+    end
     end
   end
 
