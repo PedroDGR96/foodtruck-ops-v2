@@ -36,6 +36,9 @@ class IntegrationsController < AuthenticatedController
     redirect_to edit_integrations_path, notice: t("integrations.updated")
   rescue ActiveRecord::RecordInvalid => e
     flash.now[:alert] = e.message
+    @business ||= Current.business
+    @providers = IntegrationSetting::PROVIDER_KEYS
+    @active_tab = params[:tab] || @providers.first
     @settings = load_settings
     render :edit, status: :unprocessable_entity
   end
