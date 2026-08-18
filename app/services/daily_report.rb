@@ -35,7 +35,7 @@ class DailyReport
   end
 
   def refund_total(window)
-    business.orders.where(status: :refunded, created_at: window).sum(:total).to_d
+    business.orders.where(status: :refunded, created_at: window).sum(:total)&.to_d || 0
   end
 
   def by_method(orders)
