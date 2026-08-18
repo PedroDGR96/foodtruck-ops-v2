@@ -3,6 +3,9 @@ Rails.application.routes.draw do
 
   resources :users, only: %i[index new create edit update]
   resource :settings, only: %i[edit update]
+  resource :integrations, only: %i[edit update], controller: "integrations" do
+    post "test/:provider", action: :test_connection, on: :collection
+  end
   resource :daily_report, only: :show
 
   get "menu", to: "menu#show", as: :menu

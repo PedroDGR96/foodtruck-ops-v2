@@ -26,6 +26,34 @@ RSpec.describe MockMarketplaceProvider, type: :model do
       expect { described_class.create_order(settings: {}, args: { platform: "ifood" }) }
         .to raise_error(KeyError)
     end
+
+    it "defaults platform to ifood" do
+      result = described_class.create_order(
+        settings: {},
+        args: { merchant_id: 1, total_amount: 50.0 }
+      )
+
+      expect(result[:data][:platform]).to eq("ifood")
+    end
+
+    it "generates a code starting with IFO" do
+      result = described_class.create_order(
+        settings: {},
+        args: { merchant_id: 1, total_amount: 50.0 }
+      )
+
+      expect(result[:data][:code]).to start_with("IFO-")
+    end
+
+    it "includes default customer_name and items_count" do
+      result = described_class.create_order(
+        settings: {},
+        args: { merchant_id: 1, total_amount: 50.0 }
+      )
+
+      expect(result[:data][:customer_name]).to start_with("Cliente")
+      expect(result[:data][:items_count]).to eq(1)
+    end
   end
 
   describe ".update_order" do
@@ -35,6 +63,14 @@ RSpec.describe MockMarketplaceProvider, type: :model do
       )
 
       expect(result[:success]).to be true
+      expect(result[:data][:status]).to eq("confirmed")
+    end
+
+    it "defaults status to confirmed" do
+      result = described_class.update_order(
+        settings: {}, args: { order_num: 1234 }
+      )
+
       expect(result[:data][:status]).to eq("confirmed")
     end
   end
@@ -52,6 +88,77 @@ RSpec.describe MockMarketplaceProvider, type: :model do
     it "rejects a missing order number" do
       expect { described_class.cancel_order(settings: {}, args: { merchant_id: 42 }) }
         .to raise_error(KeyError)
+    end
+
+    it "rejects a missing merchant_id" do
+      expect { described_class.cancel_order(settings: {}, args: { order_num: 1234 }) }
+        .to raise_error(KeyError)
+    end
+
+    it "uses default cancel reason" do
+      result = described_class.cancel_order(
+        settings: {}, args: { order_num: 1234, merchant_id: 42 }
+      )
+
+      expect(result[:data][:cancel_reason]).to eq("Cancelamento solicitado")
+    end
+
+    it "includes platform in message" do
+      result = described_class.cancel_order(
+        settings: {}, args: { order_num: 1234, merchant_id: 42, platform: "99food" }
+      )
+
+      expect(result[:message]).to include("99food")
+    end
+  end
+
+  describe ".status" do
+    it "returns the status for an order" do
+      result = described_class.status(
+        settings: {}, args: { order_num: 1234 }
+      )
+
+      expect(result[:success]).to be true
+      expect(result[:data][:order_num]).to eq(1234)
+      expect(result[:data][:status]).to eq("pending")
+    end
+
+    it "uses provided status" do
+      result = described_class.status(
+        settings: {}, args: { order_num: 1234, status: "delivered" }
+      )
+
+      expect(result[:data][:status]).to eq("delivered")
+    end
+  end
+
+  describe ".webhook_verify" do
+    it "verifies matching token" do
+      result = described_class.webhook_verify(
+        settings: { webhook_token: "secret123" },
+        args: { x_ifood_signature: "secret123" }
+      )
+
+      expect(result[:success]).to be true
+    end
+
+    it "rejects mismatched token" do
+      result = described_class.webhook_verify(
+        settings: { webhook_token: "secret123" },
+        args: { x_ifood_signature: "wrong" }
+      )
+
+      expect(result[:success]).to be false
+    end
+
+    it "rejects when no token configured" do
+      result = described_class.webhook_verify(
+        settings: {},
+        args: { x_ifood_signature: "anything" }
+      )
+
+      expect(result[:success]).to be false
+      expect(result[:message]).to include("Token")
     end
   end
 end

@@ -185,6 +185,54 @@ pt-BR:
       submit: "Salvar configurações"
     updated: "Configurações salvas."
 
+  integrations:
+    title: "Integrações"
+    subtitle: "Configure provedores de serviços externos para sua food truck."
+    enabled: "Ativado"
+    disabled: "Desativado"
+    test_connection: "Testar Conexão"
+    save: "Salvar Integrações"
+    updated: "Integrações salvas."
+    providers:
+      payment_gateway: "Pagamentos"
+      messaging: "Mensagens"
+      maps: "Mapas"
+      fiscal: "Fiscal"
+      marketplace: "Marketplace"
+    descriptions:
+      payment_gateway: "Provedor de pagamentos para PIX, cartão e dinheiro."
+      messaging: "Envio de WhatsApp, SMS e e-mail para clientes."
+      maps: "Geocodificação e cálculo de distâncias para entregas."
+      fiscal: "Emissão de NFC-e (PDV) e NF-e (notas fiscais)."
+      marketplace: "Integração com iFood, 99Food e Rappi."
+    fields:
+      payment_gateway:
+        public_key: "Chave pública (Mercado Pago)"
+        access_token: "Token de acesso"
+        webhook_secret: "Secret do webhook"
+        sandbox: "Modo sandbox"
+      messaging:
+        twilio_account_sid: "Twilio Account SID"
+        twilio_auth_token: "Twilio Auth Token"
+        twilio_phone: "Número Twilio"
+        whatsapp_business_token: "WhatsApp Business Token"
+        whatsapp_phone_id: "WhatsApp Phone ID"
+      maps:
+        provider: "Provedor de mapas"
+        api_key: "Chave da API"
+        default_origin: "Endereço base"
+      fiscal:
+        environment: "Ambiente"
+        state: "UF"
+        cnpj: "CNPJ"
+        certificate_path: "Caminho do certificado"
+        certificate_password: "Senha do certificado"
+      marketplace:
+        merchant_id: "ID do estabelecimento"
+        platform: "Plataforma"
+        api_key: "Chave da API"
+        webhook_token: "Token do webhook"
+
   categories:
     index:
       title: "Cardápio"

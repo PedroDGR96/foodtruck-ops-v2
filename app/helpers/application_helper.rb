@@ -20,8 +20,8 @@ module ApplicationHelper
   end
 
   def nav_link_class(active)
-    base = "rounded-md px-3 py-1.5 text-sm font-medium"
-    active ? "#{base} bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300" : "#{base} text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+    base = "rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150"
+    active ? "#{base} bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300" : "#{base} text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
   end
 
   def order_type_options

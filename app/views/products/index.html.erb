@@ -6,29 +6,29 @@
 <% if @products.any? %>
   <div class="mt-6 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
     <table class="w-full text-sm">
-      <thead class="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-800 dark:bg-slate-900">
-        <tr>
-          <th class="px-4 py-2 font-medium"><%= t("products.index.name") %></th>
-          <th class="px-4 py-2 font-medium"><%= t("products.index.category") %></th>
-          <th class="px-4 py-2 font-medium"><%= t("products.index.price") %></th>
-          <th class="px-4 py-2 font-medium"><%= t("products.index.status") %></th>
-          <th class="px-4 py-2 font-medium"><%= t("common.actions") %></th>
+      <thead class="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <tr class="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <th class="px-4 py-3 font-medium"><%= t("products.index.name") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("products.index.category") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("products.index.price") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("products.index.status") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("common.actions") %></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
         <% @products.each do |product| %>
-          <tr>
-            <td class="px-4 py-2 font-medium"><%= link_to product.name, product_path(product), class: "hover:underline" %></td>
-            <td class="px-4 py-2 text-slate-600 dark:text-slate-400"><%= product.category.name %></td>
-            <td class="px-4 py-2"><%= format_money(product.price) %></td>
-            <td class="px-4 py-2">
+          <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+            <td class="px-4 py-3 font-medium"><%= link_to product.name, product_path(product), class: "hover:underline" %></td>
+            <td class="px-4 py-3 text-slate-600 dark:text-slate-400"><%= product.category.name %></td>
+            <td class="px-4 py-3"><%= format_money(product.price) %></td>
+            <td class="px-4 py-3">
               <% if product.available? %>
                 <span class="badge badge-success"><%= t("products.status.available") %></span>
               <% else %>
                 <span class="badge badge-warning"><%= t("products.status.unavailable") %></span>
               <% end %>
             </td>
-            <td class="px-4 py-2"><%= link_to t("common.edit"), edit_product_path(product), class: "underline" %></td>
+            <td class="px-4 py-3"><%= link_to t("common.edit"), edit_product_path(product), class: "text-brand-600 hover:underline dark:text-brand-400" %></td>
           </tr>
         <% end %>
       </tbody>

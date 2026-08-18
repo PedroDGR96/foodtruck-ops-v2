@@ -1,7 +1,12 @@
 <% can_start = local_assigns.fetch(:can_start, true) %>
 <% can_mark_ready = local_assigns.fetch(:can_mark_ready, true) %>
+<% order_border = case order.order_type
+                   when "delivery" then "border-l-4 border-l-sky-500"
+                   when "pickup" then "border-l-4 border-l-emerald-500"
+                   else "border-l-4 border-l-brand-500"
+                   end %>
 <div id="<%= dom_id(order) %>"
-     class="card p-4 <%= kitchen_overdue?(order) ? "is-overdue" : "" %>"
+     class="card p-4 <%= order_border %> <%= kitchen_overdue?(order) ? "is-overdue" : "" %>"
      data-controller="kitchen-timer"
      data-kitchen-timer-start-value="<%= ((order.started_at || order.created_at).to_f * 1000).round %>"
      data-kitchen-timer-overdue-after-value="<%= kitchen_overdue_threshold %>">

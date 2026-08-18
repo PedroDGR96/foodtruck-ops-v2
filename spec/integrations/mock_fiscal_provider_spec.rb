@@ -33,5 +33,40 @@ RSpec.describe MockFiscalProvider, type: :model do
       expect(result[:success]).to be true
       expect(result[:data][:nf_e_number]).to eq("NFe-ord-2")
     end
+
+    it "uses the supplied number when provided" do
+      result = described_class.emit_nf_e(
+        settings: {},
+        args: { order_id: "ord-2", payment_method: "card", total_amount: 250.0, nf_e_number: "NFe-8888" }
+      )
+
+      expect(result[:data][:nf_e_number]).to eq("NFe-8888")
+    end
+  end
+
+  describe ".status" do
+    it "returns authorized status for a document" do
+      result = described_class.status(
+        settings: {},
+        args: { access_key: "35210112345678000190550010000001231234567890" }
+      )
+
+      expect(result[:success]).to be true
+      expect(result[:data][:status]).to eq("authorized")
+      expect(result[:data][:access_key]).to eq("35210112345678000190550010000001231234567890")
+    end
+  end
+
+  describe ".cancel" do
+    it "returns cancelled status for a document" do
+      result = described_class.cancel(
+        settings: {},
+        args: { access_key: "35210112345678000190550010000001231234567890" }
+      )
+
+      expect(result[:success]).to be true
+      expect(result[:data][:status]).to eq("cancelled")
+      expect(result[:data][:access_key]).to eq("35210112345678000190550010000001231234567890")
+    end
   end
 end

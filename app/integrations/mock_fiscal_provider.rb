@@ -31,4 +31,26 @@ class MockFiscalProvider < FiscalProvider
       }
     }
   end
+
+  def self.status(settings:, args:)
+    {
+      success: true,
+      message: "Document status queried",
+      data: {
+        access_key: args[:access_key],
+        status: "authorized"
+      }
+    }
+  end
+
+  def self.cancel(settings:, args:)
+    {
+      success: true,
+      message: "Document cancelled",
+      data: {
+        access_key: args[:access_key],
+        status: "cancelled"
+      }
+    }
+  end
 end

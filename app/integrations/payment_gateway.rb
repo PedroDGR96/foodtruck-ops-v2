@@ -3,6 +3,11 @@
 # returning the documented Hash shapes; the mock variant provides deterministic
 # sandbox behavior for tests and local development.
 class PaymentGateway
+  # @param settings [Hash] provider config (api_key, secret, etc.)
+  # @param amount [Numeric] transaction amount
+  # @param order_id [String/UUID] order reference
+  # @param metadata [Hash] additional data (payer email, payment method, etc.)
+  # @return [Hash] { success:, message:, metadata: { auth_token:, ... } }
   def self.authorize(settings:, amount:, order_id:, metadata: {})
     raise NotImplementedError
   end
