@@ -25,6 +25,8 @@ class Customer < ApplicationRecord
   def self.search(term)
     return none if term.blank?
 
+    # NOTE: For production use with many customers, add an index on name via migration.
+    # CREATE INDEX idx_customers_name ON customers(name);
     pattern = "%#{term.to_s.strip}%"
     where("name ILIKE :q OR phone ILIKE :q", q: pattern)
   end
