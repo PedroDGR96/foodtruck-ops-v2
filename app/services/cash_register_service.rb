@@ -4,6 +4,8 @@
 # through here too, so all money entries share one code path.
 class CashRegisterService
   def self.open!(register:, actor: nil)
+    raise ArgumentError, "Register already open" unless register.open?
+    raise ArgumentError, "Business not active" unless register.business.active?
     register.save!
     AuditLog.record!(
       action: "shift_opened",
