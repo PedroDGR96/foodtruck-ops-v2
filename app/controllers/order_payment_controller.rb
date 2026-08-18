@@ -48,6 +48,9 @@ class OrderPaymentController < AuthenticatedController
 
     begin
       lifecycle.record_payment!(payment)
+      if payment.status == :succeeded && balance_due > 0 && @order.status == "open"
+        @order.update_column(status: "partially_paid")
+      end
       if @order.paid?
         redirect_to order_path(@order), notice: t("orders.paid")
       else
