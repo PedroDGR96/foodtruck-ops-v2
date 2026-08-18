@@ -76,6 +76,11 @@ class OrderLifecycle
     payment.cash_register ||= CashRegister.open.find_by(user: actor) if payment.cash? && actor
     payment.save!
 
+    # Lock the order to prevent concurrent modifications during payment processing.
+    # Without this, two simultaneous payments could both read a stale `paid` sum and
+    # update based on their own calculations, causing payment_status to diverge from actual paid_amount.
+    order.lock!
+
     paid = order.payments.successful.sum(:amount)
     if paid >= order.total
       order.update_columns(payment_status: :paid)
