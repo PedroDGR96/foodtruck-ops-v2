@@ -17,7 +17,7 @@ class Payment < ApplicationRecord
   private
 
   def cannot_exceed_order_balance
-    return if order.nil?
+    return unless order.present? && order.total.present?
 
     paid_so_far = order.payments.successful.where.not(id: id).sum(:amount)
     if amount.present? && (paid_so_far + amount) > order.total
