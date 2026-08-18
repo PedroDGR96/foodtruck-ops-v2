@@ -9,6 +9,7 @@ class User < ApplicationRecord
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: { case_sensitive: false, unscoped: true }
+  validates :role, inclusion: { in: ROLES }
 
   after_save :record_lock_change
 
@@ -21,7 +22,7 @@ class User < ApplicationRecord
   end
 
   # API tokens for this user (JSON:API bearer auth)
-  has_many :tokens, dependent: :destroy
+  has_many :tokens, -> { where(business_id: business_id) }, dependent: :delete_all
 
   def active_for_authentication?
     super && active?
@@ -32,7 +33,7 @@ class User < ApplicationRecord
   end
 
   def timeout_in
-    2.hours
+    self.class.timeout_in || 2.hours
   end
 
   private
