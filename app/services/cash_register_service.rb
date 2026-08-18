@@ -12,7 +12,7 @@ class CashRegisterService
       resource: "cash_register",
       resource_id: register.id,
       actor: actor,
-      metadata: { opening_amount: register.opening_amount.to_s }
+      metadata: { opening_amount: register.opening_amount&.to_s || "0" }
     )
     register
   end
