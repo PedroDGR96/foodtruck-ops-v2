@@ -1,0 +1,94 @@
+<div class="mx-auto max-w-4xl">
+  <h1 class="text-2xl font-bold"><%= t("integrations.title") %></h1>
+  <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><%= t("integrations.subtitle") %></p>
+
+  <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-[200px_1fr]">
+    <!-- Sidebar -->
+    <nav class="flex flex-row gap-2 md:flex-col">
+      <% @providers.each do |provider_key| %>
+        <a href="#<%= provider_key %>"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
+                  hover:bg-slate-100 dark:hover:bg-slate-800
+                  <%= @active_tab == provider_key ? 'bg-slate-100 dark:bg-slate-800' : 'text-slate-600 dark:text-slate-400' %>">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full text-xs
+                       <%= @settings[provider_key]&.enabled? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' %>">
+            <%= @settings[provider_key]&.enabled? ? "✓" : "—" %>
+          </span>
+          <%= t("integrations.providers.#{provider_key}") %>
+        </a>
+      <% end %>
+    </nav>
+
+    <!-- Provider panels -->
+    <div class="space-y-6">
+      <%= form_tag integrations_path, method: :patch, id: "integrations-form" do %>
+        <% @providers.each do |provider_key| %>
+          <% setting = @settings[provider_key] %>
+          <section id="<%= provider_key %>" class="card p-5">
+            <div class="flex items-start justify-between">
+              <div>
+                <h2 class="text-lg font-semibold"><%= t("integrations.providers.#{provider_key}") %></h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><%= t("integrations.descriptions.#{provider_key}") %></p>
+              </div>
+
+              <label class="relative inline-flex cursor-pointer items-center gap-2">
+                <input type="checkbox"
+                       name="integrations[<%= provider_key %>][enabled]"
+                       value="1"
+                       <%= "checked" if setting&.enabled? %>
+                       class="peer sr-only"
+                       data-action="change->integrations#toggleProvider">
+                <div class="h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-emerald-600 peer-checked:after:translate-x-full dark:bg-slate-700"></div>
+                <span class="text-sm font-medium"><%= setting&.enabled? ? t("integrations.enabled") : t("integrations.disabled") %></span>
+              </label>
+            </div>
+
+            <div class="mt-6 space-y-4" data-integrations-target="credentials" data-provider="<%= provider_key %>">
+              <% provider_fields(provider_key).each do |field| %>
+                <div>
+                  <label class="label">
+                    <%= t("integrations.fields.#{provider_key}.#{field[:key]}") %>
+                  </label>
+                  <% if field[:type] == :password %>
+                    <%= text_field_tag "integrations[#{provider_key}][credentials][#{field[:key]}]",
+                        setting&.credentials&.dig(field[:key]),
+                        type: "password",
+                        placeholder: field[:placeholder],
+                        class: "input",
+                        autocomplete: "off" %>
+                  <% elsif field[:type] == :select %>
+                    <%= select_tag "integrations[#{provider_key}][credentials][#{field[:key]}]",
+                        options_for_select(field[:options], setting&.credentials&.dig(field[:key])),
+                        class: "input" %>
+                  <% else %>
+                    <%= text_field_tag "integrations[#{provider_key}][credentials][#{field[:key]}]",
+                        setting&.credentials&.dig(field[:key]),
+                        placeholder: field[:placeholder],
+                        class: "input" %>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <div class="flex items-center gap-3 pt-2">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-action="click->integrations#testConnection"
+                        data-provider="<%= provider_key %>">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <%= t("integrations.test_connection") %>
+                </button>
+                <span class="hidden text-sm" data-integrations-target="testResult" data-provider="<%= provider_key %>"></span>
+              </div>
+            </div>
+          </section>
+        <% end %>
+
+        <div class="flex justify-end pt-4">
+          <%= submit_tag t("integrations.save"), class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
