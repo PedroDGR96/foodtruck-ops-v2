@@ -93,6 +93,7 @@ class OrderCart
   def quick_create_customer(attributes)
     ensure_open_cart!
     customer = Customer.new(attributes)
+    raise CartClosedError, "Cliente de outro estabelecimento" unless customer.business_id == order.business_id
     customer.save!
     order.update!(customer: customer)
     order
