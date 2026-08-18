@@ -41,7 +41,7 @@ module Tenancy
   end
 
   def restore_business_id(previous)
-    if previous.present?
+    if previous && !previous.blank?
       set_local!(previous)
     else
       reset_local!
