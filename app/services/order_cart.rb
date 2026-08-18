@@ -125,6 +125,7 @@ class OrderCart
   end
 
   def recompute_totals_in_memory
+    order.order_item_addons.reload  # Ensure fresh data before recomputing totals
     items = order.order_items.reload
     addon_totals = order.order_item_addons.group(:order_item_id).sum(:price)
     new_subtotal = items.sum do |item|
