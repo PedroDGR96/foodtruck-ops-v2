@@ -38,6 +38,7 @@ class OrdersController < AuthenticatedController
   def out_for_delivery
     authorize @order, :mark_out_for_delivery?
     return redirect_to(@order, alert: t("orders.delivery_not_updated")) unless @order.delivery
+    return redirect_to(@order, alert: t("orders.delivery_not_updated")) if @order.cancelled? || @order.refunded?
 
     @order.delivery.update!(status: :out_for_delivery)
     redirect_to @order, notice: t("orders.delivery_out_notice")
@@ -48,6 +49,7 @@ class OrdersController < AuthenticatedController
   def delivered
     authorize @order, :mark_delivered?
     return redirect_to(@order, alert: t("orders.delivery_not_updated")) unless @order.delivery
+    return redirect_to(@order, alert: t("orders.delivery_not_updated")) if @order.cancelled? || @order.refunded?
 
     @order.delivery.update!(status: :delivered)
     redirect_to @order, notice: t("orders.delivery_delivered_notice")
