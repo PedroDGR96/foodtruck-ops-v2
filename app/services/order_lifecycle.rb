@@ -73,26 +73,28 @@ class OrderLifecycle
     raise IllegalTransition.new("payment", order.status) unless order.status.in?(%w[open partially_paid])
 
     ActiveRecord::Base.transaction do
-    payment.order = order
-    payment.cash_register ||= CashRegister.open.find_by(user: actor) if payment.cash? && actor
-    payment.save!
+      payment.order = order
+      payment.cash_register ||= CashRegister.open.find_by(user: actor) if payment.cash? && actor
+      payment.save!
 
-    # Lock the order to prevent concurrent modifications during payment processing.
-    # Without this, two simultaneous payments could both read a stale `paid` sum and
-    # update based on their own calculations, causing payment_status to diverge from actual paid_amount.
-    order.lock!
+      # Lock the order to prevent concurrent modifications during payment processing.
+      # Without this, two simultaneous payments could both read a stale `paid` sum and
+      # update based on their own calculations, causing payment_status to diverge from actual paid_amount.
+      order.lock!
 
-    paid = order.payments.successful.sum(:amount)
-    if paid >= order.total
-      order.update_columns(payment_status: :paid)
-      transition!("paid", %i[open partially_paid], :paid, { amount: payment.amount.to_s, method: payment.method })
-      broadcast_kds_append
-    elsif paid.positive?
-      order.update_columns(payment_status: :partially_paid)
-      transition!("partially_paid", %i[open partially_paid], :partially_paid, { amount: payment.amount.to_s, method: payment.method })
-    else
-      order.update_columns(payment_status: :pending)
-    end
+      # Move the paid sum computation inside the transaction after saving the payment
+      # so it reflects all concurrent modifications within this transaction.
+      paid = order.payments.successful.sum(:amount)
+      if paid >= order.total
+        order.update_columns(payment_status: :paid)
+        transition!("paid", %i[open partially_paid], :paid, { amount: payment.amount.to_s, method: payment.method })
+        broadcast_kds_append
+      elsif paid.positive?
+        order.update_columns(payment_status: :partially_paid)
+        transition!("partially_paid", %i[open partially_paid], :partially_paid, { amount: payment.amount.to_s, method: payment.method })
+      else
+        order.update_columns(payment_status: :pending)
+      end
     end
   end
 
