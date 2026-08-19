@@ -17,8 +17,8 @@ class Customer < ApplicationRecord
 
   def self.normalize_phone(raw)
     digits = raw.to_s.gsub(/[^\d]/, "")
-    digits = digits.delete_prefix("55") if digits.length > 11
-    digits = digits.delete_prefix("0") if digits.length > 11
+    digits = digits.sub(/^55/, "") if digits.length > 11
+    digits = digits.sub(/^0/, "") if digits.length > 11
     digits
   end
 
