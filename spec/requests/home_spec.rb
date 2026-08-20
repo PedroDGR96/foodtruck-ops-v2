@@ -75,5 +75,17 @@ RSpec.describe "Home dashboard", type: :request do
 
       expect(response.body).to include("Turno de caixa aberto desde")
     end
+
+    it "shows weekly revenue and order count" do
+      create_paid_order(total: 50.0)
+
+      login_as owner, scope: :user
+      get "/"
+
+      expect(response.body).to include("Faturamento 7 dias")
+      expect(response.body).to include("R$ 50,00")
+      expect(response.body).to include("Pedidos 7 dias")
+      expect(response.body).to match(%r{Pedidos 7 dias</dt>\s*<dd class="text-xl font-bold">1</dd>})
+    end
   end
 end

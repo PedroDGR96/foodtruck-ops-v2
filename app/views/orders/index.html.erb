@@ -6,6 +6,13 @@
     <%= link_to t("pos.title"), pos_path, class: "btn btn-primary" %>
   </div>
 
+  <div class="mt-4 flex gap-2 flex-wrap">
+    <%= link_to t("orders.status"), orders_path, class: "btn btn-sm #{params[:status].blank? ? 'btn-primary' : 'btn-secondary'}" %>
+    <% %w[draft open paid in_kitchen ready completed].each do |s| %>
+      <%= link_to t("orders.statuses.#{s}"), orders_path(status: s), class: "btn btn-sm #{params[:status] == s ? 'btn-primary' : 'btn-secondary'}" %>
+    <% end %>
+  </div>
+
   <div id="orders-list" class="mt-6 card overflow-hidden">
     <table class="w-full text-sm">
       <thead>

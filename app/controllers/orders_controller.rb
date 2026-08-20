@@ -3,7 +3,9 @@ class OrdersController < AuthenticatedController
 
   def index
     authorize Order
-    @orders = Current.business.orders.recent.includes(:delivery).limit(50)
+    @orders = Current.business.orders.recent.includes(:delivery)
+    @orders = @orders.where(status: params[:status]) if params[:status].present?
+    @orders = @orders.limit(50)
   end
 
   def show

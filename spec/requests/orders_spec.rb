@@ -103,6 +103,26 @@ RSpec.describe "Orders", type: :request do
     end
   end
 
+  describe "status filter" do
+    it "filters orders by status param" do
+      login_as cashier, scope: :user
+      Tenancy.with_business(business) do
+        create(:order, :open, business: business, status: "open")
+        create(:order, :open, business: business, status: "open")
+        o = create(:order, :open, business: business)
+        o.update!(status: "paid", payment_status: "paid")
+        dlv = build(:order, :delivery, business: business, status: "open")
+        dlv.build_delivery_address(street: "Rua X", number: "1", neighborhood: "Centro", city: "São Paulo", state: "SP")
+        dlv.save!
+      end
+
+      get orders_path(status: "open")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body.scan('class="font-medium text-brand-600').size).to eq(3)
+    end
+  end
+
   describe "cancellation" do
     it "lets a cashier cancel an open order" do
       login_as cashier, scope: :user
