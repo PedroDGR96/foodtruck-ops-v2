@@ -170,7 +170,6 @@ RSpec.describe OsmMapsProvider do
 
       expect(result[:success]).to be true
     end
-
   end
 
   describe ".reverse_geocode" do

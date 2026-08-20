@@ -50,19 +50,19 @@ class IntegrationsController < AuthenticatedController
     setting = Current.business.integration_settings.find_by(provider_key: provider)
 
     result = case provider
-             when "maps"
+    when "maps"
                test_maps_connection(setting)
-             when "fiscal"
+    when "fiscal"
                test_fiscal_connection(setting)
-             when "marketplace"
+    when "marketplace"
                test_marketplace_connection(setting)
-             when "messaging"
+    when "messaging"
                test_messaging_connection(setting)
-             when "payment_gateway"
+    when "payment_gateway"
                test_payment_connection(setting)
-             else
+    else
                { success: false, message: "Provedor não suportado" }
-             end
+    end
 
     render json: result
   end

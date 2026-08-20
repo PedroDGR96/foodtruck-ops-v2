@@ -1,0 +1,19 @@
+{
+  "name": "FoodTruck Ops",
+  "short_name": "FoodTruck",
+  "description": "Sistema de gerenciamento para food trucks",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "categories": ["business", "food"],
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

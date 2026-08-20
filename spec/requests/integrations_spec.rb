@@ -69,7 +69,6 @@ RSpec.describe "Integrations", type: :request do
 
       expect(response).to redirect_to("/integrations/edit")
     end
-
   end
 
   describe "POST /integrations/test/:provider" do
