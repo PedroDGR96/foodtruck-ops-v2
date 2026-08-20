@@ -1,0 +1,128 @@
+<%= content_for :title, t("daily_reports.title") %>
+
+<div class="mx-auto max-w-5xl">
+  <%= link_to t("cash_registers.back"), root_path, class: "text-sm text-brand-600 hover:underline dark:text-brand-400" %>
+
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold"><%= t("daily_reports.title") %></h1>
+    <span class="text-sm text-slate-500 dark:text-slate-400">
+      <%= l(@report[:date] || Date.current, format: :short_br) %>
+    </span>
+  </div>
+
+  <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+    <%= t("daily_reports.date_hint") %>: <%= format_datetime(@report[:window].first) %> – <%= format_datetime(@report[:window].last) %>
+  </div>
+
+  <dl class="mt-6 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+    <div class="card p-3">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("daily_reports.total_orders") %></dt>
+      <dd class="text-xl font-bold"><%= @report[:total_count] %></dd>
+    </div>
+    <div class="card p-3">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("daily_reports.gross_total") %></dt>
+      <dd class="text-xl font-bold"><%= format_money(@report[:gross_total]) %></dd>
+    </div>
+    <div class="card p-3">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("daily_reports.refund_total") %></dt>
+      <dd class="text-xl font-semibold text-red-600 dark:text-red-400">−<%= format_money(@report[:refund_total]) %></dd>
+    </div>
+    <div class="card p-3">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("daily_reports.net_total") %></dt>
+      <dd class="text-xl font-bold"><%= format_money(@report[:gross_total] - @report[:refund_total]) %></dd>
+      <dd class="text-xs text-slate-400"><%= t("daily_reports.net_hint") %></dd>
+    </div>
+  </dl>
+
+  <% if @report[:total_count].zero? %>
+    <p class="mt-4 text-sm text-slate-500 dark:text-slate-400"><%= t("daily_reports.no_orders") %></p>
+  <% end %>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <section aria-label="<%= t("daily_reports.by_method") %>" class="card overflow-hidden">
+      <h2 class="border-b border-slate-200 px-4 py-3 text-lg font-semibold dark:border-slate-800"><%= t("daily_reports.by_method") %></h2>
+      <% if @report[:by_method].any? %>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <th class="px-4 py-3 font-medium"><%= t("daily_reports.method") %></th>
+              <th class="px-4 py-3 text-right font-medium"><%= t("daily_reports.total") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @report[:by_method].each do |method, amount| %>
+              <tr class="border-b border-slate-100 last:border-0 dark:border-slate-800">
+                <td class="px-4 py-3"><%= t("orders.payment_methods.#{method}") %></td>
+                <td class="px-4 py-3 text-right font-semibold"><%= format_money(amount) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="p-4 text-sm text-slate-500 dark:text-slate-400"><%= t("daily_reports.no_methods") %></p>
+      <% end %>
+    </section>
+
+    <section aria-label="<%= t("daily_reports.by_product") %>" class="card overflow-hidden">
+      <h2 class="border-b border-slate-200 px-4 py-3 text-lg font-semibold dark:border-slate-800"><%= t("daily_reports.by_product") %></h2>
+      <% if @report[:by_product].any? %>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <th class="px-4 py-3 font-medium"><%= t("daily_reports.product") %></th>
+              <th class="px-4 py-3 text-right font-medium"><%= t("daily_reports.quantity") %></th>
+              <th class="px-4 py-3 text-right font-medium"><%= t("daily_reports.total") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @report[:by_product].each do |row| %>
+              <tr class="border-b border-slate-100 last:border-0 dark:border-slate-800">
+                <td class="px-4 py-3"><%= row.product_name %></td>
+                <td class="px-4 py-3 text-right"><%= row.quantity %></td>
+                <td class="px-4 py-3 text-right font-semibold"><%= format_money(row.total) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="p-4 text-sm text-slate-500 dark:text-slate-400"><%= t("daily_reports.no_products") %></p>
+      <% end %>
+    </section>
+  </div>
+
+  <section aria-label="<%= t("daily_reports.shifts") %>" class="mt-6 card overflow-hidden">
+    <h2 class="border-b border-slate-200 px-4 py-3 text-lg font-semibold dark:border-slate-800"><%= t("daily_reports.shifts") %></h2>
+    <% if @report[:shifts].any? %>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <th class="px-4 py-3 font-medium"><%= t("daily_reports.cashier") %></th>
+            <th class="px-4 py-3 font-medium"><%= t("daily_reports.opened_at") %></th>
+            <th class="px-4 py-3 font-medium"><%= t("daily_reports.closed_at") %></th>
+            <th class="px-4 py-3 font-medium"><%= t("daily_reports.status") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report[:shifts].each do |shift| %>
+            <tr class="border-b border-slate-100 last:border-0 dark:border-slate-800">
+              <td class="px-4 py-3"><%= shift.user.name %></td>
+              <td class="px-4 py-3"><%= format_datetime(shift.opened_at) %></td>
+              <td class="px-4 py-3"><%= format_datetime(shift.closed_at) || "—" %></td>
+              <td class="px-4 py-3">
+                <% if shift.open? %>
+                  <span class="badge badge-success"><%= t("cash_registers.statuses.open") %></span>
+                <% elsif shift.reconciled %>
+                  <span class="badge badge-success"><%= t("cash_registers.statuses.reconciled") %></span>
+                <% else %>
+                  <span class="badge badge-danger"><%= t("cash_registers.statuses.drifted") %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="p-4 text-sm text-slate-500 dark:text-slate-400"><%= t("daily_reports.no_shifts") %></p>
+    <% end %>
+  </section>
+</div>

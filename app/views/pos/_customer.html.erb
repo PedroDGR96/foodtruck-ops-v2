@@ -1,0 +1,41 @@
+<div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+  <% if order.customer %>
+    <div class="flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <p class="text-xs text-slate-500 dark:text-slate-400"><%= t("pos.customer_label") %></p>
+        <p class="truncate font-medium"><%= order.customer.name %></p>
+        <% if order.customer.phone.present? %>
+          <p class="text-xs text-slate-500 dark:text-slate-400"><%= order.customer.phone %></p>
+        <% end %>
+      </div>
+      <div class="flex shrink-0 items-center gap-2">
+        <%= link_to t("pos.customer_profile"), customer_path(order.customer), class: "text-sm underline" %>
+        <%= button_to t("pos.customer_remove"), customer_pos_path, method: :delete, class: "btn btn-danger btn-sm" %>
+      </div>
+    </div>
+  <% end %>
+
+  <h2 class="text-sm font-semibold"><%= t("pos.customer_attach") %></h2>
+
+  <%= form_with url: customer_pos_path, class: "mt-2 space-y-3" do |form| %>
+    <div>
+      <%= form.label :customer_id, t("pos.customer_existing"), class: "label" %>
+      <%= form.collection_select :customer_id, Current.business.customers.ordered, :id, :name, { include_blank: t("pos.customer_select_placeholder") }, class: "input" %>
+    </div>
+    <%= form.submit t("pos.customer_attach_button"), class: "btn btn-secondary w-full" %>
+  <% end %>
+
+  <p class="mt-3 text-center text-xs text-slate-400"><%= t("pos.customer_or") %></p>
+
+  <%= form_with url: customer_pos_path, scope: :customer, class: "mt-2 space-y-3" do |form| %>
+    <div>
+      <%= form.label :name, t("customers.index.name"), class: "label" %>
+      <%= form.text_field :name, class: "input", placeholder: t("pos.customer_name_placeholder") %>
+    </div>
+    <div>
+      <%= form.label :phone, t("customers.index.phone"), class: "label" %>
+      <%= form.telephone_field :phone, class: "input" %>
+    </div>
+    <%= form.submit t("pos.customer_create"), class: "btn btn-primary w-full" %>
+  <% end %>
+</div>

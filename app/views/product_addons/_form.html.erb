@@ -1,0 +1,31 @@
+<%= form_with(model: [ product_addon_group.product, product_addon_group, product_addon ], class: "mt-6") do |f| %>
+  <% if product_addon.errors.any? %>
+    <div class="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">
+      <ul>
+        <% product_addon.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <%= f.label :name, class: "label" %>
+    <%= f.text_field :name, autofocus: true, class: "input" %>
+  </div>
+
+  <div class="mb-4">
+    <%= f.label :price, class: "label" %>
+    <%= f.number_field :price, step: "0.01", min: "0", class: "input" %>
+  </div>
+
+  <div class="mb-6">
+    <%= f.label :active, class: "flex items-center gap-2 text-sm font-medium" %>
+    <%= f.check_box :active, class: "rounded border-slate-300" %>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <%= f.submit product_addon.new_record? ? t("product_addons.new.submit") : t("product_addons.edit.submit"), class: "btn btn-primary" %>
+    <%= link_to t("common.cancel"), product_path(product_addon_group.product), class: "btn btn-secondary" %>
+  </div>
+<% end %>

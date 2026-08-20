@@ -1,0 +1,90 @@
+name: foodtruck-ops
+
+x-rails: &rails
+  build:
+    context: .
+    target: development
+  volumes:
+    - .:/rails
+  environment:
+    DATABASE_URL: postgresql://app:app@db:5432/foodtruck_ops_development
+    REDIS_URL: redis://redis:6379/0
+    RAILS_MAX_THREADS: 5
+    FILE_WATCHER_POLLING: "true"
+    LISTEN_POLLING: "true"
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: app_owner
+      POSTGRES_PASSWORD: app_owner
+      POSTGRES_DB: foodtruck_ops_development
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-app-role.sql:/docker-entrypoint-initdb.d/01-app-role.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_owner -d foodtruck_ops_development"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  web:
+    <<: *rails
+    profiles: ["dev"]
+    ports:
+      - "3000:3000"
+    command: bin/rails server -b 0.0.0.0
+
+  worker:
+    <<: *rails
+    profiles: ["dev"]
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+  tailwind:
+    <<: *rails
+    profiles: ["dev"]
+    command: bin/rails tailwindcss:watch[always,poll]
+
+  test:
+    <<: *rails
+    profiles: ["test"]
+    environment:
+      DATABASE_URL: postgresql://app:app@db:5432/foodtruck_ops_test
+      REDIS_URL: redis://redis:6379/1
+      RAILS_ENV: test
+      FILE_WATCHER_POLLING: "true"
+      LISTEN_POLLING: "true"
+    command: bundle exec rspec
+
+  production:
+    build:
+      context: .
+      target: production
+    profiles: ["prod"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres-data:

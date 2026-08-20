@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-controller="dark-mode" data-theme="laranja">
+  <head>
+    <title><%= content_for(:title) || t("app.name") %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="<%= t("app.name") %>">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen" data-controller="loading shortcuts">
+    <%= link_to t("common.skip_to_content"), "#main-content", class: "skip-link" %>
+
+    <div id="toasts" class="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-2 px-4">
+      <% if notice.present? %>
+        <div data-controller="flash" data-flash-timeout-value="6000" class="pointer-events-auto w-full max-w-sm rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow dark:bg-emerald-950 dark:text-emerald-200" role="status">
+          <button type="button" data-action="flash#hide" class="float-right text-emerald-500 hover:text-emerald-700" aria-label="<%= t("common.dismiss") %>">&times;</button>
+          <%= notice %>
+        </div>
+      <% end %>
+      <% if alert.present? %>
+        <div data-controller="flash" data-flash-timeout-value="8000" class="pointer-events-auto w-full max-w-sm rounded-md bg-red-50 px-4 py-3 text-sm text-red-800 shadow dark:bg-red-950 dark:text-red-200" role="alert">
+          <button type="button" data-action="flash#hide" class="float-right text-red-500 hover:text-red-700" aria-label="<%= t("common.dismiss") %>">&times;</button>
+          <%= alert %>
+        </div>
+      <% end %>
+    </div>
+
+    <%= yield :navbar %>
+
+    <main id="main-content" class="px-5 py-6" data-loading-target>
+      <%= yield %>
+    </main>
+
+    <%= yield :footer_nav %>
+  </body>
+</html>

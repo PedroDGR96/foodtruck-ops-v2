@@ -1,0 +1,63 @@
+<% can_start = local_assigns.fetch(:can_start, true) %>
+<% can_mark_ready = local_assigns.fetch(:can_mark_ready, true) %>
+<% order_border = case order.order_type
+                   when "delivery" then "border-l-4 border-l-sky-500"
+                   when "pickup" then "border-l-4 border-l-emerald-500"
+                   else "border-l-4 border-l-brand-500"
+                   end %>
+<div id="<%= dom_id(order) %>"
+     class="card p-4 <%= order_border %> <%= kitchen_overdue?(order) ? "is-overdue" : "" %>"
+     data-controller="kitchen-timer"
+     data-kitchen-timer-start-value="<%= ((order.started_at || order.created_at).to_f * 1000).round %>"
+     data-kitchen-timer-overdue-after-value="<%= kitchen_overdue_threshold %>">
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold">#<%= order.id %></h3>
+    <div class="flex items-center gap-2">
+      <span class="badge <%= order_status_badge_class(order.kitchen_status) %>"><%= t("orders.kitchen_statuses.#{order.kitchen_status}") %></span>
+      <span class="badge <%= kitchen_prep_badge_class(order) %>">
+        <%= t("kitchen.prep_time", elapsed: format_prep_time(kitchen_prep_elapsed(order))) %>
+      </span>
+    </div>
+  </div>
+
+  <div class="mt-2 flex items-center gap-2">
+    <span class="font-mono text-sm text-slate-600 dark:text-slate-300" data-kitchen-timer-target="elapsed"><%= format_prep_time(kitchen_prep_elapsed(order)) %></span>
+    <span class="badge badge-danger" data-kitchen-timer-target="overdue" hidden><%= t("kitchen.overdue") %></span>
+  </div>
+
+  <ul class="mt-3 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+    <% order.order_items.each do |item| %>
+      <li class="py-2">
+        <p class="font-medium"><span class="text-slate-400">×<%= item.quantity %></span> <%= item.product_name %></p>
+        <% if item.variant_name.present? %>
+          <p class="text-xs text-slate-500 dark:text-slate-400"><%= item.variant_name %></p>
+        <% end %>
+        <% item.order_item_addons.each do |addon| %>
+          <p class="pl-4 text-xs text-slate-500 dark:text-slate-400">+ <%= addon.name %></p>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <% if order.delivery? %>
+    <div class="mt-3 rounded-md border border-brand-100 bg-brand-50 p-2 text-sm dark:border-brand-900 dark:bg-brand-950">
+      <p class="font-medium"><%= t("kitchen.customer") %>: <%= order.customer&.name || t("kitchen.no_customer") %></p>
+      <% if (address = order.delivery_address) %>
+        <p class="mt-1"><%= t("kitchen.address") %>: <%= address.street %><%= ", #{address.number}" if address.number.present? %></p>
+        <p class="text-xs text-slate-600 dark:text-slate-400"><%= address.neighborhood %>, <%= address.city %> - <%= address.state %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if order.notes.present? %>
+    <p class="mt-3 rounded-md bg-slate-50 p-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300"><%= order.notes %></p>
+  <% end %>
+
+  <div class="mt-3 flex gap-2">
+    <% if order.kitchen_status == "pending" && can_start %>
+      <%= button_to t("kitchen.start"), kitchen_start_path(order), method: :post, class: "btn btn-primary" %>
+    <% elsif order.kitchen_status == "in_progress" && can_mark_ready %>
+      <%= button_to t("kitchen.ready_btn"), kitchen_done_path(order), method: :post, class: "btn btn-success" %>
+    <% end %>
+  </div>
+</div>

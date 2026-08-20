@@ -1,0 +1,127 @@
+<%= content_for :title, t("cash_registers.shift") %>
+
+<div class="mx-auto max-w-5xl">
+  <%= link_to t("cash_registers.back"), cash_registers_path, class: "text-sm text-brand-600 hover:underline dark:text-brand-400" %>
+
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold"><%= t("cash_registers.shift") %></h1>
+      <% if @register.open? %>
+        <span class="badge badge-success"><%= t("cash_registers.statuses.open") %></span>
+      <% elsif @register.reconciled %>
+        <span class="badge badge-success"><%= t("cash_registers.statuses.reconciled") %></span>
+      <% else %>
+        <span class="badge badge-danger"><%= t("cash_registers.statuses.drifted") %></span>
+      <% end %>
+    </div>
+    <%= link_to t("cash_registers.back_to_list"), cash_registers_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <dl class="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+    <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.cashier") %></dt><dd class="font-medium"><%= @register.user.name %></dd></div>
+    <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.opened_at_short") %></dt><dd class="font-medium"><%= format_datetime(@register.opened_at) %></dd></div>
+    <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.closed_at_short") %></dt><dd class="font-medium"><%= format_datetime(@register.closed_at) || "—" %></dd></div>
+    <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.opening_amount") %></dt><dd class="font-semibold"><%= format_money(@register.opening_amount) %></dd></div>
+    <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.cash_sales") %></dt><dd class="font-semibold"><%= format_money(@register.cash_sales) %></dd></div>
+    <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.movements_balance") %></dt><dd class="font-semibold"><%= format_money(@register.movement_balance) %></dd></div>
+    <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.expected") %></dt><dd class="font-semibold"><%= format_money(@register.expected_closing) %></dd></div>
+    <% if @register.closed? %>
+      <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.actual") %></dt><dd class="font-semibold"><%= format_money(@register.actual_closing_amount) %></dd></div>
+      <div class="card p-3"><dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.drift") %></dt><dd class="<%= @register.drift&.zero? ? "font-semibold" : "font-semibold text-red-600 dark:text-red-400" %>"><%= format_money(@register.drift) %></dd></div>
+    <% end %>
+  </dl>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+    <section aria-label="<%= t("cash_registers.movements") %>" class="card overflow-hidden">
+      <h2 class="border-b border-slate-200 px-4 py-3 text-lg font-semibold dark:border-slate-800"><%= t("cash_registers.movements") %></h2>
+      <% if @register.cash_movements.any? %>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <th class="px-4 py-3 font-medium"><%= t("cash_registers.when") %></th>
+              <th class="px-4 py-3 font-medium"><%= t("cash_registers.category") %></th>
+              <th class="px-4 py-3 font-medium"><%= t("cash_registers.reason") %></th>
+              <th class="px-4 py-3 text-right font-medium"><%= t("cash_registers.amount") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @register.cash_movements.recent.each do |movement| %>
+              <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400"><%= format_datetime(movement.created_at) %></td>
+                <td class="px-4 py-3"><%= t("cash_registers.categories.#{movement.category}") %></td>
+                <td class="px-4 py-3"><%= movement.reason %></td>
+                <td class="px-4 py-3 text-right font-semibold <%= movement.expense? ? "text-red-600 dark:text-red-400" : "" %>">
+                  <%= movement.expense? ? "−" : "+" %><%= format_money(movement.amount) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="p-4 text-sm text-slate-500 dark:text-slate-400"><%= t("cash_registers.no_movements") %></p>
+      <% end %>
+    </section>
+
+    <aside class="space-y-4">
+      <% if policy(@register).record_movement? %>
+        <div class="card p-4">
+          <h2 class="text-lg font-semibold"><%= t("cash_registers.record_movement") %></h2>
+          <%= form_with model: [ @register, @movement ], class: "mt-4 space-y-3" do |form| %>
+            <% if @movement.errors.any? %>
+              <div class="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+                <% @movement.errors.full_messages.each do |message| %>
+                  <p><%= message %></p>
+                <% end %>
+              </div>
+            <% end %>
+
+            <div>
+              <%= form.label :movement_type, t("cash_registers.movement_type"), class: "label" %>
+              <%= form.select :movement_type, CashMovement.movement_types.keys.map { |key| [ t("cash_registers.movement_types.#{key}"), key ] }, {}, class: "input" %>
+            </div>
+
+            <div>
+              <%= form.label :category, t("cash_registers.category"), class: "label" %>
+              <%= form.select :category, CashMovement.categories.keys.map { |key| [ t("cash_registers.categories.#{key}"), key ] }, {}, class: "input" %>
+            </div>
+
+            <div>
+              <%= form.label :amount, t("cash_registers.amount"), class: "label" %>
+              <%= form.number_field :amount, step: "0.01", min: "0.01", class: "input" %>
+            </div>
+
+            <div>
+              <%= form.label :reason, t("cash_registers.reason"), class: "label" %>
+              <%= form.text_field :reason, class: "input" %>
+            </div>
+
+            <%= form.submit t("cash_registers.save_movement"), class: "btn btn-primary w-full" %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if policy(@register).close? %>
+        <div class="card p-4">
+          <h2 class="text-lg font-semibold"><%= t("cash_registers.close_title") %></h2>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.close_hint", expected: format_money(@register.expected_closing)) %></p>
+          <%= form_with url: close_cash_register_path(@register), class: "mt-4 space-y-3" do |form| %>
+            <% if @register.errors.any? %>
+              <div class="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+                <% @register.errors.full_messages.each do |message| %>
+                  <p><%= message %></p>
+                <% end %>
+              </div>
+            <% end %>
+
+            <div>
+              <%= form.label :actual_closing_amount, t("cash_registers.actual_closing"), class: "label" %>
+              <%= form.number_field :actual_closing_amount, name: "cash_register[actual_closing_amount]", step: "0.01", min: "0", value: @register.expected_closing, class: "input" %>
+            </div>
+
+            <%= form.submit t("cash_registers.close_shift"), class: "btn btn-primary w-full" %>
+          <% end %>
+        </div>
+      <% end %>
+    </aside>
+  </div>
+</div>

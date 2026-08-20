@@ -1,0 +1,87 @@
+# Files in the config/locales directory are used for internationalization and
+# are automatically loaded by Rails. If you want to use locales other than
+# English, add the necessary files in this directory.
+#
+# To use the locales, use `I18n.t`:
+#
+#     I18n.t "hello"
+#
+# In views, this is aliased to just `t`:
+#
+#     <%= t("hello") %>
+#
+# To use a different locale, set it with `I18n.locale`:
+#
+#     I18n.locale = :es
+#
+# This would use the information in config/locales/es.yml.
+#
+# To learn more about the API, please read the Rails Internationalization guide
+# at https://guides.rubyonrails.org/i18n.html.
+#
+# Be aware that YAML interprets the following case-insensitive strings as
+# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
+# must be quoted to be interpreted as strings. For example:
+#
+#     en:
+#       "yes": yup
+#       enabled: "ON"
+
+en:
+  hello: "Hello world"
+
+  activerecord:
+    attributes:
+      customer:
+        name: "Name"
+        phone: "Phone"
+        whatsapp: "WhatsApp"
+        birthday: "Birthday"
+        notes: "Notes"
+
+  orders:
+    customer: "Customer"
+
+  pos:
+    customer_label: "Customer"
+    customer_attach: "Order customer"
+    customer_existing: "Existing customer"
+    customer_select_placeholder: "Select a customer…"
+    customer_attach_button: "Attach"
+    customer_or: "or create a new one"
+    customer_create: "Create customer"
+    customer_name_placeholder: "Customer name"
+    customer_profile: "Profile"
+    customer_remove: "Remove"
+    customer_attached: "Customer %{name} attached to the order."
+    customer_created: "Customer %{name} created and attached to the order."
+
+  customers:
+    index:
+      title: "Customers"
+      new: "New customer"
+      name: "Name"
+      phone: "Phone"
+      search_placeholder: "Search by name or phone…"
+      empty_title: "No customers"
+      empty_message: "Add the first customer to serve faster at the register."
+    show:
+      back: "Back"
+      edit: "Edit"
+      orders_count: "Orders"
+      total_spent: "Total spent"
+      average_spend: "Average spend"
+      history: "Purchase history"
+      order: "Order"
+      no_history: "No purchases recorded yet."
+    new:
+      title: "New customer"
+      submit: "Create customer"
+    edit:
+      title: "Edit customer"
+      submit: "Save customer"
+    form:
+      phone_placeholder: "(11) 91234-5678"
+    created: "Customer %{name} created."
+    updated: "Customer %{name} updated."
+    discarded: "Customer %{name} archived."

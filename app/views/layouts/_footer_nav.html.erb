@@ -1,0 +1,9 @@
+<% unless current_user.owner? %>
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-950 md:hidden" aria-label="<%= t("layouts.primary_nav") %>">
+    <div class="flex items-center justify-around py-2">
+      <%= link_to t("layouts.nav.menu"), menu_path, class: "btn btn-ghost" %>
+      <%= link_to t("home.title_short"), root_path, class: "btn btn-ghost" %>
+      <span class="btn btn-ghost"><%= t("roles.#{current_user.role}") %></span>
+    </div>
+  </nav>
+<% end %>

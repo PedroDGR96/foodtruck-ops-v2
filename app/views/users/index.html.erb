@@ -1,0 +1,26 @@
+<div class="mx-auto max-w-2xl">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold"><%= t("users.index.title") %></h1>
+    <%= link_to t("users.index.add"), new_user_path, class: "btn btn-primary" %>
+  </div>
+
+  <div class="mt-6 card overflow-hidden">
+    <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+      <% @users.each do |user| %>
+        <li class="flex items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <div>
+            <p class="font-medium"><%= user.name %></p>
+            <p class="text-sm text-slate-500 dark:text-slate-400"><%= user.email %></p>
+          </div>
+          <div class="flex items-center gap-3">
+            <% unless user.active? %>
+              <span class="badge badge-danger"><%= t("common.inactive") %></span>
+            <% end %>
+            <span class="badge badge-secondary capitalize"><%= t("roles.#{user.role}") %></span>
+            <%= link_to t("common.edit"), edit_user_path(user), class: "text-sm text-brand-600 hover:underline dark:text-brand-400" %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+<%= content_for :title, t("orders.title") %>
+
+<div class="mx-auto max-w-5xl">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold"><%= t("orders.title") %></h1>
+    <%= link_to t("pos.title"), pos_path, class: "btn btn-primary" %>
+  </div>
+
+  <div id="orders-list" class="mt-6 card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <th class="px-4 py-3 font-medium"><%= t("orders.number") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("orders.order_type") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("orders.status") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("orders.payment_status") %></th>
+          <th class="px-4 py-3 text-right font-medium"><%= t("orders.total") %></th>
+          <th class="px-4 py-3 font-medium"><%= t("orders.created_at") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @orders.each do |order| %>
+          <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+            <td class="px-4 py-3"><%= link_to "##{order.id}", order_path(order), class: "font-medium text-brand-600 hover:underline dark:text-brand-400" %></td>
+            <td class="px-4 py-3"><%= t("orders.order_types.#{order.order_type}") %></td>
+            <td class="px-4 py-3">
+              <% if order.delivery? && order.delivery %>
+                <span class="badge <%= order_status_badge_class(order.delivery.status) %>"><%= t("orders.delivery_statuses.#{order.delivery.status}") %></span>
+              <% else %>
+                <span class="badge <%= order_status_badge_class(order.status) %>"><%= t("orders.statuses.#{order.status}") %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="badge <%= order_status_badge_class(order.payment_status) %>"><%= t("orders.payment_statuses.#{order.payment_status}") %></span>
+            </td>
+            <td class="px-4 py-3 text-right font-semibold"><%= format_money(order.total) %></td>
+            <td class="px-4 py-3 text-slate-500 dark:text-slate-400"><%= format_datetime(order.created_at) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @orders.empty? %>
+      <p class="p-4 text-sm text-slate-500 dark:text-slate-400"><%= t("orders.none") %></p>
+    <% end %>
+  </div>
+</div>

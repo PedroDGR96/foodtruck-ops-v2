@@ -1,0 +1,38 @@
+<div id="order-<%= order.id %>" class="card mt-6 p-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-semibold"><%= t("orders.ticket") %> #<%= order.id %></h2>
+    <span class="badge <%= order_status_badge_class(order.kitchen_status) %>"><%= t("orders.kitchen_statuses.#{order.kitchen_status}") %></span>
+  </div>
+
+  <ul class="mt-3 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+    <% order.order_items.each do |item| %>
+      <li class="py-3">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="font-medium"><span class="text-slate-400">×<%= item.quantity %></span> <%= item.product_name %></p>
+            <% if item.variant_name.present? %>
+              <p class="text-xs text-slate-500 dark:text-slate-400"><%= item.variant_name %></p>
+            <% end %>
+          </div>
+          <p class="font-semibold"><%= format_money(item.line_total) %></p>
+        </div>
+        <% item.order_item_addons.each do |addon| %>
+          <p class="mt-1 pl-4 text-xs text-slate-500 dark:text-slate-400">+ <%= addon.name %> (<%= format_money(addon.price) %>)</p>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <dl class="mt-2 space-y-1 border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
+    <div class="flex justify-between"><dt><%= t("orders.subtotal") %></dt><dd><%= format_money(order.subtotal) %></dd></div>
+    <div class="flex justify-between"><dt><%= t("orders.tax") %></dt><dd><%= format_money(order.tax) %></dd></div>
+    <% if order.delivery? %>
+      <div class="flex justify-between"><dt><%= t("orders.delivery_fee") %></dt><dd><%= format_money(order.delivery_fee) %></dd></div>
+    <% end %>
+    <div class="flex justify-between font-semibold"><dt><%= t("orders.total") %></dt><dd><%= format_money(order.total) %></dd></div>
+  </dl>
+
+  <% if order.notes.present? %>
+    <p class="mt-3 rounded-md bg-slate-50 p-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300"><%= order.notes %></p>
+  <% end %>
+</div>

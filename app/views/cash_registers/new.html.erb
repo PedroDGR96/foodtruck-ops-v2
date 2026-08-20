@@ -1,0 +1,27 @@
+<%= content_for :title, t("cash_registers.new.title") %>
+
+<div class="mx-auto max-w-md">
+  <%= link_to t("cash_registers.back"), cash_registers_path, class: "text-sm text-brand-600 hover:underline dark:text-brand-400" %>
+
+  <div class="mt-4 card p-6">
+    <h1 class="text-xl font-bold"><%= t("cash_registers.new.title") %></h1>
+
+    <%= form_with model: @register, class: "mt-6 space-y-4" do |form| %>
+      <% if @register.errors.any? %>
+        <div class="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <% @register.errors.full_messages.each do |message| %>
+            <p><%= message %></p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= form.label :opening_amount, t("cash_registers.opening_amount"), class: "label" %>
+        <%= form.number_field :opening_amount, step: "0.01", min: "0", value: 0, class: "input", autofocus: true %>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><%= t("cash_registers.opening_hint") %></p>
+      </div>
+
+      <%= form.submit t("cash_registers.open_shift"), class: "btn btn-primary w-full" %>
+    <% end %>
+  </div>
+</div>

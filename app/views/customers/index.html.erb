@@ -1,0 +1,43 @@
+<%= content_for :title, t("customers.index.title") %>
+
+<div class="flex items-center justify-between">
+  <h1 class="text-2xl font-bold"><%= t("customers.index.title") %></h1>
+  <%= link_to t("customers.index.new"), new_customer_path, class: "btn btn-primary" %>
+</div>
+
+<%= form_with url: customers_path, method: :get, class: "mt-4", role: "search" do |form| %>
+  <div class="relative">
+    <%= form.text_field :query, value: params[:query], placeholder: t("customers.index.search_placeholder"), class: "input pr-10", autocomplete: "off" %>
+    <svg class="pointer-events-none absolute top-3 right-3 h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/>
+      <path d="m21 21-4.35-4.35"/>
+    </svg>
+  </div>
+<% end %>
+
+<% if @customers.any? %>
+  <ul class="mt-6 divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+    <% @customers.each do |customer| %>
+      <li class="flex items-center justify-between gap-4 px-4 py-3">
+        <div class="min-w-0">
+          <%= link_to customer.name, customer_path(customer), class: "font-medium hover:underline" %>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            <% if customer.phone.present? %>
+              <%= customer.phone %>
+            <% end %>
+            <% if customer.whatsapp.present? %>
+              <span class="ml-2">WhatsApp <%= customer.whatsapp %></span>
+            <% end %>
+          </p>
+        </div>
+        <div class="flex shrink-0 items-center gap-3">
+          <%= link_to t("common.edit"), edit_customer_path(customer), class: "text-sm underline" %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <div class="mt-6">
+    <%= render "layouts/empty_state", title: t("customers.index.empty_title"), message: t("customers.index.empty_message"), action: link_to(t("customers.index.new"), new_customer_path, class: "btn btn-primary") %>
+  </div>
+<% end %>

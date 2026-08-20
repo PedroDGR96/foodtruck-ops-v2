@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TEST_DB=foodtruck_ops_test_t13
+
+docker compose up -d --build db redis
+docker compose run --rm --no-deps -e DATABASE_URL=postgresql://app_owner:app_owner@db:5432/${TEST_DB} test bin/db-prepare
+docker compose run --rm --no-deps -e DATABASE_URL=postgresql://app_owner:app_owner@db:5432/${TEST_DB} -e TEST_DB=${TEST_DB} test sh -c 'psql "$DATABASE_URL" -c "GRANT CONNECT ON DATABASE $TEST_DB TO app;"'
+docker compose run --rm --no-deps test bundle exec rubocop
+docker compose run --rm --no-deps test bundle exec brakeman --no-pager
+docker compose run --rm --no-deps -e DATABASE_URL=postgresql://app:app@db:5432/${TEST_DB} test bundle exec rspec

@@ -1,0 +1,61 @@
+<%= content_for :title, t("home.title_short") %>
+
+<div class="mx-auto max-w-5xl">
+  <h1 class="text-2xl font-bold"><%= t("home.title", name: current_user.name) %></h1>
+  <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+    <%= t("home.signed_in_as", role: t("roles.#{current_user.role}"), business: Current.business.name) %>
+  </p>
+
+  <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-<%= current_user.kitchen? ? 4 : 3 %>">
+    <div class="card bg-gradient-to-br from-brand-50 to-white p-4 dark:from-brand-950 dark:to-slate-900">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.today_gross") %></dt>
+      <dd class="text-xl font-bold"><%= format_money(@report[:gross_total] - @report[:refund_total]) %></dd>
+    </div>
+    <div class="card bg-gradient-to-br from-brand-50 to-white p-4 dark:from-brand-950 dark:to-slate-900">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.today_orders") %></dt>
+      <dd class="text-xl font-bold"><%= @report[:total_count] %></dd>
+    </div>
+    <div class="card bg-gradient-to-br from-brand-50 to-white p-4 dark:from-brand-950 dark:to-slate-900">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.active_orders") %></dt>
+      <dd class="text-xl font-bold"><%= @active_orders %></dd>
+    </div>
+    <% if current_user.kitchen? %>
+      <div class="card bg-gradient-to-br from-brand-50 to-white p-4 dark:from-brand-950 dark:to-slate-900">
+        <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.kitchen_queue") %></dt>
+        <dd class="text-xl font-bold"><%= @kitchen_queue %></dd>
+      </div>
+    <% end %>
+  </dl>
+
+  <% if current_user.cashier? %>
+    <div class="mt-4 card flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+      <% if @open_shift %>
+        <p class="text-slate-600 dark:text-slate-300">
+          <%= t("home.shift_open", since: format_datetime(@open_shift.opened_at)) %>
+        </p>
+      <% else %>
+        <p class="text-slate-600 dark:text-slate-300"><%= t("home.shift_closed") %></p>
+        <%= link_to t("cash_registers.open_shift"), new_cash_register_path, class: "btn btn-primary" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="mt-6">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"><%= t("home.quick_actions") %></h2>
+    <div class="mt-3 flex flex-wrap gap-3">
+      <% if current_user.owner? %>
+        <%= link_to t("layouts.nav.pos"), pos_path, class: "btn btn-primary" %>
+        <%= link_to t("layouts.nav.orders"), orders_path, class: "btn btn-secondary" %>
+        <%= link_to t("layouts.nav.staff"), users_path, class: "btn btn-secondary" %>
+        <%= link_to t("layouts.nav.settings"), edit_settings_path, class: "btn btn-secondary" %>
+      <% elsif current_user.cashier? %>
+        <%= link_to t("layouts.nav.pos"), pos_path, class: "btn btn-primary" %>
+        <%= link_to t("layouts.nav.orders"), orders_path, class: "btn btn-secondary" %>
+        <%= link_to t("layouts.nav.customers"), customers_path, class: "btn btn-secondary" %>
+      <% else %>
+        <%= link_to t("layouts.nav.kitchen"), kitchen_path, class: "btn btn-primary" %>
+        <%= link_to t("layouts.nav.orders"), orders_path, class: "btn btn-secondary" %>
+      <% end %>
+    </div>
+  </div>
+</div>

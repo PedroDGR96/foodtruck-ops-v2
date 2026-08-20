@@ -1,0 +1,2 @@
+class ProductAddonGroupPolicy < MenuRecordPolicy
+end

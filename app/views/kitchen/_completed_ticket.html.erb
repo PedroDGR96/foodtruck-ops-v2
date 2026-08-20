@@ -1,0 +1,24 @@
+<div id="<%= dom_id(order, :completed) %>" class="card p-4">
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold">#<%= order.id %></h3>
+    <span class="badge badge-success"><%= t("orders.kitchen_statuses.done") %></span>
+  </div>
+
+  <ul class="mt-3 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+    <% order.order_items.each do |item| %>
+      <li class="py-2">
+        <p class="font-medium"><span class="text-slate-400">×<%= item.quantity %></span> <%= item.product_name %></p>
+        <% if item.variant_name.present? %>
+          <p class="text-xs text-slate-500 dark:text-slate-400"><%= item.variant_name %></p>
+        <% end %>
+        <% item.order_item_addons.each do |addon| %>
+          <p class="pl-4 text-xs text-slate-500 dark:text-slate-400">+ <%= addon.name %></p>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <% if order.finished_at.present? %>
+    <p class="mt-3 text-xs text-slate-500 dark:text-slate-400"><%= t("kitchen.finished_at", time: l(order.finished_at, format: :short_br)) %></p>
+  <% end %>
+</div>

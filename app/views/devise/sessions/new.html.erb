@@ -1,0 +1,18 @@
+<div class="mx-auto mt-16 max-w-sm">
+  <h1 class="text-2xl font-bold"><%= t("app.name") %></h1>
+  <h2 class="mt-1 text-sm text-slate-500 dark:text-slate-400"><%= t("sessions.sign_in_title") %></h2>
+
+  <%= form_for(resource, as: resource_name, url: session_path(resource_name), class: "mt-6 space-y-4") do |f| %>
+    <div>
+      <%= f.label :email, class: "label" %>
+      <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "input" %>
+    </div>
+
+    <div>
+      <%= f.label :password, class: "label" %>
+      <%= f.password_field :password, autocomplete: "current-password", class: "input" %>
+    </div>
+
+    <%= f.submit t("sessions.sign_in"), class: "btn btn-primary w-full" %>
+  <% end %>
+</div>

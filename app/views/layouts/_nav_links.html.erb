@@ -1,0 +1,23 @@
+<% if current_user.owner? %>
+  <%= link_to t("home.title_short"), root_path, class: nav_link_class(request.path == root_path) %>
+  <%= link_to t("layouts.nav.pos"), pos_path, class: nav_link_class(request.path == pos_path) %>
+  <%= link_to t("layouts.nav.cash_register"), cash_registers_path, class: nav_link_class(request.path.start_with?(cash_registers_path)) %>
+  <%= link_to t("layouts.nav.daily_report"), daily_report_path, class: nav_link_class(request.path.start_with?(daily_report_path)) %>
+  <%= link_to t("layouts.nav.orders"), orders_path, class: nav_link_class(request.path.start_with?(orders_path)) %>
+  <%= link_to t("layouts.nav.customers"), customers_path, class: nav_link_class(request.path.start_with?(customers_path)) %>
+  <%= link_to t("layouts.nav.menu"), categories_path, class: nav_link_class(request.path.start_with?(categories_path)) %>
+  <%= link_to "Produtos", products_path, class: nav_link_class(request.path.start_with?(products_path)) %>
+  <%= link_to t("layouts.nav.kitchen"), kitchen_path, class: nav_link_class(request.path == kitchen_path) %>
+  <%= link_to t("layouts.nav.staff"), users_path, class: nav_link_class(request.path.start_with?(users_path)) %>
+  <%= link_to t("layouts.nav.settings"), edit_settings_path, class: nav_link_class(request.path.start_with?(settings_path)) %>
+<% elsif current_user.cashier? %>
+  <%= link_to t("layouts.nav.pos"), pos_path, class: nav_link_class(request.path == pos_path) %>
+  <%= link_to t("layouts.nav.cash_register"), cash_registers_path, class: nav_link_class(request.path.start_with?(cash_registers_path)) %>
+  <%= link_to t("layouts.nav.orders"), orders_path, class: nav_link_class(request.path.start_with?(orders_path)) %>
+  <%= link_to t("layouts.nav.customers"), customers_path, class: nav_link_class(request.path.start_with?(customers_path)) %>
+  <%= link_to t("layouts.nav.menu"), menu_path, class: nav_link_class(request.path == menu_path) %>
+<% else %>
+  <%= link_to t("layouts.nav.orders"), orders_path, class: nav_link_class(request.path.start_with?(orders_path)) %>
+  <%= link_to t("layouts.nav.menu"), menu_path, class: nav_link_class(request.path == menu_path) %>
+  <%= link_to t("layouts.nav.kitchen"), kitchen_path, class: nav_link_class(request.path == kitchen_path) %>
+<% end %>

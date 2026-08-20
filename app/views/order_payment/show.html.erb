@@ -1,0 +1,86 @@
+<%= content_for :title, t("orders.checkout_title", id: @order.id) %>
+
+<div class="mx-auto max-w-2xl">
+  <%= link_to t("orders.back_to"), order_path(@order), class: "text-sm text-brand-600 hover:underline dark:text-brand-400" %>
+
+  <h1 class="mt-2 text-2xl font-bold"><%= t("orders.checkout_title", id: @order.id) %></h1>
+
+  <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+    <%= t("orders.status") %>:
+    <span class="badge <%= order_status_badge_class(@order.payment_status) %>"><%= t("orders.payment_statuses.#{@order.payment_status}") %></span>
+  </p>
+
+  <div class="mt-6 card p-4">
+    <dl class="space-y-1 text-sm">
+      <div class="flex justify-between">
+        <dt><%= t("orders.balance_due") %></dt>
+        <dd class="font-semibold"><%= format_money(@order.balance_due) %></dd>
+      </div>
+      <div class="flex justify-between font-semibold">
+        <dt><%= t("orders.amount_to_pay") %></dt>
+        <dd class="text-brand-600 dark:text-brand-400"><%= format_money(@payment.amount) %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <% unless @order.payment_status.in?(%w[paid refunded]) %>
+    <%= form_with model: @payment, url: checkout_path(@order), method: :post, class: "mt-6 card space-y-4 p-4" do |form| %>
+      <% if @payment.errors.any? %>
+        <div class="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <% @payment.errors.full_messages.each do |message| %>
+            <p><%= message %></p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= form.label :method, t("orders.method"), class: "label" %>
+        <%= form.select :method, Payment.methods.keys.map { |key| [ payment_method_label(key), key ] }, {}, class: "input" %>
+      </div>
+
+      <div>
+        <%= form.label :amount, t("orders.amount"), class: "label" %>
+        <%= form.number_field :amount, step: "0.01", min: "0.01", max: @order.balance_due, value: @payment.amount.round(2), class: "input", autofocus: true %>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><%= t("orders.recommended", amount: format_money(@payment.amount)) %></p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <%= form.submit t("orders.confirm_payment"), class: "btn btn-primary" %>
+        <%= link_to t("orders.cancel_and_return"), orders_path, class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="mt-6 card p-4 text-sm text-slate-600 dark:text-slate-300">
+      <p><%= t("orders.already_paid_msg") %></p>
+    </div>
+  <% end %>
+
+  <div class="mt-6 card p-4">
+    <h2 class="text-lg font-semibold"><%= t("orders.payment_history") %></h2>
+
+    <% if @order.payments.successful.any? %>
+      <table class="mt-3 w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <th class="py-2 pr-2"><%= t("orders.method") %></th>
+            <th class="py-2 pr-2"><%= t("orders.status") %></th>
+            <th class="py-2 pr-2"><%= t("orders.amount") %></th>
+            <th class="py-2"><%= t("orders.time") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @order.payments.successful.order(created_at: :desc).each do |p| %>
+            <tr class="border-t border-slate-100 dark:border-slate-800">
+              <td class="py-2 pr-2 font-medium"><%= payment_method_label(p.method) %></td>
+              <td class="py-2 pr-2"><%= t("orders.payment_statuses.#{p.status}") %></td>
+              <td class="py-2 pr-2 font-semibold"><%= format_money(p.amount) %></td>
+              <td class="py-2"><%= format_datetime(p.created_at) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="mt-3 text-sm text-slate-500 dark:text-slate-400"><%= t("orders.no_payments") %></p>
+    <% end %>
+  </div>
+</div>

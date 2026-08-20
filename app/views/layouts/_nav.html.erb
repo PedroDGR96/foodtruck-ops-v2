@@ -1,0 +1,66 @@
+<header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+  <div class="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
+    <div class="flex items-center gap-6">
+      <%= link_to t("app.name"), root_path, class: "text-lg font-bold text-brand-600 dark:text-brand-400" %>
+      <nav class="hidden items-center gap-4 md:flex" aria-label="<%= t("layouts.primary_nav") %>">
+        <%= render "layouts/nav_links" %>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="hidden text-sm text-slate-500 sm:inline dark:text-slate-400"><%= Current.business.name %></span>
+
+      <!-- Theme picker -->
+      <div class="relative" data-controller="theme-picker" data-action="click@window->theme-picker#close">
+        <button type="button"
+                data-action="click->theme-picker#toggle"
+                class="btn btn-ghost px-2"
+                aria-label="Theme">
+          <span data-theme-dot="laranja" class="block h-4 w-4 rounded-full bg-amber-500 ring-offset-1 dark:ring-offset-slate-900"></span>
+        </button>
+        <div data-theme-picker-target="menu"
+             class="hidden absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+             role="menu">
+          <% themes = { "laranja" => "bg-amber-500", "midnight" => "bg-indigo-500", "verde" => "bg-emerald-500", "sunset" => "bg-rose-500" } %>
+          <% theme_labels = { "laranja" => "Laranja", "midnight" => "Midnight", "verde" => "Verde", "sunset" => "Sunset" } %>
+          <% themes.each do |key, color| %>
+            <button type="button"
+                    data-action="dark-mode#setTheme"
+                    data-theme="<%= key %>"
+                    class="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                    role="menuitem">
+              <span class="block h-3 w-3 rounded-full <%= color %>"></span>
+              <%= theme_labels[key] %>
+              <span class="ml-auto text-xs text-slate-400 dark:text-slate-500">
+                <% if key == "laranja" %>●<% end %>
+              </span>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Dark mode toggle -->
+      <button type="button"
+              data-action="dark-mode#toggleDark"
+              class="btn btn-ghost"
+              aria-label="<%= t("layouts.toggle_dark") %>">
+        <svg class="h-5 w-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 3a9 9 0 1 0 9 9c0-.5-.5-1-1-1a6 6 0 0 1-8-8c0-.5-.5-1-1-1z"/>
+        </svg>
+        <svg class="hidden h-5 w-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+      </button>
+
+      <span class="hidden text-sm text-slate-500 sm:inline dark:text-slate-400">
+        <%= current_user.name %>
+      </span>
+      <%= button_to t("layouts.sign_out"), destroy_user_session_path, method: :delete, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <nav class="flex items-center gap-4 px-4 pb-2 md:hidden" aria-label="<%= t("layouts.primary_nav") %>">
+    <%= render "layouts/nav_links" %>
+  </nav>
+</header>

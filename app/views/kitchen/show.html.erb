@@ -1,0 +1,50 @@
+<%= content_for :title, t("kitchen.title") %>
+
+<%= turbo_stream_from KitchenChannel.stream_name(Current.business.id) %>
+
+<% grouped = @orders.group_by(&:order_type) %>
+
+<div class="mx-auto max-w-6xl">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold"><%= t("kitchen.title") %></h1>
+    <button type="button"
+            data-controller="kitchen-sound"
+            data-action="kitchen-sound#toggle"
+            data-kitchen-sound-enabled-value="false"
+            data-kitchen-sound-on-label-value="<%= t("kitchen.sound_on") %>"
+            data-kitchen-sound-off-label-value="<%= t("kitchen.sound_off") %>"
+            aria-pressed="false"
+            class="btn btn-secondary"
+            title="<%= t("kitchen.sound_hint") %>">
+      <span data-kitchen-sound-target="label"><%= t("kitchen.sound_off") %></span>
+    </button>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <% %w[local delivery pickup].each do |type| %>
+      <section class="mt-6">
+        <h2 class="text-lg font-semibold"><%= t("orders.order_types.#{type}") %> <span class="text-sm font-normal text-slate-400">(<%= grouped.fetch(type, []).size %>)</span></h2>
+        <div id="kitchen-queue-<%= type %>" class="mt-3 space-y-3">
+          <% grouped.fetch(type, []).each do |order| %>
+            <%= render "ticket", order: order, can_start: policy(order).start_cooking?, can_mark_ready: policy(order).mark_ready? %>
+          <% end %>
+          <% if grouped.fetch(type, []).empty? %>
+            <p class="text-sm text-slate-500 dark:text-slate-400"><%= t("kitchen.none_in_type") %></p>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  </div>
+
+  <section class="mt-10">
+    <h2 class="text-lg font-semibold"><%= t("kitchen.completed") %></h2>
+    <div id="kitchen-completed" class="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <% @completed.each do |order| %>
+        <%= render "completed_ticket", order: order %>
+      <% end %>
+      <% if @completed.empty? %>
+        <p class="text-sm text-slate-500 dark:text-slate-400"><%= t("kitchen.none_completed") %></p>
+      <% end %>
+    </div>
+  </section>
+</div>

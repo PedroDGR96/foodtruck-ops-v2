@@ -1,0 +1,640 @@
+pt-BR:
+  app:
+    name: "FoodTruck Ops"
+
+  activerecord:
+    attributes:
+      user:
+        name: "Nome"
+        email: "E-mail"
+        role: "Perfil"
+        password: "Senha"
+        password_confirmation: "Confirmação de senha"
+        active: "Ativo"
+      order:
+        subtotal: "Subtotal"
+        tax: "Imposto"
+        total: "Total"
+        delivery_fee: "Taxa de entrega"
+        payment_status: "Pagamento"
+        order_type: "Tipo"
+        status: "Status"
+        notes: "Observações"
+      delivery_address:
+        street: "Logradouro"
+        number: "Número"
+        complement: "Complemento"
+        neighborhood: "Bairro"
+        city: "Cidade"
+        state: "UF"
+        zip: "CEP"
+        reference: "Referência"
+      delivery:
+        courier_name: "Entregador"
+        status: "Status"
+      payment:
+        amount: "Valor"
+        method: "Forma de pagamento"
+        gateway_reference: "Referência"
+      cash_register:
+        opening_amount: "Valor de abertura"
+        actual_closing_amount: "Valor em caixa"
+      cash_movement:
+        movement_type: "Tipo"
+        category: "Categoria"
+        amount: "Valor"
+        reason: "Motivo"
+      business:
+        name: "Nome"
+        timezone: "Fuso horário"
+        currency: "Moeda"
+        delivery_fee: "Taxa de entrega"
+        active: "Ativo"
+      category:
+        name: "Nome"
+        position: "Posição"
+        active: "Ativa"
+      product:
+        name: "Nome"
+        category_id: "Categoria"
+        description: "Descrição"
+        price: "Preço"
+        status: "Status"
+        position: "Posição"
+        image: "Imagem"
+      product_variant:
+        name: "Nome"
+        price: "Preço"
+        stock: "Estoque"
+        active: "Ativa"
+      product_addon_group:
+        name: "Nome"
+        multiple: "Permitir mais de um"
+        min_select: "Mínimo"
+        max_select: "Máximo"
+        position: "Posição"
+        active: "Ativo"
+      product_addon:
+        name: "Nome"
+        price: "Preço"
+        active: "Ativo"
+      customer:
+        name: "Nome"
+        phone: "Telefone"
+        whatsapp: "WhatsApp"
+        birthday: "Aniversário"
+        notes: "Observações"
+    errors:
+      models:
+        order:
+          attributes:
+            total:
+              inconsistent: "não confere com subtotal e impostos"
+            payment_status:
+              inconsistent: "não confere com o total pago"
+            delivery_address:
+              blank: "é obrigatório para pedidos de entrega"
+        payment:
+          attributes:
+            amount:
+              exceeds_order_total: "não pode exceder o saldo restante do pedido"
+        cash_register:
+          attributes:
+            opening_amount:
+              greater_than_or_equal_to: "não pode ser negativo"
+            actual_closing_amount:
+              blank: "informe o valor em caixa na conferência"
+            base:
+              already_open_shift: "já existe um turno de caixa aberto para este caixa"
+
+  common:
+    save: "Salvar"
+    cancel: "Cancelar"
+    edit: "Editar"
+    back: "Voltar"
+    search: "Buscar"
+    add: "Adicionar"
+    actions: "Ações"
+    inactive: "Inativo"
+    active: "Ativo"
+    role: "Perfil"
+    confirm: "Confirmar"
+    email: "E-mail"
+    password: "Senha"
+    new_password: "Nova senha (opcional)"
+    confirm_new_password: "Confirmar nova senha"
+    save_changes: "Salvar alterações"
+    loading: "Carregando…"
+    dismiss: "Fechar"
+    skip_to_content: "Ir para o conteúdo"
+    included: "Incluído"
+
+  roles:
+    owner: "proprietário"
+    cashier: "caixa"
+    kitchen: "cozinha"
+
+  layouts:
+    sign_out: "Sair"
+    toggle_dark: "Alternar tema"
+    primary_nav: "Navegação principal"
+    nav:
+      orders: "Pedidos"
+      cash_register: "Caixa"
+      daily_report: "Relatório"
+      customers: "Clientes"
+      menu: "Cardápio"
+      staff: "Equipe"
+      settings: "Configurações"
+      pos: "Caixa"
+      orders: "Pedidos"
+      kitchen: "Cozinha"
+
+  home:
+    title: "Bem-vindo, %{name}"
+    title_short: "Início"
+    signed_in_as: "Você está conectado como %{role} da empresa %{business}."
+    today_gross: "Faturamento de hoje"
+    today_orders: "Pedidos de hoje"
+    active_orders: "Pedidos em andamento"
+    kitchen_queue: "Fila da cozinha"
+    shift_open: "Turno de caixa aberto desde %{since}."
+    shift_closed: "Você não tem um turno de caixa aberto."
+    quick_actions: "Atalhos"
+
+  sessions:
+    sign_in: "Entrar"
+    sign_in_title: "Acessar sua empresa"
+
+  users:
+    index:
+      title: "Equipe"
+      add: "Adicionar membro da equipe"
+    new:
+      title: "Adicionar membro da equipe"
+      submit: "Adicionar membro da equipe"
+    edit:
+      title: "Editar membro da equipe"
+      submit: "Salvar alterações"
+    created: "Membro %{name} adicionado."
+    updated: "Membro %{name} atualizado."
+
+  settings:
+    edit:
+      title: "Configurações da empresa"
+      submit: "Salvar configurações"
+    updated: "Configurações salvas."
+
+  integrations:
+    title: "Integrações"
+    subtitle: "Configure provedores de serviços externos para sua food truck."
+    enabled: "Ativado"
+    disabled: "Desativado"
+    test_connection: "Testar Conexão"
+    save: "Salvar Integrações"
+    updated: "Integrações salvas."
+    providers:
+      payment_gateway: "Pagamentos"
+      messaging: "Mensagens"
+      maps: "Mapas"
+      fiscal: "Fiscal"
+      marketplace: "Marketplace"
+    descriptions:
+      payment_gateway: "Provedor de pagamentos para PIX, cartão e dinheiro."
+      messaging: "Envio de WhatsApp, SMS e e-mail para clientes."
+      maps: "Geocodificação e cálculo de distâncias para entregas."
+      fiscal: "Emissão de NFC-e (PDV) e NF-e (notas fiscais)."
+      marketplace: "Integração com iFood, 99Food e Rappi."
+    fields:
+      payment_gateway:
+        public_key: "Chave pública (Mercado Pago)"
+        access_token: "Token de acesso"
+        webhook_secret: "Secret do webhook"
+        sandbox: "Modo sandbox"
+      messaging:
+        twilio_account_sid: "Twilio Account SID"
+        twilio_auth_token: "Twilio Auth Token"
+        twilio_phone: "Número Twilio"
+        whatsapp_business_token: "WhatsApp Business Token"
+        whatsapp_phone_id: "WhatsApp Phone ID"
+      maps:
+        provider: "Provedor de mapas"
+        api_key: "Chave da API"
+        default_origin: "Endereço base"
+      fiscal:
+        environment: "Ambiente"
+        state: "UF"
+        cnpj: "CNPJ"
+        certificate_path: "Caminho do certificado"
+        certificate_password: "Senha do certificado"
+      marketplace:
+        merchant_id: "ID do estabelecimento"
+        platform: "Plataforma"
+        api_key: "Chave da API"
+        webhook_token: "Token do webhook"
+
+  categories:
+    index:
+      title: "Cardápio"
+      new: "Nova categoria"
+      products_count:
+        one: "1 produto"
+        other: "%{count} produtos"
+      position: "Posição %{position}"
+      empty_title: "Nenhuma categoria"
+      empty_message: "Comece criando uma categoria, como “Lanches” ou “Bebidas”."
+    new:
+      title: "Nova categoria"
+      submit: "Criar categoria"
+    edit:
+      title: "Editar categoria"
+      submit: "Salvar categoria"
+    created: "Categoria %{name} criada."
+    updated: "Categoria %{name} atualizada."
+    discarded: "Categoria %{name} arquivada."
+
+  products:
+    index:
+      title: "Produtos"
+      new: "Novo produto"
+      name: "Nome"
+      category: "Categoria"
+      price: "Preço"
+      status: "Status"
+      empty_title: "Nenhum produto"
+      empty_message: "Adicione o primeiro produto do seu cardápio."
+    show:
+      category: "Categoria"
+      price: "Preço"
+      status: "Status"
+      position: "Posição"
+      description: "Descrição"
+      image: "Imagem"
+      no_image: "Sem imagem"
+      variants_title: "Variações"
+      new_variant: "Nova variação"
+      variant_price: "A partir de %{price}"
+      variant_stock: "Estoque: %{stock}"
+      no_variants: "Nenhuma variação cadastrada."
+      addon_groups_title: "Extras"
+      new_addon_group: "Novo grupo de extras"
+      selection_range: "%{min} a %{max} por item"
+      no_addon_groups: "Nenhum grupo de extras cadastrado."
+      new_addon: "Novo extra"
+      discard: "Arquivar"
+      discard_confirm: "Arquivar este produto? Ele deixará de aparecer no cardápio."
+    new:
+      title: "Novo produto"
+      submit: "Criar produto"
+    edit:
+      title: "Editar produto"
+      submit: "Salvar produto"
+    created: "Produto %{name} criado."
+    updated: "Produto %{name} atualizado."
+    discarded: "Produto %{name} arquivado."
+    status:
+      available: "Disponível"
+      unavailable: "Indisponível"
+
+  product_variants:
+    new:
+      title: "Nova variação para %{product}"
+      submit: "Criar variação"
+    edit:
+      title: "Editar variação de %{product}"
+      submit: "Salvar variação"
+    form:
+      price_hint: "Preço (opcional)"
+      price_placeholder: "Usa o preço do produto"
+      stock_hint: "Estoque (opcional)"
+      stock_placeholder: "Sem controle de estoque"
+    created: "Variação %{name} criada."
+    updated: "Variação %{name} atualizada."
+    discarded: "Variação %{name} arquivada."
+
+  product_addon_groups:
+    new:
+      title: "Novo grupo de extras para %{product}"
+      submit: "Criar grupo"
+    edit:
+      title: "Editar grupo de extras de %{product}"
+      submit: "Salvar grupo"
+    form:
+      multiple_hint: "Permitir escolher mais de um extra"
+      max_select_hint: "Limite máximo (opcional)"
+      max_select_placeholder: "Sem limite"
+    created: "Grupo de extras %{name} criado."
+    updated: "Grupo de extras %{name} atualizado."
+    discarded: "Grupo de extras %{name} arquivado."
+
+  product_addons:
+    new:
+      title: "Novo extra em %{group}"
+      submit: "Criar extra"
+    edit:
+      title: "Editar extra de %{group}"
+      submit: "Salvar extra"
+    created: "Extra %{name} criado."
+    updated: "Extra %{name} atualizado."
+    discarded: "Extra %{name} arquivado."
+
+  menu:
+    title: "Cardápio"
+    search_placeholder: "Buscar produtos…"
+    search_hint: "Pressione “/” para buscar"
+    results_for: "Resultados para “%{query}”"
+    empty_title: "Nenhum produto"
+    empty_search: "Nenhum produto corresponde à sua busca."
+    empty_menu: "O cardápio ainda está vazio."
+    product_count:
+      one: "1 item"
+      other: "%{count} itens"
+    variants_count:
+      one: "1 variação"
+      other: "%{count} variações"
+    addon_groups_count:
+      one: "1 grupo de extras"
+      other: "%{count} grupos de extras"
+
+  errors:
+    forbidden:
+      title: "Acesso negado (403)"
+      message: "Você não tem permissão para realizar esta ação."
+
+  orders:
+    title: "Pedidos"
+    detail: "Pedido"
+    number: "Nº"
+    back: "Voltar"
+    back_to: "Voltar ao pedido"
+    customer: "Cliente"
+    created_at: "Criado em"
+    subtotal: "Subtotal"
+    tax: "Imposto"
+    delivery_fee: "Taxa de entrega"
+    total: "Total"
+    balance_due: "Saldo a pagar"
+    delivery: "Entrega"
+    already_paid: "Pago"
+    order_type: "Tipo"
+    status: "Status"
+    payment_status: "Pagamento"
+    ticket: "Comanda"
+    actions: "Ações"
+    payments: "Pagamentos"
+    events: "Histórico"
+    no_payments: "Nenhum pagamento registrado."
+    no_events: "Nenhum evento registrado."
+    none: "Nenhum pedido até agora."
+    method: "Forma de pagamento"
+    amount: "Valor"
+    gateway_reference: "Referência"
+    gateway_reference_hint: "ID da transação (opcional)"
+    collect_payment: "Receber pagamento"
+    checkout_title: "Pagamento do pedido #%{id}"
+    amount_to_pay: "Valor a pagar agora"
+    recommended: "(Recomendado: %{amount})"
+    confirm_payment: "Confirmar pagamento"
+    cancel_and_return: "Cancelar pedido e voltar"
+    already_paid_msg: "Este pedido já foi pago. Nenhum pagamento adicional é necessário."
+    payment_history: "Histórico de pagamentos"
+    time: "Horário"
+    payment_recorded: "Pagamento registrado."
+    invalid_step: "Etapa de pagamento inválida."
+    negative_amount: "O valor do pagamento não pode ser negativo."
+    zero_amount: "O valor deve ser maior que zero."
+    exceeds_balance: "O valor informado é maior que o saldo a pagar."
+    cannot_pay: "Este pedido não pode ser pago no estado atual."
+    cancel_order: "Cancelar pedido"
+    refund: "Reembolsar"
+    refund_confirm: "Deseja reembolsar todos os pagamentos deste pedido?"
+    confirmed: "Pedido confirmado. Receba o pagamento."
+    paid: "Pagamento recebido. Pedido enviado para a cozinha."
+    partial_payment: "Pagamento parcial registrado."
+    cancelled: "Pedido cancelado."
+    cancelled_override: "Pedido cancelado com estorno dos pagamentos."
+    refunded: "Pedido reembolsado."
+    cannot_cancel: "Este pedido não pode ser cancelado no estado atual."
+    cannot_refund: "Este pedido não pode ser reembolsado no estado atual."
+    mark_out_for_delivery: "Sair para entrega"
+    mark_delivered: "Marcar entregue"
+    delivery_out_notice: "Pedido saiu para entrega."
+    delivery_delivered_notice: "Pedido entregue."
+    delivery_not_updated: "Não foi possível atualizar o status da entrega."
+    statuses:
+      draft: "Rascunho"
+      open: "Aberto"
+      partially_paid: "Pago parcialmente"
+      paid: "Pago"
+      in_kitchen: "Na cozinha"
+      ready: "Pronto"
+      completed: "Concluído"
+      cancelled: "Cancelado"
+      refunded: "Reembolsado"
+    payment_statuses:
+      pending: "Pendente"
+      partially_paid: "Parcial"
+      paid: "Pago"
+      refunded: "Reembolsado"
+      succeeded: "Aprovado"
+    kitchen_statuses:
+      pending: "Aguardando"
+      in_progress: "Em preparo"
+      done: "Pronto"
+    order_types:
+      local: "Local"
+      delivery: "Entrega"
+      pickup: "Retirada"
+    delivery_statuses:
+      pending: "Pendente"
+      out_for_delivery: "Em entrega"
+      delivered: "Entregue"
+    payment_methods:
+      cash: "Dinheiro"
+      pix: "Pix"
+      card: "Cartão"
+    events_list:
+      confirmed: "Pedido confirmado"
+      paid: "Pagamento recebido"
+      partially_paid: "Pagamento parcial"
+      cancelled: "Pedido cancelado"
+      refunded: "Pedido reembolsado"
+      discarded: "Rascunho descartado"
+      cooking_started: "Início do preparo"
+      ready: "Pronto para retirada"
+      completed: "Pedido concluído"
+
+  pos:
+    title: "Caixa"
+    cart: "Carrinho"
+    search_placeholder: "Buscar produtos…"
+    no_products: "Nenhum produto disponível."
+    add: "Adicionar"
+    update: "Atualizar"
+    remove: "Remover"
+    confirm: "Confirmar pedido"
+    quantity_for: "Quantidade de %{name}"
+    empty_cart: "O carrinho está vazio. Adicione produtos para começar."
+    added: "%{name} adicionado ao pedido."
+    customer_label: "Cliente"
+    customer_attach: "Cliente do pedido"
+    customer_existing: "Cliente existente"
+    customer_select_placeholder: "Selecionar cliente…"
+    customer_attach_button: "Vincular"
+    customer_or: "ou crie um novo"
+    customer_create: "Criar cliente"
+    customer_name_placeholder: "Nome do cliente"
+    customer_profile: "Perfil"
+    customer_remove: "Remover"
+    customer_attached: "Cliente %{name} vinculado ao pedido."
+    customer_created: "Cliente %{name} criado e vinculado ao pedido."
+    shift_open: "Turno aberto em %{when}"
+    shift_closed_warning: "Nenhum turno aberto."
+    shift_required: "Abra um turno de caixa antes de confirmar o pedido."
+    open_shift: "Abrir turno"
+    product_not_found: "Produto não encontrado."
+    item_not_found: "Item não encontrado no pedido."
+    customer_not_found: "Cliente não encontrado."
+
+  customers:
+    index:
+      title: "Clientes"
+      new: "Novo cliente"
+      name: "Nome"
+      phone: "Telefone"
+      search_placeholder: "Buscar por nome ou telefone…"
+      empty_title: "Nenhum cliente"
+      empty_message: "Cadastre o primeiro cliente para atender mais rápido no caixa."
+    show:
+      back: "Voltar"
+      edit: "Editar"
+      orders_count: "Pedidos"
+      total_spent: "Total gasto"
+      average_spend: "Ticket médio"
+      history: "Histórico de compras"
+      order: "Pedido"
+      no_history: "Nenhuma compra registrada ainda."
+    new:
+      title: "Novo cliente"
+      submit: "Criar cliente"
+    edit:
+      title: "Editar cliente"
+      submit: "Salvar cliente"
+    form:
+      phone_placeholder: "(11) 91234-5678"
+    created: "Cliente %{name} criado."
+    updated: "Cliente %{name} atualizado."
+    discarded: "Cliente %{name} arquivado."
+
+  cash_registers:
+    title: "Caixas"
+    shift: "Turno de caixa"
+    current_shift: "Turno atual"
+    history: "Histórico"
+    open_shift: "Abrir turno"
+    opened: "Turno aberto com sucesso."
+    closed: "Turno fechado."
+    movement_recorded: "Movimentação registrada."
+    opened_at: "Aberto em %{when}"
+    opened_at_short: "Aberto em"
+    closed_at_short: "Fechado em"
+    cashier: "Caixa"
+    status: "Status"
+    expected: "Esperado"
+    actual: "Contado"
+    drift: "Diferença"
+    cash_sales: "Vendas em dinheiro"
+    movements_balance: "Saldo de movimentações"
+    opening_amount: "Valor de abertura"
+    opening_hint: "Valor em caixa no início do turno"
+    actual_closing: "Valor contado no fechamento"
+    no_open_shift: "Nenhum turno aberto."
+    no_shifts: "Nenhum turno registrado."
+    no_movements: "Nenhuma movimentação registrada."
+    view_shift: "Ver turno"
+    back: "Voltar"
+    back_to_list: "Voltar à lista"
+    movements: "Movimentações"
+    when: "Quando"
+    category: "Categoria"
+    reason: "Motivo"
+    amount: "Valor"
+    movement_type: "Tipo"
+    record_movement: "Registrar movimentação"
+    save_movement: "Salvar movimentação"
+    close_title: "Fechar turno"
+    close_hint: "Valor esperado: %{expected}"
+    close_shift: "Fechar turno"
+    statuses:
+      open: "Aberto"
+      closed: "Fechado"
+      drifted: "Divergente"
+      reconciled: "Conferido"
+    categories:
+      refund: "Reembolso"
+      cash_drop: "Depósito"
+      payout: "Pagamento"
+      other_income: "Outra entrada"
+      other_expense: "Outra saída"
+    movement_types:
+      income: "Entrada"
+      expense: "Saída"
+    new:
+      title: "Abrir turno de caixa"
+    errors:
+      already_closed: "Este turno já foi fechado."
+
+  kitchen:
+    title: "Cozinha"
+    start: "Iniciar preparo"
+    ready_btn: "Marcar pronto"
+    started: "Preparo iniciado."
+    ready: "Pedido marcado como pronto."
+    cannot_start: "Este pedido não pode ser iniciado no estado atual."
+    cannot_ready: "Este pedido não pode ser marcado como pronto no estado atual."
+    prep_time: "Preparo: %{elapsed}"
+    overdue: "Atrasado"
+    completed: "Concluídos recentemente"
+    none_completed: "Nenhum pedido concluído ainda."
+    none_in_type: "Nenhum pedido aguardando neste tipo."
+    finished_at: "Pronto às %{time}"
+    sound_on: "Som ligado"
+    sound_off: "Som desligado"
+    sound_hint: "Ative o som para receber um alerta quando novos pedidos chegarem."
+    customer: "Cliente"
+    address: "Endereço"
+    no_customer: "Sem cliente"
+  daily_reports:
+    title: "Relatório diário"
+    date: "Data"
+    date_hint: "Relatório do dia"
+    total_orders: "Pedidos"
+    gross_total: "Vendas brutas"
+    refund_total: "Reembolsos"
+    net_total: "Total líquido"
+    by_method: "Vendas por forma de pagamento"
+    by_product: "Vendas por produto"
+    product: "Produto"
+    quantity: "Quantidade"
+    total: "Total"
+    method: "Forma de pagamento"
+    no_orders: "Nenhum pedido registrado neste dia."
+    no_products: "Nenhuma venda de produto registrada."
+    no_methods: "Nenhum pagamento registrado."
+    shifts: "Turnos do dia"
+    cashier: "Caixa"
+    opened_at: "Aberto em"
+    closed_at: "Fechado em"
+    status: "Status"
+    no_shifts: "Nenhum turno registrado neste dia."
+    net_hint: "Vendas brutas menos reembolsos"
+
+  time:
+    formats:
+      br: "%d/%m/%Y %H:%M"
+      short_br: "%d/%m/%Y"
+
+  date:
+    formats:
+      br: "%d/%m/%Y %H:%M"
+      short_br: "%d/%m/%Y"
