@@ -10,7 +10,7 @@ gem "rswag"
 gem "stimulus-rails"
 gem "tailwindcss-rails"
 gem "jbuilder"
-gem "redis", ">= 5.0", "< 6"
+gem "redis", ">= 5.0", "< 7"
 gem "sidekiq", "~> 8.0"
 gem "bootsnap", require: false
 gem "kamal", require: false
