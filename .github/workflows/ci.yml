@@ -36,7 +36,7 @@ jobs:
       DB_PASSWORD: app
       REDIS_URL: redis://localhost:6379/1
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: .ruby-version
