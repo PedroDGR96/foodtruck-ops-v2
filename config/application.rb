@@ -33,7 +33,8 @@ module App
     # Zeitwerk root so constants keep their top-level names (Current,
     # BusinessScoped, ...). app/core itself must never become a root.
     core_root = Rails.root.join("app/core")
-    config.eager_load_paths += [ core_root.join("models"), core_root.join("models/concerns") ]
+    config.eager_load_paths += [ core_root.join("models"), core_root.join("models/concerns"),
+                                 core_root.join("lib") ]
     config.active_job.queue_adapter = :sidekiq
     config.active_record.schema_format = :sql
     config.middleware.insert_after Warden::Manager, TenantMiddleware

@@ -8,7 +8,7 @@ Everything else stays vertical until the pilot vertical demands promotion.
 
 | Area | Files |
 | --- | --- |
-| Tenancy & RLS | `lib/tenancy.rb`, `lib/tenancy/*`, `app/models/concerns/business_scoped.rb`, `app/models/concerns/tenant_child.rb`, `app/models/current.rb`, `app/models/business.rb`, `app/jobs/application_job.rb`, `app/jobs/business_job.rb` |
+| Tenancy & RLS | `app/core/lib/tenancy.rb`, `app/core/lib/tenancy/*` (runtime; `lib/tenancy/tenant_rls.rb` stays in `lib` as migration tooling), `app/core/models/concerns/business_scoped.rb`, `app/core/models/concerns/tenant_child.rb`, `app/core/models/current.rb`, `app/models/business.rb`, `app/jobs/application_job.rb`, `app/jobs/business_job.rb` |
 | Identity & access | `app/models/user.rb`, `app/models/token.rb`, `app/controllers/application_controller.rb`, `app/controllers/authenticated_controller.rb`, `app/controllers/users/*`, `app/controllers/users_controller.rb` |
 | Order lifecycle shell | `app/models/order_event.rb`, `app/services/order_lifecycle.rb`, `app/services/order_service.rb`, `app/controllers/orders_controller.rb` (state machine, events, cancellation/refund flow) |
 | Payments | `app/models/payment.rb`, `app/controllers/order_payment_controller.rb` |
