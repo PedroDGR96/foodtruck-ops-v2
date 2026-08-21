@@ -14,9 +14,12 @@ roles, a live queue of orders, and a kitchen display that reacts in real time.
 ```bash
 # from the repo root
 bin/setup            # builds images, boots db/redis/web/worker/tailwind
-bin/rails db:seed    # creates the business + 3 staff users
-bin/rails runner bin/demo-data.rb   # seeds catalog, open shift, 6 live orders
+docker compose exec -T web bin/rails db:seed     # creates the business + 3 staff users
+docker compose exec -T web bin/rails runner bin/demo-data.rb   # seeds catalog, open shift, 6 live orders
 ```
+
+> Run Rails commands inside the `web` container (`docker compose exec -T web bin/rails ...`).
+> The host-side `bin/rails` binstub only works if Ruby is installed locally.
 
 The seed scripts are idempotent — re-running them never duplicates data.
 
@@ -104,7 +107,7 @@ The seed planted orders in **every** state, so each screen is already alive:
 |---|---|
 | `localhost:3000` won't load | `docker compose --profile dev ps` — are `web`, `worker`, `tailwind` up? Re-run `bin/setup`. |
 | Pages render without styling | Tailwind watcher died → `docker compose --profile dev up -d tailwind`. |
-| Empty kitchen / empty orders | Demo data missing → re-run `bin/rails runner bin/demo-data.rb`. |
+| Empty kitchen / empty orders | Demo data missing → `docker compose exec -T web bin/rails runner bin/demo-data.rb`. |
 | Password rejected | All seeded users use `password123`; change via `OWNER_PASSWORD` on reseed. |
 | I broke the demo data | The DB is disposable: `docker compose down -v` wipes it, then `bin/setup` + reseed. |
 
