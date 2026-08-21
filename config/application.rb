@@ -28,6 +28,12 @@ module App
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks generators])
+
+    # Tier 1 core (see docs/CORE_CONTRACT.md): each directory is its own
+    # Zeitwerk root so constants keep their top-level names (Current,
+    # BusinessScoped, ...). app/core itself must never become a root.
+    core_root = Rails.root.join("app/core")
+    config.eager_load_paths += [ core_root.join("models"), core_root.join("models/concerns") ]
     config.active_job.queue_adapter = :sidekiq
     config.active_record.schema_format = :sql
     config.middleware.insert_after Warden::Manager, TenantMiddleware
