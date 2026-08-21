@@ -93,5 +93,17 @@ RSpec.describe "Daily Reports", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("R$ 100,00")
     end
+
+    it "shows date navigation links" do
+      login(:owner)
+
+      get daily_report_path(date: "2026-08-04")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("aria-label=\"Dia anterior\"")
+      expect(response.body).to include("aria-label=\"Próximo dia\"")
+      expect(response.body).to include("date=2026-08-03")
+      expect(response.body).to include("date=2026-08-05")
+    end
   end
 end

@@ -5,6 +5,11 @@ class CustomersController < AuthenticatedController
     authorize Customer
     @customers = Current.business.customers.ordered
     @customers = @customers.search(params[:query]) if params[:query].present?
+    @customer_stats = {}
+    @customers.each do |customer|
+      history = CustomerHistory.call(customer)
+      @customer_stats[customer.id] = { order_count: history.order_count, total_spent: history.total_spent }
+    end
   end
 
   def show

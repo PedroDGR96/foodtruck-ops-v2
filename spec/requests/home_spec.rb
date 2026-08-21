@@ -75,5 +75,29 @@ RSpec.describe "Home dashboard", type: :request do
 
       expect(response.body).to include("Turno de caixa aberto desde")
     end
+
+    it "shows weekly revenue and order count" do
+      create_paid_order(total: 50.0)
+
+      login_as owner, scope: :user
+      get "/"
+
+      expect(response.body).to include("Faturamento 7 dias")
+      expect(response.body).to include("R$ 50,00")
+      expect(response.body).to include("Ordens 7 dias")
+    end
+
+    it "excludes refunded orders from weekly order count" do
+      create_paid_order(total: 50.0)
+      Tenancy.with_business(business) do
+        refunded = create(:order, :open, business: business, total: 20.0, subtotal: 20.0)
+        refunded.update!(status: "refunded", payment_status: "refunded")
+      end
+
+      login_as owner, scope: :user
+      get "/"
+
+      expect(response.body).to match(%r{Ordens 7 dias</dt>\s*<dd class="text-xl font-bold">1</dd>})
+    end
   end
 end

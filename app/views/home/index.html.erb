@@ -6,7 +6,7 @@
     <%= t("home.signed_in_as", role: t("roles.#{current_user.role}"), business: Current.business.name) %>
   </p>
 
-  <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-<%= current_user.kitchen? ? 4 : 3 %>">
+  <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-<%= current_user.kitchen? ? 6 : 5 %>">
     <div class="card bg-gradient-to-br from-brand-50 to-white p-4 dark:from-brand-950 dark:to-slate-900">
       <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.today_gross") %></dt>
       <dd class="text-xl font-bold"><%= format_money(@report[:gross_total] - @report[:refund_total]) %></dd>
@@ -14,6 +14,14 @@
     <div class="card bg-gradient-to-br from-brand-50 to-white p-4 dark:from-brand-950 dark:to-slate-900">
       <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.today_orders") %></dt>
       <dd class="text-xl font-bold"><%= @report[:total_count] %></dd>
+    </div>
+    <div class="card border-l-4 border-blue-400 bg-gradient-to-br from-blue-50 to-white p-4 dark:from-blue-950 dark:to-slate-900">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.weekly_revenue") %></dt>
+      <dd class="text-xl font-bold"><%= format_money(@weekly_revenue) %></dd>
+    </div>
+    <div class="card border-l-4 border-blue-400 bg-gradient-to-br from-blue-50 to-white p-4 dark:from-blue-950 dark:to-slate-900">
+      <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.weekly_orders") %></dt>
+      <dd class="text-xl font-bold"><%= @weekly_orders %></dd>
     </div>
     <div class="card bg-gradient-to-br from-brand-50 to-white p-4 dark:from-brand-950 dark:to-slate-900">
       <dt class="text-xs text-slate-500 dark:text-slate-400"><%= t("home.active_orders") %></dt>

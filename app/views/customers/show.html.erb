@@ -3,6 +3,7 @@
 <div class="flex items-center justify-between">
   <div class="flex items-center gap-3">
     <h1 class="text-2xl font-bold"><%= @customer.name %></h1>
+    <%= link_to t("pos.title"), pos_path, class: "btn btn-primary btn-sm" %>
     <%= link_to t("customers.show.edit"), edit_customer_path(@customer), class: "btn btn-secondary btn-sm" if policy(@customer).update? %>
   </div>
   <%= link_to t("customers.show.back"), customers_path, class: "btn btn-secondary" %>

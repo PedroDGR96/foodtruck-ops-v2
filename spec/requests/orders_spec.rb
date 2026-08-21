@@ -244,4 +244,40 @@ RSpec.describe "Orders", type: :request do
       expect(response).to redirect_to(order_path(dlv))
     end
   end
+
+  describe "status filter" do
+    it "filters orders by status param" do
+      login_as cashier, scope: :user
+      Tenancy.with_business(business) do
+        create(:order, business: business, status: "open")
+        create(:order, business: business, status: "open")
+        d = delivery_order(business)
+        d.update!(status: "open")
+        d.create_delivery!(courier_name: "Carlos")
+        paid_order(status: "paid", total: 10.0)
+      end
+
+      get "/orders?status=open"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body.scan('class="font-medium text-brand-600').size).to eq(3)
+    end
+
+    it "shows all orders when the status param is blank" do
+      login_as cashier, scope: :user
+      Tenancy.with_business(business) do
+        create(:order, business: business, status: "open")
+        create(:order, business: business, status: "open")
+        d = delivery_order(business)
+        d.update!(status: "open")
+        d.create_delivery!(courier_name: "Carlos")
+        paid_order(status: "paid", total: 10.0)
+      end
+
+      get "/orders"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body.scan('class="font-medium text-brand-600').size).to eq(4)
+    end
+  end
 end

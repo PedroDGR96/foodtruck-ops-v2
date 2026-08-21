@@ -168,3 +168,9 @@
     @apply ring-2 ring-red-400 dark:ring-red-500;
   }
 }
+
+@media print {
+  nav, footer, .btn, aside, [role="search"], .skip-link { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .card { border: 1px solid #e2e8f0 !important; box-shadow: none !important; }
+}

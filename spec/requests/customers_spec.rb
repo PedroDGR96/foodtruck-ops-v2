@@ -141,5 +141,21 @@ RSpec.describe "Customers", type: :request do
       expect(response).to have_http_status(:redirect)
       expect(response).to redirect_to(new_user_session_path)
     end
+
+    it "shows order count and total spent for customers with orders" do
+      login_as cashier, scope: :user
+      Tenancy.with_business(business) do
+        c = customer(name: "Alice", phone: "11999990001")
+        o = create(:order, :open, business: business, customer: c, total: 40.0, subtotal: 40.0)
+        create(:payment, order: o, amount: 40.0)
+        o.update!(status: "paid", payment_status: "paid")
+        customer(name: "Bob", phone: "11999990002")
+      end
+
+      get "/customers"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("1 ordens · R$ 40,00")
+    end
   end
 end
