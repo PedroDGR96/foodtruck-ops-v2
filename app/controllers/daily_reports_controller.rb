@@ -1,5 +1,5 @@
 # app/controllers/daily_reports_controller.rb
-class DailyReportsController < ApplicationController
+class DailyReportsController < AuthenticatedController
   before_action :set_daily_report, only: [ :show ]
 
   def show
