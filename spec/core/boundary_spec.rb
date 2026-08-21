@@ -10,7 +10,7 @@ RSpec.describe "core boundary" do
     Product Category MenuItem MenuSection MenuAddon Addon
     KitchenOrder KitchenStation DeliveryRoute DeliveryRun
     PosSession PosOrder CashRegister CashMovement CashDrawer
-    Integration WebhookEndpoint Customer
+    Integration WebhookEndpoint Customer MenuInvalidatable
   ].freeze
 
   core_files = Dir[Rails.root.join("app/core/**/*.rb")].sort
