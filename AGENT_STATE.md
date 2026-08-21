@@ -67,10 +67,10 @@ B = order-lifecycle/cash-register/daily-reports; C = tenancy-rls/cart-checkout/m
 - Executor = qwopus3.5-4b-coder@bf16 on `.172`; planners = gemma-4-e2b (`.245` A/B, `.85` C).
 
 ## Test status
-- `main` @ `8a5df14` — rspec **540/0**, SimpleCov **99.7%+** (overall + per-file ≥95),
-  rubocop clean, brakeman clean. `orders_controller.rb` per-file back to **100%** after
-  stub-based rescue specs (was 94.73%).
+- `main` @ `cc2dd13` (pushed) — rspec **629/0**, SimpleCov **99.67%** (overall + per-file ≥95),
+  rubocop clean, brakeman clean. Canonical repo: `~/Desktop/foodtruck-ops-v2` (only git copy;
+  pre-squash history no longer exists locally). 2026-08-20 repo detox: defunct t12 worktree clone
+  evicted from repo root; foreign `app/models/restaurant/*` removed (quarantined, see WORK_LOG).
 
 ## Last meaningful change
-- 2026-08-15 — Big Pickle (takeover): T-08 delivery status lifecycle wired end-to-end
-  (routes/controller/policy/locale/view + 6 request specs); gate green (540/0, 99.7%+).
+- 2026-08-20 — Traycer takeover: baseline verified + repo detox (8260bf6, cc2dd13); gate green.
