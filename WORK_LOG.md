@@ -151,3 +151,21 @@
 - 2026-08-14 16:39:21 [loop-c] audit iter=34 issues - subsystem integrations flagged (1598 chars)
 - 2026-08-14 16:39:25 [loop-a] audit iter=220 issues - subsystem auth-users flagged (1255 chars)
 - 2026-08-14 20:55:40 [loop-c] audit iter=35 issues - subsystem cart-checkout flagged (1846 chars)
+
+## 2026-08-20 — Traycer takeover: baseline verification + repo detox
+- Canonical repo confirmed: ~/Desktop/foodtruck-ops-v2 (only git copy; remote github.com/PedroDGR96/foodtruck-ops-v2).
+  Pre-squash history (8a5df14 era) is gone locally; other Desktop dirs are frozen non-git copies.
+- Evicted defunct t12-mock-adapters worktree clone from repo root (broken .git plumbing, 179MB,
+  made brakeman scan duplicate code with a new fingerprint → bin/ci died before rspec).
+  Preserved at ~/Desktop/_defunct-t12-mock-adapters.
+- Removed foreign app/models/restaurant/* (5 files, tracked since the squash): standalone-script
+  style, require_relative external config/database, nonexistent APIs, zero references. Quarantined
+  at ~/Desktop/_quarantine/restaurant-namespace. Commit 8260bf6.
+- Added AdapterRegistry::Base contract spec (all 4 interface methods raise NotImplementedError);
+  closes per-file coverage floor gap. Commit cc2dd13.
+- Gate green on main @ cc2dd13: rubocop ✓ brakeman ✓ rspec 629/0 ✓ SimpleCov 99.67% (per-file ≥95 ✓).
+- Pushed de83c9d..cc2dd13 to origin/main.
+- 2026-08-20 (2): Gate B/C verification — bin/setup green; seeds idempotent
+  (1 business/6 users/3 products/6 orders/1 open shift); /up 200; public routes
+  no 500s; spec/system journey specs 7/0. Fixed DEMO.md prepare commands
+  (host bin/rails broken without local Ruby → container exec path).
