@@ -46,6 +46,11 @@ module App
         config.eager_load_paths << path if Dir.exist?(path)
       end
     end
+    # Helpers are mixed into views only if Rails knows their directories —
+    # eager_load_paths alone defines the constants but never mixes them in.
+    config.helpers_paths += Dir.children(verticals_root).sort
+                                      .map { |n| verticals_root.join(n, "helpers").to_s }
+                                      .select { |p| Dir.exist?(p) }
     config.active_job.queue_adapter = :sidekiq
     config.active_record.schema_format = :sql
     config.middleware.insert_after Warden::Manager, TenantMiddleware
