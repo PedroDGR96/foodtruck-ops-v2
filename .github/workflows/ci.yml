@@ -41,13 +41,20 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
-      - name: Create the non-owner application role
+      - name: Create the operational and application roles
         env:
           PGPASSWORD: app_owner
-        run: psql -h localhost -U app_owner -d foodtruck_ops_development -c "CREATE ROLE app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD 'app';"
+        run: |
+          psql -h localhost -U app_owner -d foodtruck_ops_development <<'SQL'
+            CREATE ROLE dbadmin LOGIN SUPERUSER NOINHERIT PASSWORD 'dbadmin-change-me';
+            CREATE ROLE migrator LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE PASSWORD 'migrator';
+            ALTER DATABASE foodtruck_ops_development OWNER TO migrator;
+            CREATE ROLE app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD 'app';
+            GRANT CONNECT ON DATABASE foodtruck_ops_development TO app;
+          SQL
       - name: Prepare database as migration owner
         env:
-          DATABASE_URL: postgresql://app_owner:app_owner@localhost:5432/foodtruck_ops_test
+          DATABASE_URL: postgresql://migrator:migrator@localhost:5432/foodtruck_ops_test
         run: bin/db-prepare
       - name: Lint
         run: bundle exec rubocop

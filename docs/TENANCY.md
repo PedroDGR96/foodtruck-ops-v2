@@ -14,7 +14,7 @@ application layer is bypassed.
 | `Tenancy.with_business` | `lib/tenancy.rb` | sets the GUC + `Current` for a block, inside a transaction |
 | `TenantMiddleware` | `app/middleware/tenant_middleware.rb` | sets tenant context per HTTP request |
 | Sidekiq middleware | `lib/tenancy/sidekiq_*.rb` | sets tenant context per job |
-| DB roles | `app` (NOBYPASSRLS) / `app_owner` | runtime vs migration/seed role |
+| DB roles | `app` (NOBYPASSRLS) / `migrator` (no superuser, no BYPASSRLS) | runtime vs migration/seed role |
 | RLS policies | `db/structure.sql` | `tenant_isolation` policy + `assign_business_id_from_guc()` trigger |
 
 ## Application layer
@@ -135,9 +135,16 @@ and has no `business_id` column or RLS. All other tenant tables are under RLS.
   `LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS` (dev:
   `docker/postgres/init-app-role.sql`; CI: `.github/workflows/ci.yml`). Because
   it is `NOBYPASSRLS`, RLS policies apply to it.
-- **`app_owner`** — owns migrations and seeds. Grants to `app` are applied by
+- **`migrator`** — owns migrations and seeds. Created
+  `LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE`; owns the application
+  databases and every object in them. Grants to `app` are applied by
   `bin/db-prepare` (`GRANT USAGE ... ON SCHEMA public`, table/sequence
   privileges, and default privileges).
+- **`app_owner`** — idle bootstrap superuser created by the postgres image.
+  PostgreSQL 17 refuses to demote it, so it is left owning nothing
+  user-visible; routine operations never use it (CIS PostgreSQL Benchmark:
+  no superuser for routine operations).
+- **`dbadmin`** — break-glass superuser for genuine emergencies.
 
 ## Verification
 

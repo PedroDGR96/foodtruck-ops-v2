@@ -25,8 +25,8 @@ bin/setup
 1. `docker compose up -d --build db redis` — starts the Postgres and Redis
    containers (the `db` image also runs `docker/postgres/init-app-role.sql`,
    which creates the non-owner `app` role on first boot).
-2. `docker compose run --rm --no-deps -e DATABASE_URL=postgresql://app_owner:app_owner@db:5432/foodtruck_ops_development web bin/db-prepare`
-   — as the **migration-owner** (`app_owner`) role: migrates the schema
+2. `docker compose run --rm --no-deps -e DATABASE_URL=postgresql://migrator:migrator@db:5432/foodtruck_ops_development web bin/db-prepare`
+   — as the **migration-owner** (`migrator`) role: migrates the schema
    (`rails db:prepare`) and grants schema/table privileges to the `app` role.
 3. `docker compose --profile dev up -d web worker tailwind` — starts the
    Rails server (port 3000), Sidekiq, and the Tailwind watcher.
@@ -76,7 +76,7 @@ docker compose up -d db redis
 
 # 2. Prepare schema as migration-owner and grant app privileges
 docker compose run --rm --no-deps \
-  -e DATABASE_URL=postgresql://app_owner:app_owner@db:5432/foodtruck_ops_development \
+  -e DATABASE_URL=postgresql://migrator:migrator@db:5432/foodtruck_ops_development \
   web bin/db-prepare
 
 # 3. Start web + worker + tailwind
