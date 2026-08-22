@@ -1,6 +1,6 @@
 <div id="order-<%= order.id %>" class="card mt-6 p-4">
   <div class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold"><%= t("orders.ticket") %> #<%= order.id %></h2>
+    <h2 class="text-lg font-semibold"><%= t("orders.ticket") %> <%= order_display_number(order) %></h2>
     <div class="flex items-center gap-2">
       <span class="badge <%= order_status_badge_class(order.kitchen_status) %>"><%= t("orders.kitchen_statuses.#{order.kitchen_status}") %></span>
       <button type="button" onclick="window.print()" class="btn btn-secondary btn-sm" aria-label="<%= t("orders.print_ticket") %>">

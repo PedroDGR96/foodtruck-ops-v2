@@ -4,7 +4,7 @@
   <div>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold"><%= t("orders.detail") %> #<%= @order.id %></h1>
+        <h1 class="text-2xl font-bold"><%= t("orders.detail") %> <%= order_display_number(@order) %></h1>
         <span class="badge <%= order_status_badge_class(@order.status) %>"><%= t("orders.statuses.#{@order.status}") %></span>
       </div>
       <%= link_to t("orders.back"), orders_path, class: "btn btn-secondary" %>

@@ -422,6 +422,7 @@ CREATE TABLE public.orders (
     started_at timestamp(6) without time zone,
     finished_at timestamp(6) without time zone,
     delivery_fee numeric(12,2) DEFAULT 0.0 NOT NULL,
+    number bigint NOT NULL,
     CONSTRAINT orders_delivery_fee_non_negative CHECK ((delivery_fee >= (0)::numeric)),
     CONSTRAINT orders_subtotal_non_negative CHECK ((subtotal >= (0)::numeric)),
     CONSTRAINT orders_tax_non_negative CHECK ((tax >= (0)::numeric)),
@@ -589,7 +590,8 @@ CREATE TABLE public.users (
     unlock_token character varying,
     locked_at timestamp(6) without time zone,
     active boolean DEFAULT true NOT NULL,
-    CONSTRAINT users_role_is_valid CHECK (((role)::text = ANY (ARRAY[('owner'::character varying)::text, ('cashier'::character varying)::text, ('kitchen'::character varying)::text])))
+    force_password_change boolean DEFAULT false NOT NULL,
+    CONSTRAINT users_role_is_valid CHECK (((role)::text = ANY (ARRAY[('owner'::character varying)::text, ('admin'::character varying)::text, ('cashier'::character varying)::text, ('kitchen'::character varying)::text])))
 );
 
 
@@ -1148,6 +1150,13 @@ CREATE INDEX index_orders_on_business_id_and_created_at ON public.orders USING b
 --
 
 CREATE INDEX index_orders_on_business_id_and_customer_id ON public.orders USING btree (business_id, customer_id);
+
+
+--
+-- Name: index_orders_on_business_id_and_number; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_orders_on_business_id_and_number ON public.orders USING btree (business_id, number);
 
 
 --
@@ -2038,6 +2047,8 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260822150000'),
+('20260819201103'),
 ('20260809020000'),
 ('20260807120001'),
 ('20260804130004'),

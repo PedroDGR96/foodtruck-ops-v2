@@ -20,6 +20,8 @@ class Order < ApplicationRecord
   enum :kitchen_status, { pending: "pending", in_progress: "in_progress", done: "done" }, default: :pending, prefix: true
   enum :payment_status, { pending: "pending", partially_paid: "partially_paid", paid: "paid", refunded: "refunded" }, default: :pending, prefix: true
 
+  before_create :assign_order_number
+
   belongs_to :user, optional: true
   belongs_to :customer, optional: true
   has_many :order_items, dependent: :restrict_with_exception
@@ -91,6 +93,15 @@ class Order < ApplicationRecord
   end
 
   private
+
+  # Human-friendly sequential number per business (shown as #123 instead of
+  # the UUID). Unique index on [business_id, number] guards against races;
+  # a collision raises RecordNotUnique and the caller retries.
+  def assign_order_number
+    return if number.present?
+
+    self.number = self.class.where(business_id: business_id).maximum(:number).to_i + 1
+  end
 
   def totals_consistent
     return unless persisted? && total_changed? || subtotal_changed?

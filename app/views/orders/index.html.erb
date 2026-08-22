@@ -7,8 +7,8 @@
   </div>
 
   <div class="mt-4 flex gap-2 flex-wrap">
-    <% ["", "open", "paid", "in_kitchen", "ready", "completed"].each do |s| %>
-      <%= link_to s.presence || t("orders.filter_all"), orders_path(status: s.presence), class: "btn btn-sm #{params[:status] == s || (s.blank? && params[:status].blank?) ? 'btn-primary' : 'btn-secondary'}" %>
+    <% ["", "open", "paid", "in_kitchen", "ready", "completed"].each do |status| %>
+      <%= link_to status.presence ? t("orders.statuses.#{status}") : t("orders.filter_all"), orders_path(status: status.presence), class: "btn btn-sm #{params[:status] == status || (status.blank? && params[:status].blank?) ? 'btn-primary' : 'btn-secondary'}" %>
     <% end %>
   </div>
 
@@ -27,7 +27,7 @@
       <tbody>
         <% @orders.each do |order| %>
           <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
-            <td class="px-4 py-3"><%= link_to "##{order.id}", order_path(order), class: "font-medium text-brand-600 hover:underline dark:text-brand-400" %></td>
+            <td class="px-4 py-3"><%= link_to order_display_number(order), order_path(order), class: "font-medium text-brand-600 hover:underline dark:text-brand-400" %></td>
             <td class="px-4 py-3"><%= t("orders.order_types.#{order.order_type}") %></td>
             <td class="px-4 py-3">
               <% if order.delivery? && order.delivery %>

@@ -28,6 +28,10 @@ module ApplicationHelper
     Order.order_types.keys.map { |key| [ t("orders.order_types.#{key}"), key ] }
   end
 
+  def order_display_number(order)
+    "##{order.number || order.id}"
+  end
+
   def order_status_badge_class(status)
     {
       draft: "badge-secondary", open: "badge-info", partially_paid: "badge-warning",

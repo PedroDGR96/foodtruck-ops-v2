@@ -11,7 +11,7 @@
      data-kitchen-timer-start-value="<%= ((order.started_at || order.created_at).to_f * 1000).round %>"
      data-kitchen-timer-overdue-after-value="<%= kitchen_overdue_threshold %>">
   <div class="flex items-center justify-between">
-    <h3 class="text-lg font-semibold">#<%= order.id %></h3>
+    <h3 class="text-lg font-semibold">#<%= order.number %></h3>
     <div class="flex items-center gap-2">
       <span class="badge <%= order_status_badge_class(order.kitchen_status) %>"><%= t("orders.kitchen_statuses.#{order.kitchen_status}") %></span>
       <span class="badge <%= kitchen_prep_badge_class(order) %>">

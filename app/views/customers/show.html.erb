@@ -52,7 +52,7 @@
       <% @history.orders.each do |order| %>
         <li class="flex items-center justify-between gap-3 border-b border-slate-100 pb-2 last:border-0 dark:border-slate-800">
           <div class="min-w-0">
-            <%= link_to "#{t("customers.show.order")} ##{order.id}", order_path(order), class: "font-medium hover:underline" %>
+            <%= link_to "#{t("customers.show.order")} #{order_display_number(order)}", order_path(order), class: "font-medium hover:underline" %>
             <p class="text-xs text-slate-500 dark:text-slate-400"><%= format_datetime(order.created_at) %></p>
           </div>
           <div class="flex shrink-0 items-center gap-3">

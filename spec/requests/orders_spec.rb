@@ -65,8 +65,8 @@ RSpec.describe "Orders", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(I18n.t("orders.payment_statuses.paid"))
       expect(response.body).to include(I18n.t("orders.payment_statuses.partially_paid"))
-      expect(response.body).to include("##{paid_delivery.id}")
-      expect(response.body).to include("##{partial.id}")
+      expect(response.body).to include("##{paid_delivery.number}")
+      expect(response.body).to include("##{partial.number}")
     end
 
     it "loads the order list without querying per-order deliveries" do

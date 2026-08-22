@@ -28,7 +28,7 @@ RSpec.describe "Kitchen display flow", type: :system do
     visit "/kitchen"
 
     expect(page).to have_css("#order_#{order.id}")
-    expect(page).to have_content("##{order.id}")
+    expect(page).to have_content("##{order.number}")
 
     click_button I18n.t("kitchen.start")
     expect(within_tenant { order.reload }).to be_in_kitchen
