@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# One-time hardening for EXISTING database volumes. Fresh clusters get the
+# same posture from docker/postgres/init-app-role.sql automatically.
+#
+# PostgreSQL 17 refuses to demote the bootstrap superuser (ALTER ROLE ...
+# NOSUPERUSER is rejected for the initdb role), so instead we make it idle
+# like a stock `postgres` account:
+#
+#   app_owner  bootstrap superuser, ends up owning NOTHING user-visible
+#   migrator   NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE - owns every
+#              database and object; runs migrations/seeds/grants
+#   dbadmin    break-glass LOGIN SUPERUSER (rotate the password)
+#   app        unprivileged runtime role (unchanged)
+#
+# CIS PostgreSQL Benchmark: the superuser account must not be used for
+# routine database operations.
+#
+# Safe to re-run: every step is guarded or idempotent.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+databases=(
+  foodtruck_ops_development
+  foodtruck_ops_test_t13
+  foodtruck_ops_test
+)
+
+for db in "${databases[@]}"; do
+  if ! docker compose exec -T db psql -U app_owner -lqt 2>/dev/null | cut -d'|' -f1 | grep -qw "$db"; then
+    echo "== skipping $db (does not exist) =="
+    continue
+  fi
+
+  echo "== moving operational ownership away from app_owner in $db =="
+  docker compose exec -T db psql -U app_owner -v ON_ERROR_STOP=1 -d "$db" <<'SQL'
+
+-- Break-glass admin plus the new operational role.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'dbadmin') THEN
+    CREATE ROLE dbadmin LOGIN SUPERUSER NOINHERIT PASSWORD 'dbadmin-change-me';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'migrator') THEN
+    CREATE ROLE migrator LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE PASSWORD 'migrator';
+  END IF;
+END
+$$;
+
+-- Tables / views / materialized views. Sequences are deliberately skipped:
+-- table-linked sequences cannot be altered directly and follow their table's
+-- owner automatically.
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN
+    SELECT c.relname AS name,
+           CASE c.relkind
+             WHEN 'r' THEN 'TABLE'
+             WHEN 'v' THEN 'VIEW'
+             WHEN 'm' THEN 'MATERIALIZED VIEW'
+           END AS kind
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relowner = 'app_owner'::regrole
+      AND c.relkind IN ('r', 'v', 'm')
+  LOOP
+    EXECUTE format('ALTER %s %I OWNER TO migrator', r.kind, r.name);
+  END LOOP;
+
+  -- Functions/procedures/aggregates, matched by full signature because of
+  -- overloads (e.g. pgcrypto's digest(text,int) vs digest(bytea,int)).
+  FOR r IN
+    SELECT p.oid::regprocedure AS f
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proowner = 'app_owner'::regrole
+  LOOP
+    EXECUTE format('ALTER FUNCTION %s OWNER TO migrator', r.f);
+  END LOOP;
+END
+$$;
+SQL
+
+  # ALTER DATABASE needs a literal name and its own statement.
+  docker compose exec -T db psql -U app_owner -v ON_ERROR_STOP=1 -d "$db" \
+    -c "ALTER DATABASE $db OWNER TO migrator;" \
+    -c "GRANT CONNECT ON DATABASE $db TO app;" \
+    -c "SET ROLE migrator; CREATE EXTENSION IF NOT EXISTS pgcrypto;" > /dev/null
+
+done
+
+echo "done. verify:"
+echo "  select rolname, rolsuper, rolbypassrls, rolcreatedb, rolcreaterole"
+echo "    from pg_roles where rolname in ('app','app_owner','migrator','dbadmin');"

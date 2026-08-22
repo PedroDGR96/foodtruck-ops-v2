@@ -25,7 +25,7 @@ here and in DEVELOPMENT.md.
   `BEFORE INSERT` trigger that fills `business_id` from the `app.business_id`
   GUC. Never create tenant tables without this. Generate them with
   `bin/rails generate tenant_model <Name>`.
-- **Roles:** `app` (runtime, NOBYPASSRLS) and `app_owner` (migrations/seeds).
+- **Roles:** `app` (runtime, unprivileged), `migrator` (migrations/seeds, no superuser, no BYPASSRLS), `dbadmin` (break-glass superuser); the bootstrap `app_owner` stays idle.
   Migrations and seeds never run as `app`.
 - **Schema format:** `:sql` — after any migration, `db/structure.sql` is
   regenerated (`bin/rails db:schema:dump`) and committed.

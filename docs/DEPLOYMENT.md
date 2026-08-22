@@ -59,7 +59,7 @@ needs table grants. The dev image includes `bin/db-prepare`, which does both:
 
 ```bash
 docker compose run --rm --no-deps \
-  -e DATABASE_URL='postgresql://app_owner:<PASSWORD>@<db-host>:5432/foodtruck_ops_production' \
+  -e DATABASE_URL='postgresql://migrator:<PASSWORD>@<db-host>:5432/foodtruck_ops_production' \
   web bin/db-prepare
 ```
 
@@ -89,7 +89,7 @@ healthcheck:
 - Tenant-scoped tables carry `FORCE ROW LEVEL SECURITY` and a
   `tenant_isolation` policy keyed on the `app.business_id` GUC (see
   TENANCY.md). Even a compromised app query cannot read another tenant's rows.
-- Migrations and seeds always run as `app_owner`, never as `app`.
+- Migrations and seeds always run as `migrator`, never as `app`; `migrator` is not a superuser and cannot bypass RLS.
 
 ## Backups
 
