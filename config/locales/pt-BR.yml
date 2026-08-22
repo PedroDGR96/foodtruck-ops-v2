@@ -266,6 +266,7 @@ pt-BR:
       empty_title: "Nenhum produto"
       empty_message: "Adicione o primeiro produto do seu cardápio."
     show:
+      title: "Produto %{name}"
       category: "Categoria"
       price: "Preço"
       status: "Status"
