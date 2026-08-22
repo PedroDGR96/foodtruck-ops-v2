@@ -35,6 +35,17 @@ module App
     core_root = Rails.root.join("app/core")
     config.eager_load_paths += [ core_root.join("models"), core_root.join("models/concerns"),
                                  core_root.join("lib"), core_root.join("jobs") ]
+
+    # Verticals (Tier 2): each subtree root keeps constants top-level
+    # (Product, OrdersController, ...) while files group per vertical.
+    verticals_root = Rails.root.join("app/verticals")
+    Dir.children(verticals_root).sort.each do |name|
+      base = verticals_root.join(name)
+      %w[models models/concerns controllers services policies channels helpers].each do |sub|
+        path = base.join(sub)
+        config.eager_load_paths << path if Dir.exist?(path)
+      end
+    end
     config.active_job.queue_adapter = :sidekiq
     config.active_record.schema_format = :sql
     config.middleware.insert_after Warden::Manager, TenantMiddleware
