@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# DORA-lite: delivery performance metrics straight from git history.
+#
+# The 2026 productivity research (Halkwinds, DORA) found tool adoption
+# outpaces measurement maturity - only 22% of orgs qualify as Elite/High on
+# all four DORA metrics. This computes the two we can get locally:
+#
+#   deployment frequency : merges into main per week
+#   change lead time     : median hours from branch's first commit to merge
+#   change failure rate  : reverts as % of non-merge commits on main
+#
+# Usage: bin/dora [since]   (default: "30 days ago")
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+SINCE="${1:-30 days ago}"
+
+merges=$(git log --merges --since="$SINCE" --format="%ct" main | sort -n)
+merge_count=$(printf '%s\n' "$merges" | grep -c . || true)
+
+if [ "$merge_count" -eq 0 ]; then
+  echo "no merges into main since $SINCE"
+  exit 0
+fi
+
+first_ts=$(printf '%s\n' "$merges" | head -1)
+last_ts=$(printf '%s\n' "$merges" | tail -1)
+span_days=$(( (last_ts - first_ts) / 86400 ))
+span_weeks=$(python3 -c "print(max(0.5, round($span_days / 7 + 0.5, 1)))")
+
+echo "== DORA-lite (since $SINCE) =="
+echo "deployment_frequency : $(python3 -c "print(round($merge_count / $span_weeks, 1))") merges/week ($merge_count merges over ~$span_weeks weeks)"
+
+lead_hours=$(for m in $(git log --merges --since="$SINCE" --format="%H" main); do
+  base=$(git log --format="%at" "$(git merge-base "$m^1" "$m^2" 2>/dev/null)" -1 2>/dev/null || continue)
+  merge_at=$(git log --format="%at" -1 "$m")
+  echo $(( (merge_at - base) / 3600 ))
+done | sort -n)
+if [ -n "$lead_hours" ]; then
+  median_lead=$(printf '%s\n' "$lead_hours" | python3 -c "
+import sys
+xs=sorted(int(l) for l in sys.stdin if l.strip())
+print(xs[len(xs)//2] if xs else 'n/a')")
+  echo "change_lead_time     : median ${median_lead}h from branch start to merge"
+fi
+
+non_merge=$(git log --no-merges --since="$SINCE" --format="%s" main)
+total=$(printf '%s\n' "$non_merge" | grep -c . || true)
+reverts=$(printf '%s\n' "$non_merge" | grep -ci "^revert" || true)
+if [ "$total" -gt 0 ]; then
+  echo "change_failure_rate  : $(python3 -c "print(round(100 * $reverts / $total, 1))")% ($reverts revert commits / $total non-merge commits)"
+fi
+
+echo "(elite baseline per DORA: daily+ deploys, lead time < 1 day, CFR < 15%)"
