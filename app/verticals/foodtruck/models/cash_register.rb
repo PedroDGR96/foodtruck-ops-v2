@@ -15,6 +15,7 @@ class CashRegister < ApplicationRecord
   belongs_to :user
   has_many :cash_movements, dependent: :restrict_with_exception
   has_many :payments, dependent: :restrict_with_exception
+  has_one :cash_register, dependent: :restrict_with_exception
 
   validates :opening_amount, numericality: { greater_than_or_equal_to: 0 }
   validates :actual_closing_amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
