@@ -9,4 +9,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO app;
+
+-- Resource guardrails (requires ADMIN OPTION on app; see init-app-role.sql).
+-- Idempotent convergence for environments bootstrapped before these limits.
+ALTER ROLE app CONNECTION LIMIT 50;
+ALTER ROLE app SET statement_timeout TO '30s';
+ALTER ROLE app SET idle_in_transaction_session_timeout TO '60s';
 SQL
