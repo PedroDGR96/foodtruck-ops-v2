@@ -38,6 +38,10 @@ class UsersController < AuthenticatedController
     end
   end
 
+  def login
+    redirect_to Devise::SessionsController.new(params[:id])
+  end
+
   private
 
   def set_user
