@@ -15,9 +15,16 @@
 --   app        unprivileged runtime role
 
 CREATE ROLE dbadmin LOGIN SUPERUSER NOINHERIT PASSWORD 'dbadmin-change-me';
-CREATE ROLE migrator LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE PASSWORD 'migrator';
+CREATE ROLE migrator LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT CREATEDB CREATEROLE PASSWORD 'migrator';
 
 ALTER DATABASE foodtruck_ops_development OWNER TO migrator;
 
-CREATE ROLE app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD 'app';
+CREATE ROLE app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS
+  CONNECTION LIMIT 50 ADMIN migrator PASSWORD 'app';
 GRANT CONNECT ON DATABASE foodtruck_ops_development TO app;
+
+-- Runtime DoS guardrails (CIS: bound resource consumption). The migrator
+-- keeps no persistent statement timeout because schema loads are long.
+ALTER ROLE app SET statement_timeout TO '30s';
+ALTER ROLE app SET idle_in_transaction_session_timeout TO '60s';
+GRANT app TO migrator WITH ADMIN OPTION;

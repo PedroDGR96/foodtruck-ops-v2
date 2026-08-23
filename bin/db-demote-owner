@@ -42,10 +42,19 @@ BEGIN
     CREATE ROLE dbadmin LOGIN SUPERUSER NOINHERIT PASSWORD 'dbadmin-change-me';
   END IF;
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'migrator') THEN
-    CREATE ROLE migrator LOGIN NOSUPERUSER NOBYPASSRLS CREATEDB CREATEROLE PASSWORD 'migrator';
+    CREATE ROLE migrator LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT CREATEDB CREATEROLE PASSWORD 'migrator';
+  ELSE
+    ALTER ROLE migrator NOINHERIT;
   END IF;
 END
 $$;
+
+-- Delegated administration: lets db-prepare (running as migrator) maintain
+-- the runtime role's resource limits without superuser involvement.
+GRANT app TO migrator WITH ADMIN OPTION;
+ALTER ROLE app CONNECTION LIMIT 50;
+ALTER ROLE app SET statement_timeout TO '30s';
+ALTER ROLE app SET idle_in_transaction_session_timeout TO '60s';
 
 -- Tables / views / materialized views. Sequences are deliberately skipped:
 -- table-linked sequences cannot be altered directly and follow their table's
