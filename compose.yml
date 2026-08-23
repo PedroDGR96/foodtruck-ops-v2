@@ -7,7 +7,7 @@ x-rails: &rails
   volumes:
     - .:/rails
   environment:
-    DATABASE_URL: postgresql://app:app@db:5432/foodtruck_ops_development
+    DATABASE_URL: postgresql://app:app@db:5432/foodtruck_ops_development?sslmode=require
     REDIS_URL: redis://redis:6379/0
     RAILS_MAX_THREADS: 5
     FILE_WATCHER_POLLING: "true"
@@ -21,6 +21,26 @@ x-rails: &rails
 services:
   db:
     image: postgres:17
+    # TLS in transit (CIS PostgreSQL 6.8): self-signed server cert generated
+    # in-container at start (nothing secret is committed); clients use
+    # sslmode=require. Regenerated per container recreation, which is fine
+    # because require-mode does not verify identity.
+    command:
+      - bash
+      - -c
+      - |
+        mkdir -p /tls && cd /tls
+        if [ ! -f server.crt ]; then
+          openssl req -new -x509 -days 3650 -nodes -subj "/CN=foodtruck-ops-db" \
+            -keyout server.key -out server.crt >/dev/null 2>&1
+        fi
+        chown postgres:postgres /tls/server.key /tls/server.crt
+        chmod 600 /tls/server.key
+        exec docker-entrypoint.sh postgres \
+          -c ssl=on \
+          -c ssl_cert_file=/tls/server.crt \
+          -c ssl_key_file=/tls/server.key \
+          -c ssl_min_protocol_version=TLSv1.2
     environment:
       POSTGRES_USER: app_owner
       POSTGRES_PASSWORD: app_owner
@@ -67,7 +87,7 @@ services:
     <<: *rails
     profiles: ["test"]
     environment:
-      DATABASE_URL: postgresql://app:app@db:5432/foodtruck_ops_test
+      DATABASE_URL: postgresql://app:app@db:5432/foodtruck_ops_test?sslmode=require
       REDIS_URL: redis://redis:6379/1
       RAILS_ENV: test
       FILE_WATCHER_POLLING: "true"
