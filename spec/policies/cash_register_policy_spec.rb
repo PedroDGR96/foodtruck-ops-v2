@@ -59,6 +59,12 @@ RSpec.describe CashRegisterPolicy do
       closed = Tenancy.with_business(business) { create(:cash_register, :closed, business: business, user: cashier) }
       expect(policy_for(cashier, closed).close?).to be(false)
     end
+
+    it "denies the cashier on someone else's closed register" do
+      other_cashier = Tenancy.with_business(business) { create(:user, :cashier, business: business) }
+      closed = Tenancy.with_business(business) { create(:cash_register, :closed, business: business, user: other_cashier) }
+      expect(policy_for(cashier, closed).close?).to be(false)
+    end
   end
 
   describe "#record_movement?" do
