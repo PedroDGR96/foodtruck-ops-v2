@@ -12,7 +12,7 @@ docker compose --profile test run --rm \
 ```
 - The DB lives in the `db` service (`postgres:17`); it's healthy within `~3s` after `up`.
 - The app role needs `CONNECT` on the test DB (granted by `bin/ci`); if a fresh DB is used, run
-  `docker compose run --rm --no-deps -e DATABASE_URL=postgresql://migrator:migrator@db:5432/foodtruck_ops_test test bin/db-prepare`
+  `docker compose run --rm --no-deps -e DATABASE_URL=postgresql://migrator:migrator@db:5432/foodtruck_ops_test?sslmode=require test bin/db-prepare`
   then `psql "$DATABASE_URL" -c "GRANT CONNECT ON DATABASE foodtruck_ops_test TO app;"`.
 - DB roles: runtime = `app` (unprivileged); migrations/seeds/grants = `migrator`
   (no superuser, no BYPASSRLS); `dbadmin` is break-glass; bootstrap `app_owner`
