@@ -93,5 +93,10 @@ RSpec.describe CashRegisterPolicy do
       other = Tenancy.with_business(business) { create(:user, :cashier, business: business) }
       expect(policy_for(other, open_register).record_movement?).to be(false)
     end
+
+    it "denies the kitchen on any register" do
+      expect(policy_for(kitchen, open_register).record_movement?).to be(false)
+      expect(policy_for(kitchen, closed_register).record_movement?).to be(false)
+    end
   end
 end
