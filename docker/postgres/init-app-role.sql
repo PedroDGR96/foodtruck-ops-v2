@@ -28,3 +28,9 @@ GRANT CONNECT ON DATABASE foodtruck_ops_development TO app;
 ALTER ROLE app SET statement_timeout TO '30s';
 ALTER ROLE app SET idle_in_transaction_session_timeout TO '60s';
 GRANT app TO migrator WITH ADMIN OPTION;
+
+-- CIS PostgreSQL Benchmark: no PUBLIC schema privileges. migrator keeps
+-- CREATE for migrations; app only traverses the schema.
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE, CREATE ON SCHEMA public TO migrator;
+GRANT USAGE ON SCHEMA public TO app;

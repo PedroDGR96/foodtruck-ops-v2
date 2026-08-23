@@ -15,4 +15,11 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENC
 ALTER ROLE app CONNECTION LIMIT 50;
 ALTER ROLE app SET statement_timeout TO '30s';
 ALTER ROLE app SET idle_in_transaction_session_timeout TO '60s';
+
+-- CIS PostgreSQL Benchmark: the PUBLIC role must not hold schema privileges.
+-- migrator keeps CREATE (it runs migrations); app gets read/write via its
+-- explicit table grants, never object-creation rights.
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE, CREATE ON SCHEMA public TO migrator;
+GRANT USAGE ON SCHEMA public TO app;
 SQL

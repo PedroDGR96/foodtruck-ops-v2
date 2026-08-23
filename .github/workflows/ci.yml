@@ -55,6 +55,9 @@ jobs:
             ALTER ROLE app SET statement_timeout TO '30s';
             ALTER ROLE app SET idle_in_transaction_session_timeout TO '60s';
             GRANT app TO migrator WITH ADMIN OPTION;
+            REVOKE ALL ON SCHEMA public FROM PUBLIC;
+            GRANT USAGE, CREATE ON SCHEMA public TO migrator;
+            GRANT USAGE ON SCHEMA public TO app;
           SQL
       - name: Prepare database as migration owner
         env:
