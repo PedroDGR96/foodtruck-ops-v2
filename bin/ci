@@ -8,4 +8,5 @@ docker compose run --rm --no-deps -e DATABASE_URL=postgresql://migrator:migrator
 docker compose run --rm --no-deps -e DATABASE_URL=postgresql://migrator:migrator@db:5432/${TEST_DB}?sslmode=require -e TEST_DB=${TEST_DB} test sh -c 'psql "$DATABASE_URL" -c "GRANT CONNECT ON DATABASE $TEST_DB TO app;"'
 docker compose run --rm --no-deps test bundle exec rubocop
 docker compose run --rm --no-deps test bundle exec brakeman --no-pager
+docker compose run --rm --no-deps test bundle exec bundler-audit check --update
 docker compose run --rm --no-deps -e DATABASE_URL=postgresql://app:app@db:5432/${TEST_DB}?sslmode=require test bundle exec rspec
