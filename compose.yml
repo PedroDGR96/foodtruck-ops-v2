@@ -12,6 +12,10 @@ x-rails: &rails
     RAILS_MAX_THREADS: 5
     FILE_WATCHER_POLLING: "true"
     LISTEN_POLLING: "true"
+    # Defense-in-depth for CVE-2026-66066 class (Active Storage/libvips):
+    # block untrusted libvips operations even if a future regression
+    # reintroduces attacker-controlled variant parameters.
+    VIPS_BLOCK_UNTRUSTED: "1"
   depends_on:
     db:
       condition: service_healthy
@@ -92,6 +96,7 @@ services:
       RAILS_ENV: test
       FILE_WATCHER_POLLING: "true"
       LISTEN_POLLING: "true"
+      VIPS_BLOCK_UNTRUSTED: "1"
     command: bundle exec rspec
 
   production:
