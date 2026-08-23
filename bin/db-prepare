@@ -7,6 +7,9 @@ psql "$DATABASE_URL" <<'SQL'
 GRANT USAGE ON SCHEMA public TO app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO app;
+-- Audit trail is tamper-evident (OWASP granular permissions): the runtime
+-- role may append and read audit rows but never modify or erase them.
+REVOKE UPDATE, DELETE ON audit_logs FROM app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO app;
 
