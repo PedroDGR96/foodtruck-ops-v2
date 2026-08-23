@@ -90,6 +90,15 @@ healthcheck:
   `tenant_isolation` policy keyed on the `app.business_id` GUC (see
   TENANCY.md). Even a compromised app query cannot read another tenant's rows.
 - Migrations and seeds always run as `migrator`, never as `app`; `migrator` is not a superuser and cannot bypass RLS.
+- Published ports for `db` (5432) and `redis` (6379) are bound to
+  `127.0.0.1` in `compose.yml`, so only processes on the host itself can
+  reach them; containers talk over the internal compose network. The web
+  port stays LAN-exposed so the POS can be used from a phone on the same
+  network — front it with a TLS reverse proxy before exposing it beyond
+  that.
+- The audit trail (`audit_logs`) is tamper-evident at the database level:
+  `bin/db-prepare` revokes UPDATE and DELETE from `app`, so rows can be
+  appended and read but never rewritten or erased through the app role.
 
 ## Backups
 
