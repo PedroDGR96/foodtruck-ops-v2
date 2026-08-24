@@ -15,7 +15,7 @@ module Api
 
       attr_reader :current_user, :api_token
 
-      def authenticate_request
+      def authenticate_request(options = {})
         token = Token.authenticate(bearer_token)
         raise Unauthorized if token.nil? || !token.active? || token.expired?
 
