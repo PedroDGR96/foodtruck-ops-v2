@@ -14,6 +14,8 @@ class OrdersController < AuthenticatedController
   end
 
   def cancel
+    # Cancel action requires authorization and uses OrderLifecycle for the transition.
+    # The lifecycle handles validation, timing checks, and state transitions.
     authorize @order, :cancel?
     OrderLifecycle.new(@order, current_user).cancel!
     redirect_to orders_path, notice: t("orders.cancelled")
@@ -22,6 +24,7 @@ class OrdersController < AuthenticatedController
   end
 
   def force_cancel
+    # Force cancel overrides lifecycle restrictions. Requires authorization and uses the same pattern as regular cancel.
     authorize @order, :cancel?
     OrderLifecycle.new(@order, current_user).cancel!(force: true)
     redirect_to orders_path, notice: t("orders.cancelled_override")
@@ -30,6 +33,8 @@ class OrdersController < AuthenticatedController
   end
 
   def refund
+    # Refund action requires authorization and uses OrderLifecycle for the transition.
+    # The lifecycle handles validation, timing checks, and state transitions.
     authorize @order, :refund?
     OrderLifecycle.new(@order, current_user).refund!
     redirect_to @order, notice: t("orders.refunded")
@@ -38,6 +43,8 @@ class OrdersController < AuthenticatedController
   end
 
   def out_for_delivery
+    # Delivery action requires authorization and updates the delivery status.
+    # Specific guards: requires a delivery record, not cancelled/refunded.
     authorize @order, :mark_out_for_delivery?
     return redirect_to(@order, alert: t("orders.delivery_not_updated")) unless @order.delivery
     return redirect_to(@order, alert: t("orders.delivery_not_updated")) if @order.cancelled? || @order.refunded?
@@ -49,6 +56,8 @@ class OrdersController < AuthenticatedController
   end
 
   def delivered
+    # Delivery action requires authorization and updates the delivery status.
+    # Specific guards: requires a delivery record, not cancelled/refunded.
     authorize @order, :mark_delivered?
     return redirect_to(@order, alert: t("orders.delivery_not_updated")) unless @order.delivery
     return redirect_to(@order, alert: t("orders.delivery_not_updated")) if @order.cancelled? || @order.refunded?
