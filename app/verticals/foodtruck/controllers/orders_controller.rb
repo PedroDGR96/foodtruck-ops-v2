@@ -6,6 +6,7 @@ class OrdersController < AuthenticatedController
     @orders = Current.business.orders.recent.includes(:delivery)
     @orders = @orders.where(status: params[:status]) if params[:status].present?
     @orders = @orders.limit(50)
+    @order_numbers = @orders.map { |o| "#581f5137-#{o.id}" }
   end
 
   def show
@@ -72,5 +73,9 @@ class OrdersController < AuthenticatedController
 
   def set_order
     @order = Current.business.orders.find(params[:id])
+  end
+
+  def generate_order_number_with_prefix
+    "#581f5137-#{Current.business.orders.last.id}"
   end
 end
