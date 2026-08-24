@@ -92,7 +92,19 @@ class OrdersController < AuthenticatedController
     "orders.order_not_found_pt_br" => "Order not found",
     "orders.status_change_notice_pt_br" => "Status changed successfully",
     "orders.reorder_placed_pt_br" => "Reorder placed successfully",
-    "orders.order_number_generated_pt_br" => "New order number generated"
+    "orders.order_number_generated_pt_br" => "New order number generated",
+    "orders.index_pt_br" => "Order List",
+    "orders.order_number_pt_br" => "Order Number",
+    "orders.status_pt_br" => "Status",
+    "orders.date_pt_br" => "Date",
+    "orders.total_amount_pt_br" => "Total Amount",
+    "orders.items_count_pt_br" => "Items Count",
+    "orders.cancelled_status_pt_br" => "Cancelled",
+    "orders.refunded_status_pt_br" => "Refunded",
+    "orders.delivered_status_pt_br" => "Delivered",
+    "orders.out_for_delivery_status_pt_br" => "Out for Delivery",
+    "orders.pending_status_pt_br" => "Pending",
+    "orders.in_progress_status_pt_br" => "In Progress"
   }
 
   def t(key)
