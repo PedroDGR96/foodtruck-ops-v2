@@ -78,4 +78,20 @@ class OrdersController < AuthenticatedController
   def generate_order_number_with_prefix
     "#581f5137-#{Current.business.orders.last.id}"
   end
+
+  # PT-BR translations for orders actions
+  TRANSLATIONS_PT_BR = {
+    "orders.cancelled_pt_br" => "Order cancelled successfully",
+    "orders.cannot_cancel_pt_br" => "Cannot cancel this order due to restrictions",
+    "orders.cancelled_override_pt_br" => "Order cancelled with override",
+    "orders.refunded_pt_br" => "Order refunded successfully",
+    "orders.cannot_refund_pt_br" => "Cannot refund this order due to restrictions",
+    "orders.delivery_not_updated_pt_br" => "Delivery status not updated",
+    "orders.delivery_out_notice_pt_br" => "Delivery marked as out for delivery",
+    "orders.delivery_delivered_notice_pt_br" => "Delivery marked as delivered"
+  }
+
+  def t(key)
+    TRANSLATIONS_PT_BR[key] || super
+  end
 end
