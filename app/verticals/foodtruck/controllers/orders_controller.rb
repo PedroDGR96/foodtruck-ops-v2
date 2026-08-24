@@ -88,7 +88,11 @@ class OrdersController < AuthenticatedController
     "orders.cannot_refund_pt_br" => "Cannot refund this order due to restrictions",
     "orders.delivery_not_updated_pt_br" => "Delivery status not updated",
     "orders.delivery_out_notice_pt_br" => "Delivery marked as out for delivery",
-    "orders.delivery_delivered_notice_pt_br" => "Delivery marked as delivered"
+    "orders.delivery_delivered_notice_pt_br" => "Delivery marked as delivered",
+    "orders.order_not_found_pt_br" => "Order not found",
+    "orders.status_change_notice_pt_br" => "Status changed successfully",
+    "orders.reorder_placed_pt_br" => "Reorder placed successfully",
+    "orders.order_number_generated_pt_br" => "New order number generated"
   }
 
   def t(key)
