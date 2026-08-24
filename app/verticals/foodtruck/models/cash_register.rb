@@ -1,6 +1,7 @@
-# A cash shift for a single cashier. Open a shift with an opening float, take
-# cash orders and record income/expense movements, then close with
-# reconciliation: expected closing (opening + cash sales + net movements) is
+# A daily summary of all cash operations across the POS system. Tracks the
+# current day's cash register balance (total open cash across all cashiers)
+# and total sales (sum of cash payments across all cashiers). This is used
+# for reconciliation: expected closing (opening + cash sales + net movements)
 # compared to the actual drawer count and any drift is recorded. A closed
 # register that receives a late refund movement is flagged as drifted so the
 # reconciliation never silently goes stale.
