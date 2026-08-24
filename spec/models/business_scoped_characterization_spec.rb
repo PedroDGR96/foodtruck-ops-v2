@@ -2,9 +2,8 @@
 
 require "rails_helper"
 
-# Overnight characterization work — populated by the autonomous loop.
-RSpec.describe "characterization placeholder" do
-  it "boots" do
-    expect(true).to be(true)
+RSpec.describe "BusinessScoped concern" do
+  it "raises when business_id is unset" do
+    expect { Current.business_id! }.to raise_error(Tenancy::TenantNotSetError)
   end
 end
