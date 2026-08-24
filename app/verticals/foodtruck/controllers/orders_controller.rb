@@ -183,7 +183,8 @@ class OrdersController < AuthenticatedController
     "orders.pos.lifecycle_transition_pt_br" => "POS Lifecycle Transition",
     "orders.pos.lifecycle_validation_pt_br" => "POS Lifecycle Validation",
     "orders.pos.lifecycle_timing_check_pt_br" => "POS Lifecycle Timing Check",
-    "orders.pos.lifecycle_state_transition_pt_br" => "POS Lifecycle State Transition"
+    "orders.pos.lifecycle_state_transition_pt_br" => "POS Lifecycle State Transition",
+    "orders.order_number_format_pt_br" => "#581f5137-[ID]"
   }
 
   def t(key)
