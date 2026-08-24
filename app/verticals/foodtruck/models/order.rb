@@ -121,6 +121,7 @@ class Order < ApplicationRecord
     return unless Current.business
     return if payments.empty?
 
-    errors.add(:payment_status, :inconsistent) if paid_amount < total
+    balance = (total - paid_amount).round(2)
+    errors.add(:payment_status, :inconsistent) unless balance <= 0
   end
 end
