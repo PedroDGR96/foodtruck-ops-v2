@@ -54,7 +54,7 @@ RSpec.describe OrderLifecycle do
   end
 
   describe "cancel!" do
-    it "cancels an unpaid draft or open order" do
+    it "cancel an unpaid draft or open order" do
       [ :draft, :open ].each do |status|
         order = build_order(status)
         lifecycle(order).cancel!
@@ -62,13 +62,13 @@ RSpec.describe OrderLifecycle do
       end
     end
 
-    it "refuses to cancel an already prep order without force" do
+    it "refuses to cancel an already prepped order without force" do
       order = payable_order(:paid, total: 10.0)
 
       expect { lifecycle(order).cancel! }.to raise_error(OrderLifecycle::IllegalTransition)
     end
 
-    it "cancels and refunds payments when forced" do
+    it "cancel and refunds payments when forced" do
       order = payable_order(:in_kitchen, total: 10.0)
 
       lifecycle(order, owner).cancel!(force: true)
@@ -80,7 +80,7 @@ RSpec.describe OrderLifecycle do
   end
 
   describe "discard!" do
-    it "cancels a draft without refunding" do
+    it "cancel a draft without refunding" do
       order = build_order(:draft)
 
       lifecycle(order).discard!
@@ -150,7 +150,7 @@ RSpec.describe OrderLifecycle do
       expect(within_tenant { order.order_events.last.event }).to eq("paid")
     end
 
-    it "keeps the order partially paid until the balance is settled" do
+    it "keep the order partially paid until the balance is settled" do
       order = build_order(:open, total: 30.0, subtotal: 30.0)
 
       first = order.payments.build(method: "cash", amount: 10.0)
