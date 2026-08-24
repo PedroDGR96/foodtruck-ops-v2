@@ -75,10 +75,6 @@ class OrdersController < AuthenticatedController
     @order = Current.business.orders.find(params[:id])
   end
 
-  def generate_order_number_with_prefix
-    "#581f5137-#{Current.business.orders.last.id}"
-  end
-
   # PT-BR translations for orders actions and POS pages
   TRANSLATIONS_PT_BR = {
     "orders.cancelled_pt_br" => "Order cancelled successfully",
