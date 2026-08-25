@@ -24,6 +24,9 @@ class User < ApplicationRecord
   # API tokens for this user (JSON:API bearer auth)
   has_many :tokens, -> { where(business_id: business_id) }, dependent: :delete_all
 
+  # Tenants associated with this user (tenancy association)
+  has_many :tenants, -> { where(business_id: business_id) }, dependent: :delete_all
+
   def active_for_authentication?
     super && active?
   end
