@@ -6,7 +6,7 @@ class OrdersController < AuthenticatedController
     @orders = Current.business.orders.recent.includes(:delivery)
     @orders = @orders.where(status: params[:status]) if params[:status].present?
     @orders = @orders.limit(50)
-    @order_numbers = @orders.map { |o| "#581f5137-#{o.id}" }
+    @order_numbers = @orders.map { |o| t("orders.order_number_format_pt_br").gsub("[ID]", o.id.to_s) }
   end
 
   def show
