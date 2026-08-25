@@ -19,9 +19,9 @@ module Api
         token = Token.authenticate(bearer_token)
         raise Unauthorized if token.nil? || !token.active? || token.expired?
 
-        token.touch_last_used!
-        @api_token = token
         Tenancy.with_business(token.business) do
+          @api_token = token
+          token.touch_last_used!
           @current_user = token.user
           yield
         end
