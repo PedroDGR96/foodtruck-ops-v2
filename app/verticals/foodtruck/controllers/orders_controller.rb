@@ -179,7 +179,8 @@ class OrdersController < AuthenticatedController
     "orders.pos_lifecycle_validation_pt_br" => "POS Lifecycle Validation",
     "orders.pos_lifecycle_timing_check_pt_br" => "POS Lifecycle Timing Check",
     "orders.pos_lifecycle_state_transition_pt_br" => "POS Lifecycle State Transition",
-    "orders.order_number_format_pt_br" => "#581f5137-[ID]"
+    "orders.order_number_format_pt_br" => "#581f5137-[ID]",
+    "orders.order_number_format_en" => "#581f5137-[ID]"
   }
 
   def t(key)
