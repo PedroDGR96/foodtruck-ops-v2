@@ -92,6 +92,10 @@ class Order < ApplicationRecord
     update_columns(subtotal: new_subtotal, total: (new_subtotal + tax + delivery_fee).round(2))
   end
 
+  def translated_status
+    I18n.t("orders.status.#{status}", locale: :pt_br)
+  end
+
   private
 
   # Human-friendly sequential number per business (shown as #123 instead of
