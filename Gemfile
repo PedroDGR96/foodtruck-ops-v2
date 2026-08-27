@@ -11,7 +11,7 @@ gem "stimulus-rails"
 gem "tailwindcss-rails"
 gem "jbuilder"
 gem "redis", ">= 5.0", "< 6"
-gem "sidekiq", "~> 8.0"
+gem "sidekiq", "~> 8.1"
 gem "bootsnap", require: false
 gem "kamal", require: false
 gem "thruster", require: false
