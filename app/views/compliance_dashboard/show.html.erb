@@ -1,0 +1,91 @@
+<h1 class="text-3xl font-bold"><%= t("compliance.title") %></h1>
+
+<div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+  <div class="rounded-xl bg-white p-6 shadow dark:bg-slate-800">
+    <h2 class="text-lg font-semibold text-slate-700 dark:text-slate-200"><%= t("compliance.consent.title") %></h2>
+    <dl class="mt-4 space-y-2">
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.consent.active") %></dt>
+        <dd class="font-bold"><%= @consent_stats[:active] %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.consent.withdrawn") %></dt>
+        <dd class="font-bold"><%= @consent_stats[:withdrawn] %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="rounded-xl bg-white p-6 shadow dark:bg-slate-800">
+    <h2 class="text-lg font-semibold text-slate-700 dark:text-slate-200"><%= t("compliance.dsar.title") %></h2>
+    <dl class="mt-4 space-y-2">
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.dsar.pending") %></dt>
+        <dd class="font-bold"><%= @dsar_stats[:pending] %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.dsar.overdue") %></dt>
+        <dd class="font-bold text-red-600"><%= @dsar_stats[:overdue] %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.dsar.due_soon") %></dt>
+        <dd class="font-bold text-amber-600"><%= @dsar_stats[:due_soon] %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="rounded-xl bg-white p-6 shadow dark:bg-slate-800">
+    <h2 class="text-lg font-semibold text-slate-700 dark:text-slate-200"><%= t("compliance.incidents.title") %></h2>
+    <dl class="mt-4 space-y-2">
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.incidents.open") %></dt>
+        <dd class="font-bold"><%= @incident_stats[:open] %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.incidents.critical") %></dt>
+        <dd class="font-bold text-red-600"><%= @incident_stats[:critical] %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-slate-500 dark:text-slate-400"><%= t("compliance.incidents.anpd_overdue") %></dt>
+        <dd class="font-bold text-red-600"><%= @incident_stats[:anpd_overdue] %></dd>
+      </div>
+    </dl>
+  </div>
+</div>
+
+<% if @recent_dsars.any? %>
+  <h2 class="mt-8 text-xl font-semibold"><%= t("compliance.dsar.recent") %></h2>
+  <div class="mt-4 overflow-hidden rounded-xl bg-white shadow dark:bg-slate-800">
+    <table class="w-full text-left text-sm">
+      <thead class="border-b bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+        <tr>
+          <th class="px-4 py-3"><%= t("compliance.dsar.email") %></th>
+          <th class="px-4 py-3"><%= t("compliance.dsar.type") %></th>
+          <th class="px-4 py-3"><%= t("compliance.dsar.status") %></th>
+          <th class="px-4 py-3"><%= t("compliance.dsar.deadline") %></th>
+          <th class="px-4 py-3"><%= t("compliance.dsar.created") %></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y dark:divide-slate-700">
+        <% @recent_dsars.each do |dsar| %>
+          <tr>
+            <td class="px-4 py-3"><%= dsar.data_subject_email %></td>
+            <td class="px-4 py-3"><%= t("compliance.dsar.types.#{dsar.request_type}") %></td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium
+                <%= case dsar.status
+                    when 'pending' then 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                    when 'completed' then 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    when 'rejected' then 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    else 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
+                    end %>">
+                <%= t("compliance.dsar.statuses.#{dsar.status}") %>
+              </span>
+            </td>
+            <td class="px-4 py-3"><%= dsar.deadline_at&.strftime("%d/%m/%Y") %></td>
+            <td class="px-4 py-3"><%= dsar.created_at&.strftime("%d/%m/%Y") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

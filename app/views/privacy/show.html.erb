@@ -1,0 +1,63 @@
+<div class="mx-auto max-w-3xl">
+  <h1 class="text-3xl font-bold"><%= t("privacy.title") %></h1>
+  <p class="mt-2 text-sm text-slate-500 dark:text-slate-400"><%= t("privacy.last_updated", date: Date.current.strftime("%d/%m/%Y")) %></p>
+
+  <div class="prose prose-slate mt-8 dark:prose-invert max-w-none">
+    <h2><%= t("privacy.section_1_title") %></h2>
+    <p><%= t("privacy.section_1_text", business: @business_name) %></p>
+
+    <h2><%= t("privacy.section_2_title") %></h2>
+    <p><%= t("privacy.section_2_intro") %></p>
+    <ul>
+      <li><%= t("privacy.data_identity") %></li>
+      <li><%= t("privacy.data_contact") %></li>
+      <li><%= t("privacy.data_financial") %></li>
+      <li><%= t("privacy.data_usage") %></li>
+      <li><%= t("privacy.data_device") %></li>
+    </ul>
+
+    <h2><%= t("privacy.section_3_title") %></h2>
+    <p><%= t("privacy.section_3_intro") %></p>
+    <ul>
+      <li><%= t("privacy.basis_contract") %></li>
+      <li><%= t("privacy.basis_legitimate") %></li>
+      <li><%= t("privacy.basis_consent") %></li>
+      <li><%= t("privacy.basis_legal") %></li>
+    </ul>
+
+    <h2><%= t("privacy.section_4_title") %></h2>
+    <p><%= t("privacy.section_4_intro") %></p>
+    <ul>
+      <li><%= t("privacy.right_access") %></li>
+      <li><%= t("privacy.right_correction") %></li>
+      <li><%= t("privacy.right_deletion") %></li>
+      <li><%= t("privacy.right_portability") %></li>
+      <li><%= t("privacy.right_revocation") %></li>
+      <li><%= t("privacy.right_info") %></li>
+    </ul>
+    <p><%= t("privacy.rights_deadline", days: 15) %></p>
+
+    <h2><%= t("privacy.section_5_title") %></h2>
+    <p><%= t("privacy.section_5_text") %></p>
+
+    <h2><%= t("privacy.section_6_title") %></h2>
+    <p><%= t("privacy.section_6_text") %></p>
+
+    <h2><%= t("privacy.section_7_title") %></h2>
+    <p><%= t("privacy.section_7_text") %></p>
+    <ul>
+      <li><%= t("privacy.retention_operational") %></li>
+      <li><%= t("privacy.retention_fiscal") %></li>
+      <li><%= t("privacy.retention_analytics") %></li>
+    </ul>
+
+    <h2><%= t("privacy.section_8_title") %></h2>
+    <p><%= t("privacy.section_8_intro") %></p>
+    <p><%= t("privacy.dpo_name") %></p>
+    <p><%= t("privacy.dpo_contact") %></p>
+
+    <h2><%= t("privacy.section_9_title") %></h2>
+    <p><%= t("privacy.section_9_intro") %></p>
+    <p><%= t("privacy.data_request_instruction") %></p>
+  </div>
+</div>

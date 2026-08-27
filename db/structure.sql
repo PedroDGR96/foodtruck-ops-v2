@@ -261,6 +261,27 @@ ALTER TABLE ONLY public.categories FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: consent_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.consent_records (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    user_id uuid,
+    data_subject_email character varying,
+    consent_type character varying NOT NULL,
+    consent_version character varying NOT NULL,
+    consent_text_hash character varying NOT NULL,
+    granted boolean DEFAULT true NOT NULL,
+    ip_address character varying,
+    user_agent character varying,
+    withdrawn_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: customers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -278,6 +299,28 @@ CREATE TABLE public.customers (
 );
 
 ALTER TABLE ONLY public.customers FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: data_subject_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.data_subject_requests (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    user_id uuid,
+    data_subject_email character varying NOT NULL,
+    request_type character varying NOT NULL,
+    status character varying DEFAULT 'pending'::character varying NOT NULL,
+    description text,
+    response_notes text,
+    deadline_at timestamp(6) without time zone NOT NULL,
+    completed_at timestamp(6) without time zone,
+    ip_address character varying,
+    user_agent character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
 
 
 --
@@ -451,6 +494,29 @@ CREATE TABLE public.payments (
 );
 
 ALTER TABLE ONLY public.payments FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: privacy_incidents; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.privacy_incidents (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    business_id uuid NOT NULL,
+    title character varying NOT NULL,
+    description text NOT NULL,
+    severity character varying DEFAULT 'low'::character varying NOT NULL,
+    status character varying DEFAULT 'detected'::character varying NOT NULL,
+    affected_data_categories text[] DEFAULT '{}'::text[],
+    affected_subjects_count integer DEFAULT 0,
+    anpd_notified_at timestamp(6) without time zone,
+    anpd_notification_deadline timestamp(6) without time zone,
+    subjects_notified_at timestamp(6) without time zone,
+    remediation_notes text,
+    detected_at timestamp(6) without time zone NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
 
 
 --
@@ -689,11 +755,27 @@ ALTER TABLE ONLY public.categories
 
 
 --
+-- Name: consent_records consent_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.consent_records
+    ADD CONSTRAINT consent_records_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: data_subject_requests data_subject_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.data_subject_requests
+    ADD CONSTRAINT data_subject_requests_pkey PRIMARY KEY (id);
 
 
 --
@@ -761,6 +843,14 @@ ALTER TABLE ONLY public.payments
 
 
 --
+-- Name: privacy_incidents privacy_incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.privacy_incidents
+    ADD CONSTRAINT privacy_incidents_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: product_addon_groups product_addon_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -814,6 +904,20 @@ ALTER TABLE ONLY public.tokens
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_consent_records_on_biz_email_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_consent_records_on_biz_email_type ON public.consent_records USING btree (business_id, data_subject_email, consent_type);
+
+
+--
+-- Name: idx_dsr_on_deadline_pending; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_dsr_on_deadline_pending ON public.data_subject_requests USING btree (deadline_at) WHERE ((status)::text = 'pending'::text);
 
 
 --
@@ -978,6 +1082,20 @@ CREATE INDEX index_categories_on_business_id_and_position ON public.categories U
 
 
 --
+-- Name: index_consent_records_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_consent_records_on_business_id ON public.consent_records USING btree (business_id);
+
+
+--
+-- Name: index_consent_records_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_consent_records_on_user_id ON public.consent_records USING btree (user_id);
+
+
+--
 -- Name: index_customers_on_business_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -996,6 +1114,20 @@ CREATE INDEX index_customers_on_business_id_and_name ON public.customers USING b
 --
 
 CREATE UNIQUE INDEX index_customers_on_business_id_and_phone ON public.customers USING btree (business_id, phone) WHERE ((phone IS NOT NULL) AND (discarded_at IS NULL));
+
+
+--
+-- Name: index_data_subject_requests_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_data_subject_requests_on_business_id ON public.data_subject_requests USING btree (business_id);
+
+
+--
+-- Name: index_data_subject_requests_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_data_subject_requests_on_user_id ON public.data_subject_requests USING btree (user_id);
 
 
 --
@@ -1206,6 +1338,13 @@ CREATE INDEX index_payments_on_cash_register_id ON public.payments USING btree (
 --
 
 CREATE INDEX index_payments_on_order_id ON public.payments USING btree (order_id);
+
+
+--
+-- Name: index_privacy_incidents_on_business_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_privacy_incidents_on_business_id ON public.privacy_incidents USING btree (business_id);
 
 
 --
@@ -1516,6 +1655,14 @@ ALTER TABLE ONLY public.order_events
 
 
 --
+-- Name: consent_records fk_rails_282f08b4f7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.consent_records
+    ADD CONSTRAINT fk_rails_282f08b4f7 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: cash_movements fk_rails_3244ed8937; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1572,6 +1719,14 @@ ALTER TABLE ONLY public.product_variants
 
 
 --
+-- Name: consent_records fk_rails_57c104c14a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.consent_records
+    ADD CONSTRAINT fk_rails_57c104c14a FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
 -- Name: audit_logs fk_rails_5973e49273; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1593,6 +1748,14 @@ ALTER TABLE ONLY public.product_addon_groups
 
 ALTER TABLE ONLY public.order_item_addons
     ADD CONSTRAINT fk_rails_638c785368 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: data_subject_requests fk_rails_63ad2f354d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.data_subject_requests
+    ADD CONSTRAINT fk_rails_63ad2f354d FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -1700,6 +1863,14 @@ ALTER TABLE ONLY public.order_items
 
 
 --
+-- Name: privacy_incidents fk_rails_cacac7d798; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.privacy_incidents
+    ADD CONSTRAINT fk_rails_cacac7d798 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
 -- Name: cash_movements fk_rails_cc82f643e9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1737,6 +1908,14 @@ ALTER TABLE ONLY public.order_events
 
 ALTER TABLE ONLY public.product_addon_groups
     ADD CONSTRAINT fk_rails_d4ff722d57 FOREIGN KEY (business_id) REFERENCES public.businesses(id);
+
+
+--
+-- Name: data_subject_requests fk_rails_d83c35524b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.data_subject_requests
+    ADD CONSTRAINT fk_rails_d83c35524b FOREIGN KEY (business_id) REFERENCES public.businesses(id);
 
 
 --
@@ -2047,6 +2226,7 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260826040000'),
 ('20260822150000'),
 ('20260819201103'),
 ('20260809020000'),

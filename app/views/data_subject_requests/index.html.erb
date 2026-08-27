@@ -1,0 +1,54 @@
+<h1 class="text-3xl font-bold"><%= t("compliance.dsar.title") %></h1>
+
+<div class="mt-4">
+  <%= link_to t("compliance.dsar.new"), new_data_subject_request_path, class: "btn btn-primary" %>
+</div>
+
+<div class="mt-6 overflow-hidden rounded-xl bg-white shadow dark:bg-slate-800">
+  <table class="w-full text-left text-sm">
+    <thead class="border-b bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+      <tr>
+        <th class="px-4 py-3"><%= t("compliance.dsar.email") %></th>
+        <th class="px-4 py-3"><%= t("compliance.dsar.type") %></th>
+        <th class="px-4 py-3"><%= t("compliance.dsar.status") %></th>
+        <th class="px-4 py-3"><%= t("compliance.dsar.deadline") %></th>
+        <th class="px-4 py-3"><%= t("compliance.dsar.days_remaining") %></th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y dark:divide-slate-700">
+      <% @dsars.each do |dsar| %>
+        <tr>
+          <td class="px-4 py-3"><%= dsar.data_subject_email %></td>
+          <td class="px-4 py-3"><%= t("compliance.dsar.types.#{dsar.request_type}") %></td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium
+              <%= case dsar.status
+                  when 'pending' then 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                  when 'completed' then 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                  when 'rejected' then 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  else 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
+                  end %>">
+              <%= t("compliance.dsar.statuses.#{dsar.status}") %>
+            </span>
+          </td>
+          <td class="px-4 py-3"><%= dsar.deadline_at&.strftime("%d/%m/%Y") %></td>
+          <td class="px-4 py-3
+            <%= 'text-red-600 font-bold' if dsar.overdue? %>
+            <%= 'text-amber-600' if dsar.days_remaining.positive? && dsar.days_remaining <= 3 %>">
+            <% if dsar.status == "completed" %>
+              —
+            <% elsif dsar.overdue? %>
+              <%= t("compliance.dsar.overdue") %>
+            <% else %>
+              <%= dsar.days_remaining %>d
+            <% end %>
+          </td>
+          <td class="px-4 py-3">
+            <%= link_to t("common.view"), data_subject_request_path(dsar), class: "text-brand-600 hover:underline" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

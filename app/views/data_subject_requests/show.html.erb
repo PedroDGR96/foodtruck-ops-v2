@@ -1,0 +1,69 @@
+<h1 class="text-3xl font-bold"><%= t("compliance.dsar.detail") %></h1>
+
+<div class="mt-6 rounded-xl bg-white p-6 shadow dark:bg-slate-800">
+  <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div>
+      <dt class="text-sm text-slate-500 dark:text-slate-400"><%= t("compliance.dsar.email") %></dt>
+      <dd class="mt-1 font-medium"><%= @dsar.data_subject_email %></dd>
+    </div>
+    <div>
+      <dt class="text-sm text-slate-500 dark:text-slate-400"><%= t("compliance.dsar.type") %></dt>
+      <dd class="mt-1 font-medium"><%= t("compliance.dsar.types.#{@dsar.request_type}") %></dd>
+    </div>
+    <div>
+      <dt class="text-sm text-slate-500 dark:text-slate-400"><%= t("compliance.dsar.status") %></dt>
+      <dd class="mt-1">
+        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium
+          <%= case @dsar.status
+              when 'pending' then 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+              when 'completed' then 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+              when 'rejected' then 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+              else 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
+              end %>">
+          <%= t("compliance.dsar.statuses.#{@dsar.status}") %>
+        </span>
+      </dd>
+    </div>
+    <div>
+      <dt class="text-sm text-slate-500 dark:text-slate-400"><%= t("compliance.dsar.deadline") %></dt>
+      <dd class="mt-1 font-medium
+        <%= 'text-red-600' if @dsar.overdue? %>">
+        <%= @dsar.deadline_at&.strftime("%d/%m/%Y %H:%M") %>
+        <% if @dsar.status == "pending" %>
+          (<%= @dsar.days_remaining %>d)
+        <% end %>
+      </dd>
+    </div>
+  </dl>
+
+  <% if @dsar.description.present? %>
+    <div class="mt-6">
+      <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200"><%= t("compliance.dsar.description") %></h3>
+      <p class="mt-1 whitespace-pre-wrap text-slate-600 dark:text-slate-300"><%= @dsar.description %></p>
+    </div>
+  <% end %>
+
+  <% if @dsar.response_notes.present? %>
+    <div class="mt-4">
+      <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200"><%= t("compliance.dsar.response_notes") %></h3>
+      <p class="mt-1 whitespace-pre-wrap text-slate-600 dark:text-slate-300"><%= @dsar.response_notes %></p>
+    </div>
+  <% end %>
+</div>
+
+<div class="mt-6 flex gap-3">
+  <% if @dsar.status == "pending" %>
+    <%= button_to t("compliance.dsar.start_progress"),
+        data_subject_request_path(@dsar, data_subject_request: { status: "in_progress" }),
+        method: :patch, class: "btn btn-secondary" %>
+  <% end %>
+  <% if %w[pending in_progress].include?(@dsar.status) %>
+    <%= button_to t("compliance.dsar.complete"),
+        data_subject_request_path(@dsar, data_subject_request: { status: "completed" }),
+        method: :patch, class: "btn btn-primary" %>
+  <% end %>
+</div>
+
+<div class="mt-6">
+  <%= link_to t("common.back"), data_subject_requests_path, class: "text-brand-600 hover:underline" %>
+</div>

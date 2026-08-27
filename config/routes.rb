@@ -70,6 +70,11 @@ Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
+  # LGPD Compliance
+  get "privacy", to: "privacy#show", as: :privacy_policy
+  resource :compliance, only: :show, controller: "compliance_dashboard"
+  resources :data_subject_requests, only: %i[index new show create update]
+
   root to: "home#index"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

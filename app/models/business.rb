@@ -10,7 +10,6 @@ class Business < ApplicationRecord
   has_many :customers, dependent: :restrict_with_exception
   has_many :cash_registers, dependent: :restrict_with_exception
   has_many :cash_movements, dependent: :restrict_with_exception
-  has_many :integration_settings, dependent: :restrict_with_exception
 
   has_many :delivery_addresses, dependent: :restrict_with_exception
   has_many :deliveries, dependent: :restrict_with_exception
