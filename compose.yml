@@ -75,7 +75,8 @@ services:
     profiles: ["dev"]
     ports:
       - "3000:3000"
-    command: bin/rails server -b 0.0.0.0
+    # Clear a stale pid left by an unclean shutdown so the container reboots cleanly.
+    command: sh -c "rm -f tmp/pids/server.pid && exec bin/rails server -b 0.0.0.0"
 
   worker:
     <<: *rails
