@@ -280,6 +280,8 @@ CREATE TABLE public.consent_records (
     updated_at timestamp(6) without time zone NOT NULL
 );
 
+ALTER TABLE ONLY public.consent_records FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: customers; Type: TABLE; Schema: public; Owner: -
@@ -321,6 +323,8 @@ CREATE TABLE public.data_subject_requests (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
+
+ALTER TABLE ONLY public.data_subject_requests FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -517,6 +521,8 @@ CREATE TABLE public.privacy_incidents (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
+
+ALTER TABLE ONLY public.privacy_incidents FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -1516,10 +1522,24 @@ CREATE TRIGGER categories_set_business_id BEFORE INSERT ON public.categories FOR
 
 
 --
+-- Name: consent_records consent_records_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER consent_records_set_business_id BEFORE INSERT ON public.consent_records FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
 -- Name: customers customers_set_business_id; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER customers_set_business_id BEFORE INSERT ON public.customers FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: data_subject_requests data_subject_requests_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER data_subject_requests_set_business_id BEFORE INSERT ON public.data_subject_requests FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
 
 
 --
@@ -1576,6 +1596,13 @@ CREATE TRIGGER orders_set_business_id BEFORE INSERT ON public.orders FOR EACH RO
 --
 
 CREATE TRIGGER payments_set_business_id BEFORE INSERT ON public.payments FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
+
+
+--
+-- Name: privacy_incidents privacy_incidents_set_business_id; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER privacy_incidents_set_business_id BEFORE INSERT ON public.privacy_incidents FOR EACH ROW EXECUTE FUNCTION public.assign_business_id_from_guc();
 
 
 --
@@ -2023,10 +2050,22 @@ ALTER TABLE public.cash_registers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: consent_records; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.consent_records ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: customers; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: data_subject_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.data_subject_requests ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: deliveries; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2075,6 +2114,12 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: privacy_incidents; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.privacy_incidents ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: product_addon_groups; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2129,10 +2174,24 @@ CREATE POLICY tenant_isolation ON public.categories USING ((business_id = (curre
 
 
 --
+-- Name: consent_records tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.consent_records USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
 -- Name: customers tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY tenant_isolation ON public.customers USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
+-- Name: data_subject_requests tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.data_subject_requests USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
 
 
 --
@@ -2192,6 +2251,13 @@ CREATE POLICY tenant_isolation ON public.payments USING ((business_id = (current
 
 
 --
+-- Name: privacy_incidents tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.privacy_incidents USING ((business_id = (current_setting('app.business_id'::text))::uuid)) WITH CHECK ((business_id = (current_setting('app.business_id'::text))::uuid));
+
+
+--
 -- Name: product_addon_groups tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2226,7 +2292,9 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260829090000'),
 ('20260826040000'),
+('20260826020000'),
 ('20260822150000'),
 ('20260819201103'),
 ('20260809020000'),
