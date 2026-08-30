@@ -7,7 +7,7 @@ module Tenancy
     business_id = business_or_id.respond_to?(:id) ? business_or_id.id : business_or_id
     raise TenantNotSetError, "A business is required for tenant-scoped work" if business_id.blank?
 
-    business = business_or_id.respond_to?(:id) ? business_or_id : Business.find(business_id)
+    business = business_or_id.respond_to?(:id) ? business_or_id : Business.find_by(id: business_id)
     raise TenantNotSetError, "Business not found" unless business.present?
 
     result = nil
