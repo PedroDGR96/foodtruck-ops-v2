@@ -10,6 +10,7 @@ class OrderEvent < ApplicationRecord
   validate :metadata_present
 
   after_find { readonly! }
+  before_update { readonly! }
 
   private
 
