@@ -334,6 +334,108 @@ RSpec.describe CashRegisterService do
         expect(movement.movement_type).to eq("expense")
       end
     end
+
+    it "rejects a movement with a zero amount" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 10.00,
+          opened_at: Time.current
+        )
+
+        expect {
+          described_class.record_movement!(
+            register: register,
+            movement_type: :income,
+            category: :cash_drop,
+            amount: 0,
+            reason: "Cash drop",
+            actor: user
+          )
+        }.to raise_error(ActiveRecord::RecordInvalid)
+      end
+    end
+
+    it "rejects a movement with a negative amount" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 10.00,
+          opened_at: Time.current
+        )
+
+        expect {
+          described_class.record_movement!(
+            register: register,
+            movement_type: :income,
+            category: :cash_drop,
+            amount: -5.00,
+            reason: "Cash drop",
+            actor: user
+          )
+        }.to raise_error(ActiveRecord::RecordInvalid)
+      end
+    end
+
+    it "rejects a movement without a reason" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 10.00,
+          opened_at: Time.current
+        )
+
+        expect {
+          described_class.record_movement!(
+            register: register,
+            movement_type: :income,
+            category: :cash_drop,
+            amount: 5.00,
+            reason: nil,
+            actor: user
+          )
+        }.to raise_error(ActiveRecord::RecordInvalid)
+      end
+    end
+
+    it "orders movements newest first through the recent scope" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 10.00,
+          opened_at: Time.current
+        )
+
+        first = described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 5.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        second = described_class.record_movement!(
+          register: register,
+          movement_type: :expense,
+          category: :payout,
+          amount: 3.00,
+          reason: "Payout",
+          actor: user
+        )
+
+        expect(register.cash_movements.recent.first.id).to eq(second.id)
+        expect(register.cash_movements.recent.last.id).to eq(first.id)
+      end
+    end
   end
 
   describe ".close!" do
