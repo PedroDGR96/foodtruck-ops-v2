@@ -13,6 +13,7 @@ class Order < ApplicationRecord
     paid: "paid",
     in_kitchen: "in_kitchen",
     ready: "ready",
+    delivered: "delivered",
     completed: "completed",
     cancelled: "cancelled",
     refunded: "refunded"
@@ -38,7 +39,7 @@ class Order < ApplicationRecord
   validates_parent_business_for :customer
 
   scope :recent, -> { order(created_at: :desc) }
-  scope :active, -> { where(status: %i[paid in_kitchen ready]) }
+  scope :active, -> { where(status: %i[paid in_kitchen ready delivered]) }
   scope :kitchen_queue, -> do
     where(status: %i[paid in_kitchen])
       .eager_load(order_items: :order_item_addons)
