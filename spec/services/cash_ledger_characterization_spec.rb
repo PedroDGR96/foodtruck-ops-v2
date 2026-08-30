@@ -91,5 +91,63 @@ RSpec.describe CashRegisterService do
         expect(register.expected_closing).to eq(75.00)
       end
     end
+
+    it "accumulates multiple movements into expected closing" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 50.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        described_class.record_movement!(
+          register: register,
+          movement_type: :expense,
+          category: :payout,
+          amount: 20.00,
+          reason: "Payout",
+          actor: user
+        )
+
+        expect(register.cash_movements.count).to eq(2)
+        expect(register.expected_closing).to eq(130.00)
+      end
+    end
+
+    it "records the movement with the provided category and reason" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        movement = described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :other_income,
+          amount: 15.00,
+          reason: "Other income",
+          actor: user
+        )
+
+        expect(movement.category).to eq("other_income")
+        expect(movement.reason).to eq("Other income")
+        expect(movement.amount).to eq(15.00)
+      end
+    end
   end
 end
