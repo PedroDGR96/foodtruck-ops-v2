@@ -239,6 +239,39 @@ RSpec.describe CashRegisterService do
         expect(register.expected_closing).to eq(90.00)
       end
     end
+
+    it "exposes income and expense movements through their scopes" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 40.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        described_class.record_movement!(
+          register: register,
+          movement_type: :expense,
+          category: :payout,
+          amount: 10.00,
+          reason: "Payout",
+          actor: user
+        )
+
+        expect(register.cash_movements.income.count).to eq(1)
+        expect(register.cash_movements.expense.count).to eq(1)
+      end
+    end
   end
 
   describe ".close!" do
