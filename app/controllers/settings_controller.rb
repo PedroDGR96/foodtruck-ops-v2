@@ -18,7 +18,7 @@ class SettingsController < AuthenticatedController
       )
       redirect_to edit_settings_path, notice: t("settings.updated")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

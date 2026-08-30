@@ -25,7 +25,7 @@ class DataSubjectRequestsController < AuthenticatedController
     if @dsar.save
       redirect_to data_subject_requests_path, notice: t("compliance.dsar.created")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -40,7 +40,7 @@ class DataSubjectRequestsController < AuthenticatedController
     if @dsar.update(dsar_params)
       redirect_to @dsar, notice: t("compliance.dsar.updated")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

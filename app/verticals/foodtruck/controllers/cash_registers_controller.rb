@@ -25,7 +25,7 @@ class CashRegistersController < AuthenticatedController
     redirect_to register, notice: t("cash_registers.opened")
   rescue ActiveRecord::RecordInvalid => e
     @register = e.record
-    render :new, status: :unprocessable_entity
+    render :new, status: :unprocessable_content
   end
 
   def close
@@ -41,7 +41,7 @@ class CashRegistersController < AuthenticatedController
   rescue ActiveRecord::RecordInvalid => e
     @register = e.record
     @movement = @register.cash_movements.build
-    render :show, status: :unprocessable_entity
+    render :show, status: :unprocessable_content
   end
 
   private

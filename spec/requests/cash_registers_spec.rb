@@ -73,7 +73,7 @@ RSpec.describe "Cash Registers", type: :request do
     it "rejects invalid opening amount" do
       post cash_registers_path, params: { cash_register: { opening_amount: -10 } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects opening when another shift is already open" do
@@ -81,7 +81,7 @@ RSpec.describe "Cash Registers", type: :request do
 
       post cash_registers_path, params: { cash_register: { opening_amount: 50.0 } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -114,13 +114,13 @@ RSpec.describe "Cash Registers", type: :request do
 
       post close_cash_register_path(register), params: { cash_register: { actual_closing_amount: "-5" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects a blank closing amount instead of closing at zero" do
       post close_cash_register_path(register), params: { cash_register: { actual_closing_amount: "" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(Tenancy.with_business(business) { register.reload }).to be_open
     end
   end
@@ -146,7 +146,7 @@ RSpec.describe "Cash Registers", type: :request do
         cash_movement: { movement_type: "income", category: "cash_drop", amount: 0, reason: "" }
       }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 end

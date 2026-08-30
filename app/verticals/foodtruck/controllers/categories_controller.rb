@@ -18,7 +18,7 @@ class CategoriesController < AuthenticatedController
     if @category.save
       redirect_to categories_path, notice: t("categories.created", name: @category.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -32,7 +32,7 @@ class CategoriesController < AuthenticatedController
     if @category.update(category_params)
       redirect_to categories_path, notice: t("categories.updated", name: @category.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

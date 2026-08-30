@@ -14,7 +14,7 @@ class CashMovementsController < AuthenticatedController
     redirect_to @register, notice: t("cash_registers.movement_recorded")
   rescue ActiveRecord::RecordInvalid => e
     @movement = e.record
-    render "cash_registers/show", status: :unprocessable_entity
+    render "cash_registers/show", status: :unprocessable_content
   end
 
   private

@@ -63,11 +63,11 @@ module Api
       end
 
       def render_unprocessable(exception)
-        render json: { errors: exception.record.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: exception.record.errors.full_messages }, status: :unprocessable_content
       end
 
       def render_unprocessable_message(exception)
-        render json: { error: exception.message }, status: :unprocessable_entity
+        render json: { error: exception.message }, status: :unprocessable_content
       end
     end
   end

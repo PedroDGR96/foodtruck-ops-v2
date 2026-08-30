@@ -105,7 +105,7 @@ RSpec.describe "Authorization", type: :request do
 
       post "/users", params: { user: { name: "", email: "invalid@example.test", role: "cashier", password: "password123" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "re-renders the user form when update fails" do
@@ -114,7 +114,7 @@ RSpec.describe "Authorization", type: :request do
 
       patch "/users/#{target.id}", params: { user: { name: "" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(reload_user(target).name).not_to be_empty
     end
 
@@ -123,7 +123,7 @@ RSpec.describe "Authorization", type: :request do
 
       patch "/settings", params: { business: { name: "" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(business.reload.name).not_to be_empty
     end
   end

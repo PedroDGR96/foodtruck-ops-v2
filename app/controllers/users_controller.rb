@@ -19,7 +19,7 @@ class UsersController < AuthenticatedController
       AuditLog.record!(action: "user_created", resource: "user", resource_id: @user.id, actor: current_user)
       redirect_to users_path, notice: t("users.created", name: @user.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -34,7 +34,7 @@ class UsersController < AuthenticatedController
       AuditLog.record!(action: "user_updated", resource: "user", resource_id: @user.id, actor: current_user)
       redirect_to users_path, notice: t("users.updated", name: @user.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

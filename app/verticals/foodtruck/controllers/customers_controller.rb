@@ -29,7 +29,7 @@ class CustomersController < AuthenticatedController
     if @customer.save
       redirect_to customer_path(@customer), notice: t("customers.created", name: @customer.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -43,7 +43,7 @@ class CustomersController < AuthenticatedController
     if @customer.update(customer_params)
       redirect_to customer_path(@customer), notice: t("customers.updated", name: @customer.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

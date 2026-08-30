@@ -14,7 +14,7 @@ class ProductAddonsController < AuthenticatedController
     if @product_addon.save
       redirect_to product_path(@product_addon_group.product), notice: t("product_addons.created", name: @product_addon.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -28,7 +28,7 @@ class ProductAddonsController < AuthenticatedController
     if @product_addon.update(product_addon_params)
       redirect_to product_path(@product_addon_group.product), notice: t("product_addons.updated", name: @product_addon.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

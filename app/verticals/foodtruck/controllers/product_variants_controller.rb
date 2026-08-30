@@ -14,7 +14,7 @@ class ProductVariantsController < AuthenticatedController
     if @product_variant.save
       redirect_to product_path(@product), notice: t("product_variants.created", name: @product_variant.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -28,7 +28,7 @@ class ProductVariantsController < AuthenticatedController
     if @product_variant.update(product_variant_params)
       redirect_to product_path(@product), notice: t("product_variants.updated", name: @product_variant.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

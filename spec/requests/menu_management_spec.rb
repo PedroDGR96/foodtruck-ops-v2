@@ -40,11 +40,11 @@ RSpec.describe "Menu management (owner)", type: :request do
 
     it "re-renders new and edit on invalid submissions" do
       post "/categories", params: { category: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Nova")
 
       patch category_path(category), params: { category: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Editar")
     end
   end
@@ -86,11 +86,11 @@ RSpec.describe "Menu management (owner)", type: :request do
 
     it "re-renders new and edit on invalid submissions" do
       post "/products", params: { product: { name: "", category_id: category.id } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Novo")
 
       patch product_path(product), params: { product: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Editar")
     end
   end
@@ -122,11 +122,11 @@ RSpec.describe "Menu management (owner)", type: :request do
 
     it "re-renders new and edit on invalid submissions" do
       post product_product_variants_path(product), params: { product_variant: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Nova variação")
 
       patch product_product_variant_path(product, variant), params: { product_variant: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Editar")
     end
   end
@@ -160,11 +160,11 @@ RSpec.describe "Menu management (owner)", type: :request do
 
     it "re-renders new and edit on invalid submissions" do
       post product_product_addon_groups_path(product), params: { product_addon_group: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Novo")
 
       patch product_product_addon_group_path(product, group), params: { product_addon_group: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Editar")
     end
   end
@@ -199,11 +199,11 @@ RSpec.describe "Menu management (owner)", type: :request do
 
     it "re-renders new and edit on invalid submissions" do
       post product_product_addon_group_product_addons_path(product, group), params: { product_addon: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Novo")
 
       patch product_product_addon_group_product_addon_path(product, group, addon), params: { product_addon: { name: "" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Editar")
     end
   end

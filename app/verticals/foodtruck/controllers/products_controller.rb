@@ -24,7 +24,7 @@ class ProductsController < AuthenticatedController
     if @product.save
       redirect_to product_path(@product), notice: t("products.created", name: @product.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -38,7 +38,7 @@ class ProductsController < AuthenticatedController
     if @product.update(product_params)
       redirect_to product_path(@product), notice: t("products.updated", name: @product.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

@@ -40,7 +40,7 @@ class IntegrationsController < AuthenticatedController
     @providers = IntegrationSetting::PROVIDER_KEYS
     @active_tab = params[:tab] || @providers.first
     @settings = load_settings
-    render :edit, status: :unprocessable_entity
+    render :edit, status: :unprocessable_content
   end
 
   def test_connection
