@@ -36,6 +36,14 @@ RSpec.describe "Data Subject Requests", type: :request do
     end
   end
 
+  describe "GET /data_subject_requests/new" do
+    it "allows the owner to reach the new DSAR form" do
+      login_as owner, scope: :user
+      get "/data_subject_requests/new"
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   describe "GET /data_subject_requests/:id" do
     it "allows the owner to view a DSAR" do
       dsar = Tenancy.with_business(business) do
