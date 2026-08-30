@@ -43,7 +43,7 @@ class OrderPaymentController < AuthenticatedController
     payment = @order.payments.build(
       method: method,
       amount: amount,
-      gateway_reference: "step_#{params[:step]}"
+      gateway_reference: "step_#{params[:step]&.to_i}"
     )
 
     begin
@@ -97,7 +97,7 @@ class OrderPaymentController < AuthenticatedController
     order.payments.build(
       method: Payment.methods.keys.first,
       amount: calculate_amount_for_step(order, step),
-      gateway_reference: "step_#{step}"
+      gateway_reference: "step_#{step.to_i}"
     )
   end
 end
