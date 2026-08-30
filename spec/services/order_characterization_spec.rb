@@ -45,5 +45,46 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "tracks partial payments via balance_due and fully_paid?" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.50,
+          delivery_fee: 0.0,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Salad",
+          quantity: 2,
+          unit_price: 8.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra dressing", price: 1.50)
+
+        order.recalculate_totals!
+        order.reload
+
+        # subtotal = (8.00 + 1.50).round(2) * 2 = 9.50 * 2 = 19.00
+        expect(order.subtotal).to eq(19.00)
+        # total = 19.00 + 1.50 + 0.00 = 20.50
+        expect(order.total).to eq(20.50)
+
+        create(:payment, order: order, status: :succeeded, amount: 10.00)
+
+        Tenancy.with_business(business) do
+          # balance_due = total - paid_amount = 20.50 - 10.00 = 10.50
+          expect(order.balance_due).to eq(10.50)
+          expect(order.fully_paid?).to be(false)
+        end
+      end
+    end
   end
 end
