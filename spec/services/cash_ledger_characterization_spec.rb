@@ -39,6 +39,23 @@ RSpec.describe CashRegisterService do
         expect { described_class.open!(register: register) }.to raise_error(ArgumentError, "Register already open")
       end
     end
+
+    it "returns the same register instance after opening" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 75.00,
+          opened_at: Time.current
+        )
+
+        result = described_class.open!(register: register, actor: user)
+
+        expect(result.id).to eq(register.id)
+        expect(result.user_id).to eq(user.id)
+      end
+    end
   end
 
   describe ".record_movement!" do
@@ -147,6 +164,44 @@ RSpec.describe CashRegisterService do
         expect(movement.category).to eq("other_income")
         expect(movement.reason).to eq("Other income")
         expect(movement.amount).to eq(15.00)
+      end
+    end
+
+    it "links the movement to its register and actor" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        movement = described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 30.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        expect(movement.cash_register_id).to eq(register.id)
+        expect(movement.created_by_id).to eq(user.id)
+      end
+    end
+
+    it "keeps expected closing equal to opening amount when no movements exist" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 200.00,
+          opened_at: Time.current
+        )
+
+        expect(register.expected_closing).to eq(200.00)
       end
     end
   end
