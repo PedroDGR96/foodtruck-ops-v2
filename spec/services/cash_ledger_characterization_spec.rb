@@ -56,6 +56,22 @@ RSpec.describe CashRegisterService do
         expect(result.user_id).to eq(user.id)
       end
     end
+
+    it "keeps the opening amount unchanged after open!" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 120.50,
+          opened_at: Time.current
+        )
+
+        described_class.open!(register: register, actor: user)
+
+        expect(register.reload.opening_amount).to eq(120.50)
+      end
+    end
   end
 
   describe ".record_movement!" do
@@ -270,6 +286,52 @@ RSpec.describe CashRegisterService do
 
         expect(register.cash_movements.income.count).to eq(1)
         expect(register.cash_movements.expense.count).to eq(1)
+      end
+    end
+
+    it "stores the movement amount as a positive decimal" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 10.00,
+          opened_at: Time.current
+        )
+
+        movement = described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: "75.25",
+          reason: "Cash drop",
+          actor: user
+        )
+
+        expect(movement.amount).to eq(75.25)
+      end
+    end
+
+    it "records the movement type on the persisted record" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 10.00,
+          opened_at: Time.current
+        )
+
+        movement = described_class.record_movement!(
+          register: register,
+          movement_type: :expense,
+          category: :payout,
+          amount: 5.00,
+          reason: "Payout",
+          actor: user
+        )
+
+        expect(movement.movement_type).to eq("expense")
       end
     end
   end
