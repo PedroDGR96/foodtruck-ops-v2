@@ -204,6 +204,41 @@ RSpec.describe CashRegisterService do
         expect(register.expected_closing).to eq(200.00)
       end
     end
+
+    it "accumulates multiple income movements on the same register" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 50.00,
+          opened_at: Time.current
+        )
+
+        first = described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 25.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        second = described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :other_income,
+          amount: 15.00,
+          reason: "Other income",
+          actor: user
+        )
+
+        expect(register.cash_movements.count).to eq(2)
+        expect(first.amount).to eq(25.00)
+        expect(second.amount).to eq(15.00)
+        expect(register.expected_closing).to eq(90.00)
+      end
+    end
   end
 
   describe ".close!" do
