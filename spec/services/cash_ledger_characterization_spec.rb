@@ -150,4 +150,55 @@ RSpec.describe CashRegisterService do
       end
     end
   end
+
+  describe ".close!" do
+    it "closes the register with actual closing amount and computes drift" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 50.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        result = described_class.close!(register: register, actual_closing_amount: 140.00, actor: user)
+
+        expect(result).to eq(register)
+        expect(register.reload.status).to eq("closed")
+        expect(register.actual_closing_amount).to eq(140.00)
+        expect(register.expected_closing_amount).to eq(150.00)
+        expect(register.drift).to eq(-10.00)
+        expect(register.reconciled).to be_falsey
+      end
+    end
+
+    it "marks the register as reconciled when actual equals expected" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        described_class.close!(register: register, actual_closing_amount: 100.00, actor: user)
+
+        expect(register.reload.status).to eq("closed")
+        expect(register.expected_closing_amount).to eq(100.00)
+        expect(register.drift).to eq(0.00)
+        expect(register.reconciled).to be_truthy
+      end
+    end
+  end
 end
