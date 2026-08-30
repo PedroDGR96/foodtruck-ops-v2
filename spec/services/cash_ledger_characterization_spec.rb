@@ -2,8 +2,94 @@
 
 require "rails_helper"
 
-RSpec.describe "characterization placeholder" do
-  it "boots" do
-    expect(true).to be(true)
+RSpec.describe CashRegisterService do
+  let(:business) { create(:business) }
+  let(:user) { create(:user, business: business) }
+
+  describe ".open!" do
+    it "persists the opening balance on an open register" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 250.00,
+          opened_at: Time.current
+        )
+
+        result = described_class.open!(register: register, actor: user)
+
+        expect(result).to eq(register)
+        expect(register.reload.opening_amount).to eq(250.00)
+      end
+    end
+
+    it "raises when the register is not open" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :closed,
+          opening_amount: 10.00,
+          opened_at: Time.current,
+          actual_closing_amount: 10.00,
+          closed_at: Time.current
+        )
+
+        expect { described_class.open!(register: register) }.to raise_error(ArgumentError, "Register already open")
+      end
+    end
+  end
+
+  describe ".record_movement!" do
+    it "records an income movement and adds to expected closing" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        movement = described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 50.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        expect(movement).to be_persisted
+        expect(register.cash_movements.count).to eq(1)
+        expect(register.expected_closing).to eq(150.00)
+      end
+    end
+
+    it "records an expense movement and subtracts from expected closing" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        movement = described_class.record_movement!(
+          register: register,
+          movement_type: :expense,
+          category: :refund,
+          amount: 25.00,
+          reason: "Refund",
+          actor: user
+        )
+
+        expect(movement).to be_persisted
+        expect(register.cash_movements.count).to eq(1)
+        expect(register.expected_closing).to eq(75.00)
+      end
+    end
   end
 end
