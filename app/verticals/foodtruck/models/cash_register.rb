@@ -53,6 +53,10 @@ class CashRegister < ApplicationRecord
     self
   end
 
+  def clear_cache
+    cache.delete_all
+  end
+
   def expected_closing
     (opening_amount + cash_sales + movement_balance).round(2)
   end
