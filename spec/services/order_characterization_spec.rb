@@ -176,5 +176,45 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "rounds per-item unit totals to two decimals before multiplying by quantity" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 0.50,
+          delivery_fee: 1.25,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Special",
+          quantity: 3,
+          unit_price: 4.33,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra topping", price: 1.67)
+
+        order.recalculate_totals!
+        order.reload
+
+        # per-item unit = (4.33 + 1.67).round(2) = 6.00; subtotal = 6.00 * 3 = 18.00
+        expect(order.subtotal).to eq(18.00)
+        # total = 18.00 + 0.50 + 1.25 = 19.75
+        expect(order.total).to eq(19.75)
+
+        create(:payment, order: order, status: :succeeded, amount: 19.75)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
