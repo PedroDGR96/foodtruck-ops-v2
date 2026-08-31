@@ -3,8 +3,8 @@ class KitchenController < AuthenticatedController
 
   def show
     authorize :kitchen, :show?
-    @orders = Current.business.orders.kitchen_queue
-    @completed = Current.business.orders.kitchen_completed
+    @orders = Current.business.orders.kitchen_queue.limit(100)
+    @completed = Current.business.orders.kitchen_completed.limit(50)
   end
 
   def start
