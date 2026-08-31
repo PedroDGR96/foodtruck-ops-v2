@@ -137,5 +137,44 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "computes total from subtotal plus tax and delivery fee without addons" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 3.75,
+          delivery_fee: 2.50,
+          total: 0.0
+        )
+
+        create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 2,
+          unit_price: 7.50,
+          line_total: 0.0
+        )
+
+        order.recalculate_totals!
+        order.reload
+
+        # subtotal = (7.50 + 0.0).round(2) * 2 = 15.00
+        expect(order.subtotal).to eq(15.00)
+        # total = 15.00 + 3.75 + 2.50 = 21.25
+        expect(order.total).to eq(21.25)
+
+        create(:payment, order: order, status: :succeeded, amount: 21.25)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
