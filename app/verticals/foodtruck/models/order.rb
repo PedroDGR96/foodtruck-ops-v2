@@ -5,6 +5,11 @@ class Order < ApplicationRecord
   include BusinessScoped
   include TenantChild
 
+  # Batch limits for kitchen board rendering so eager_load scopes never pull
+  # unbounded result sets into memory (prevents runaway loops when the queue
+  # grows large).
+  KITCHEN_BATCH_LIMIT = 200
+
   enum :order_type, { local: "local", delivery: "delivery", pickup: "pickup" }, default: :local
   enum :status, {
     draft: "draft",
@@ -44,12 +49,14 @@ class Order < ApplicationRecord
     where(status: %i[paid in_kitchen])
       .eager_load(order_items: :order_item_addons)
       .order(Arel.sql("CASE kitchen_status WHEN 'in_progress' THEN 0 ELSE 1 END"), created_at: :asc)
+      .limit(KITCHEN_BATCH_LIMIT)
   end
   scope :purchases, -> { where.not(status: %i[draft cancelled refunded]) }
   scope :kitchen_completed, -> do
     where(kitchen_status: :done, status: :ready)
       .eager_load(order_items: :order_item_addons)
       .order(created_at: :desc)
+      .limit(KITCHEN_BATCH_LIMIT)
   end
 
   def paid_amount
