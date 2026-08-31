@@ -5,7 +5,9 @@ module Api
 
       def index
         authorize Product
-        render_collection paginate(Current.business.products.ordered)
+        products = Current.business.products.ordered
+        products = products.where(category_id: params[:category_id]) if params[:category_id].present?
+        render_collection paginate(products)
       end
 
       def show
