@@ -26,6 +26,6 @@ class KitchenController < AuthenticatedController
   private
 
   def set_order
-    @order = Current.business.orders.find(params[:id])
+    @order = Current.business.orders.where(id: params[:id]).first
   end
 end
