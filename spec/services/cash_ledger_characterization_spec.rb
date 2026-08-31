@@ -436,6 +436,70 @@ RSpec.describe CashRegisterService do
         expect(register.cash_movements.recent.last.id).to eq(first.id)
       end
     end
+
+    it "does not affect the expected closing of another register" do
+      Tenancy.with_business(business) do
+        other_user = create(:user, business: business)
+        first_register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 100.00,
+          opened_at: Time.current
+        )
+
+        second_register = CashRegister.create!(
+          user: other_user,
+          business: business,
+          status: :open,
+          opening_amount: 50.00,
+          opened_at: Time.current
+        )
+
+        described_class.record_movement!(
+          register: first_register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 25.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        expect(second_register.expected_closing).to eq(50.00)
+      end
+    end
+
+    it "computes expected closing from opening amount plus net movements" do
+      Tenancy.with_business(business) do
+        register = CashRegister.create!(
+          user: user,
+          business: business,
+          status: :open,
+          opening_amount: 75.00,
+          opened_at: Time.current
+        )
+
+        described_class.record_movement!(
+          register: register,
+          movement_type: :income,
+          category: :cash_drop,
+          amount: 25.00,
+          reason: "Cash drop",
+          actor: user
+        )
+
+        described_class.record_movement!(
+          register: register,
+          movement_type: :expense,
+          category: :payout,
+          amount: 10.00,
+          reason: "Payout",
+          actor: user
+        )
+
+        expect(register.expected_closing).to eq(90.00)
+      end
+    end
   end
 
   describe ".close!" do
