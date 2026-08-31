@@ -216,5 +216,48 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "recomputes totals when an addon is added after the initial recalculation" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.00,
+          delivery_fee: 0.0,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 2,
+          unit_price: 10.00,
+          line_total: 0.0
+        )
+
+        # First pass: no addons yet -> subtotal = (10.00 + 0).round(2) * 2 = 20.00
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(20.00)
+        expect(order.total).to eq(21.00)
+
+        # Add an addon and recalculate again -> subtotal = (10.00 + 3.50).round(2) * 2 = 27.00
+        create(:order_item_addon, order_item: item, name: "Extra cheese", price: 3.50)
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(27.00)
+        # total = 27.00 + 1.00 + 0.00 = 28.00
+        expect(order.total).to eq(28.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 28.00)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
