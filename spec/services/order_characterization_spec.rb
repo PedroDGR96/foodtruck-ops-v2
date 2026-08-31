@@ -86,5 +86,56 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "sums multiple line items with mixed addons and quantities" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.25,
+          delivery_fee: 3.75,
+          total: 0.0
+        )
+
+        item_a = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 2,
+          unit_price: 12.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_a, name: "Extra cheese", price: 1.50)
+
+        item_b = create(
+          :order_item,
+          order: order,
+          product_name: "Fries",
+          quantity: 4,
+          unit_price: 3.25,
+          line_total: 0.0
+        )
+
+        order.recalculate_totals!
+        order.reload
+
+        # item_a subtotal = (12.00 + 1.50).round(2) * 2 = 13.50 * 2 = 27.00
+        # item_b subtotal = (3.25 + 0.00).round(2) * 4 = 3.25 * 4 = 13.00
+        # order.subtotal = 27.00 + 13.00 = 40.00
+        expect(order.subtotal).to eq(40.00)
+        # total = 40.00 + 1.25 + 3.75 = 45.00
+        expect(order.total).to eq(45.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 45.00)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
