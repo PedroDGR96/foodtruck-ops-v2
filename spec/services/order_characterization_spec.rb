@@ -396,5 +396,60 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "computes totals for multiple items where one has an addon and the other does not" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 2.50,
+          delivery_fee: 1.50,
+          total: 0.0
+        )
+
+        item_a = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 5.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_a, name: "Extra cheese", price: 1.00)
+
+        item_b = create(
+          :order_item,
+          order: order,
+          product_name: "Fries",
+          quantity: 2,
+          unit_price: 7.00,
+          line_total: 0.0
+        )
+
+        order.recalculate_totals!
+        order.reload
+
+        # item_a subtotal = (5.00 + 1.00).round(2) * 3 = 6.00 * 3 = 18.00
+        # item_b subtotal = (7.00 + 0.00).round(2) * 2 = 7.00 * 2 = 14.00
+        # order.subtotal = 18.00 + 14.00 = 32.00
+        expect(order.subtotal).to eq(32.00)
+        # total = 32.00 + 2.50 + 1.50 = 36.00
+        expect(order.total).to eq(36.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 20.00)
+        create(:payment, order: order, status: :succeeded, amount: 16.00)
+
+        Tenancy.with_business(business) do
+          # paid_amount = 20.00 + 16.00 = 36.00
+          expect(order.paid_amount).to eq(36.00)
+          # balance_due = total - paid_amount = 36.00 - 36.00 = 0.00
+          expect(order.balance_due).to eq(0.00)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
