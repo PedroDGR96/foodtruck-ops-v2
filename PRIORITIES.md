@@ -69,6 +69,24 @@ Orders must retain correct historical info even if the product/price later chang
 
 ---
 
+## DEMO FREEZE (2026-09-01 → 2026-09-03, client presentation window)
+
+STOP. A client demo/presentation is scheduled within 48h. During this window:
+
+- **DO NOT modify `app/` behavior files** (`app/verticals/**`, `app/controllers/**`,
+  `app/views/**`, `app/services/**`, `app/integrations/**`). The presentation screens
+  must not change under the presenter.
+- **Only allowed work in this window**: (a) ADD/DOCUMENT-only specs (`spec/**`) that
+  prove existing behavior is intentional or pin invariants; (b) genuinely
+  demo-blocking bug fixes — and even those go through manual review, never
+  fast-landed.
+- Audit findings from this window are to be COLLECTED and reported, not patched.
+  Prefer marking findings as INTENTIONAL-with-spec over any `app/` change.
+- Revert-for-safety: if the demo data (`bin/demo-data.rb`) or the running stack is
+  disturbed, report it — do not "fix" it by patching app code.
+- This freeze lifts automatically on 2026-09-03. Do NOT try to game it by editing
+  this file's timestamp.
+
 ## Constraints (unchanged, hard rules)
 - Run `bin/ci` (rubocop + brakeman + rspec + SimpleCov) after every change; land only if
   0 failures AND per-file coverage >= 95%.
