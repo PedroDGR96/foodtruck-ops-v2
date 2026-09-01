@@ -302,5 +302,57 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "computes correct totals when every line item has its own distinct addon" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 2.00,
+          delivery_fee: 1.50,
+          total: 0.0
+        )
+
+        item_a = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 9.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_a, name: "Extra cheese", price: 1.50)
+
+        item_b = create(
+          :order_item,
+          order: order,
+          product_name: "Fries",
+          quantity: 2,
+          unit_price: 6.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_b, name: "Extra sauce", price: 1.00)
+
+        order.recalculate_totals!
+        order.reload
+
+        # item_a subtotal = (9.00 + 1.50).round(2) * 3 = 10.50 * 3 = 31.50
+        # item_b subtotal = (6.00 + 1.00).round(2) * 2 = 7.00 * 2 = 14.00
+        # order.subtotal = 31.50 + 14.00 = 45.50
+        expect(order.subtotal).to eq(45.50)
+        # total = 45.50 + 2.00 + 1.50 = 49.00
+        expect(order.total).to eq(49.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 49.00)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
