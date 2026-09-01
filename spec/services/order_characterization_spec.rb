@@ -451,5 +451,45 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "verifies money invariants for an order with no payments" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.25,
+          delivery_fee: 3.75,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 4,
+          unit_price: 12.00,
+          line_total: 0.0
+        )
+
+        order.recalculate_totals!
+        order.reload
+
+        # subtotal = (12.00 + 0).round(2) * 4 = 48.00
+        expect(order.subtotal).to eq(48.00)
+        # total = 48.00 + 1.25 + 3.75 = 53.00
+        expect(order.total).to eq(53.00)
+
+        Tenancy.with_business(business) do
+          # paid_amount with no successful payments = 0.00
+          expect(order.paid_amount).to eq(0.00)
+          # balance_due = total - paid_amount = 53.00 - 0.00 = 53.00
+          expect(order.balance_due).to eq(53.00)
+          expect(order.fully_paid?).to be(false)
+        end
+      end
+    end
   end
 end
