@@ -259,5 +259,48 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "sums multiple successful payments against the order total" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.25,
+          delivery_fee: 3.75,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Taco",
+          quantity: 5,
+          unit_price: 4.00,
+          line_total: 0.0
+        )
+
+        order.recalculate_totals!
+        order.reload
+
+        # subtotal = (4.00 + 0.0).round(2) * 5 = 20.00
+        expect(order.subtotal).to eq(20.00)
+        # total = 20.00 + 1.25 + 3.75 = 25.00
+        expect(order.total).to eq(25.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 10.00)
+        create(:payment, order: order, status: :succeeded, amount: 15.00)
+
+        Tenancy.with_business(business) do
+          # paid_amount = 10.00 + 15.00 = 25.00
+          expect(order.paid_amount).to eq(25.00)
+          # balance_due = total - paid_amount = 25.00 - 25.00 = 0.00
+          expect(order.balance_due).to eq(0.00)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
