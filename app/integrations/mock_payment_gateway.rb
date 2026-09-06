@@ -28,10 +28,15 @@ class MockPaymentGateway < PaymentGateway
   end
 
   def self.refund(settings:, amount:, order_id:)
+    refund_id = "mock_refund_#{order_id}_#{amount.to_f.round(2)}"
     {
       success: true,
       message: "Refund of #{amount} initiated for order #{order_id}",
-      metadata: { order_id: order_id, amount: amount.to_f.round(2) }
+      metadata: {
+        order_id: order_id,
+        amount: amount.to_f.round(2),
+        refund_id: refund_id
+      }
     }
   end
 
