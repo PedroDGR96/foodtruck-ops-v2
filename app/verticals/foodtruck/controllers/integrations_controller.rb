@@ -86,10 +86,13 @@ class IntegrationsController < AuthenticatedController
 
   def test_maps_connection(setting)
     creds = setting_credentials(setting)
-    if creds[:api_key].present?
-      MockMapsProvider.test_connection(settings: creds)
+    provider = creds[:provider] || "osm"
+    
+    case provider
+    when "google"
+      MockGoogleMapsProvider.test_connection(settings: creds) if creds[:api_key].present?
     else
-      OsmMapsProvider.test_connection(settings: {})
+      OsmMapsProvider.test_connection(settings: creds.except(:provider, :api_key))
     end
   rescue => e
     { success: false, message: "Erro: #{e.message}" }
