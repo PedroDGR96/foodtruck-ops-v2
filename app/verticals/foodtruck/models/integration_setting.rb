@@ -7,6 +7,8 @@ class IntegrationSetting < ApplicationRecord
   # Decision: credentials are intentionally stored as plaintext JSONB today (no
   # `encrypts :credentials`). Specs pin this contract. Add `encrypts` and update
   # the spec to assert ciphertext before shipping real provider credentials.
+  encrypts :credentials
+
   before_validation :ensure_credentials_is_hash
   attribute :credentials, :jsonb, default: {}
 
