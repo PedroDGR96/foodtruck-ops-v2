@@ -62,7 +62,7 @@ class IntegrationsController < AuthenticatedController
     when "messaging"
       MockMessagingProvider.test_connection(settings: setting_credentials(setting))
     else
-      { success: false, message: "Provedor não suportado" }
+      { success: false, message: "Provider not supported" }
     end
 
     render json: result
