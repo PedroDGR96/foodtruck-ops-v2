@@ -12,6 +12,10 @@ class PaymentGateway
     raise NotImplementedError
   end
 
+  def self.test_connection(settings:)
+    raise NotImplementedError
+  end
+
   def self.capture(settings:, order_id:, auth_token:)
     raise NotImplementedError
   end

@@ -35,6 +35,17 @@ class MockPaymentGateway < PaymentGateway
     }
   end
 
+  def self.test_connection(settings:)
+    public_key = settings[:public_key].to_s
+    return failure("Chave pública não configurada") if public_key.empty?
+
+    {
+      success: true,
+      message: "Mercado Pago conectado (chave: #{public_key[0..10]}...)",
+      metadata: {}
+    }
+  end
+
   def self.status(settings:, order_id:)
     {
       success: true,

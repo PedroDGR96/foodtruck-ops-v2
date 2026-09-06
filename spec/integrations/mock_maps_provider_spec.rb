@@ -28,6 +28,31 @@ RSpec.describe MockMapsProvider, type: :model do
     end
   end
 
+  describe ".test_connection" do
+    it "reports the configured API key when present" do
+      result = described_class.test_connection(settings: { api_key: "AIzaSy123" })
+
+      expect(result[:success]).to be true
+      expect(result[:message]).to include("Google Maps")
+    end
+
+    it "falls back to the mock OSM geocode without an API key" do
+      result = described_class.test_connection(settings: {})
+
+      expect(result[:success]).to be true
+      expect(result[:message]).to include("OpenStreetMap")
+    end
+
+    it "surfaces errors gracefully" do
+      allow(described_class).to receive(:geocode).and_raise(RuntimeError, "boom")
+
+      result = described_class.test_connection(settings: {})
+
+      expect(result[:success]).to be false
+      expect(result[:message]).to include("boom")
+    end
+  end
+
   describe ".distance" do
     it "returns deterministic meters derived from origin/destination" do
       first = described_class.distance(settings: {}, args: { origin: "A", destination: "B" })

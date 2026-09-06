@@ -9,6 +9,10 @@ class FiscalProvider
     raise NotImplementedError
   end
 
+  def self.test_connection(settings:)
+    raise NotImplementedError
+  end
+
   def self.emit_nf_e(settings:, args:)
     raise NotImplementedError
   end

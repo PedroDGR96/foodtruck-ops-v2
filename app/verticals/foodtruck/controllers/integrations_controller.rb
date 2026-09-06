@@ -53,13 +53,13 @@ class IntegrationsController < AuthenticatedController
     when "maps"
                test_maps_connection(setting)
     when "fiscal"
-               test_fiscal_connection(setting)
+               MockFiscalProvider.test_connection(settings: setting_credentials(setting))
     when "marketplace"
-               test_marketplace_connection(setting)
+               MockMarketplaceProvider.test_connection(settings: setting_credentials(setting))
     when "messaging"
-               test_messaging_connection(setting)
+               MockMessagingProvider.test_connection(settings: setting_credentials(setting))
     when "payment_gateway"
-               test_payment_connection(setting)
+               MockPaymentGateway.test_connection(settings: setting_credentials(setting))
     else
                { success: false, message: "Provedor não suportado" }
     end
@@ -80,60 +80,18 @@ class IntegrationsController < AuthenticatedController
     end
   end
 
+  def setting_credentials(setting)
+    setting&.credentials&.deep_symbolize_keys || {}
+  end
+
   def test_maps_connection(setting)
-    if setting&.credentials&.dig("api_key").present?
-      { success: true, message: "Google Maps configurado" }
+    creds = setting_credentials(setting)
+    if creds[:api_key].present?
+      MockMapsProvider.test_connection(settings: creds)
     else
-      OsmMapsProvider.geocode(settings: {}, args: { address: "Porto Alegre, RS" })[:success] ?
-        { success: true, message: "OpenStreetMap conectado" } :
-        { success: false, message: "Falha ao conectar com OpenStreetMap" }
+      OsmMapsProvider.test_connection(settings: {})
     end
   rescue => e
     { success: false, message: "Erro: #{e.message}" }
-  end
-
-  def test_fiscal_connection(setting)
-    env = setting&.credentials&.dig("environment") || "homologacao"
-    cnpj = setting&.credentials&.dig("cnpj")
-
-    if env == "homologacao"
-      { success: true, message: "Ambiente de homologação configurado" }
-    elsif cnpj.present?
-      { success: true, message: "Produção configurada (CNPJ: #{cnpj})" }
-    else
-      { success: false, message: "CNPJ não configurado para produção" }
-    end
-  end
-
-  def test_marketplace_connection(setting)
-    merchant_id = setting&.credentials&.dig("merchant_id")
-    platform = setting&.credentials&.dig("platform") || "ifood"
-
-    if merchant_id.present?
-      { success: true, message: "#{platform.capitalize} conectado (merchant: #{merchant_id})" }
-    else
-      { success: false, message: "ID do estabelecimento não configurado" }
-    end
-  end
-
-  def test_messaging_connection(setting)
-    sid = setting&.credentials&.dig("twilio_account_sid")
-    token = setting&.credentials&.dig("twilio_auth_token")
-
-    if sid.present? && token.present?
-      { success: true, message: "Twilio configurado (SID: #{sid[0..5]}...)" }
-    else
-      { success: false, message: "Credenciais do Twilio não configuradas" }
-    end
-  end
-
-  def test_payment_connection(setting)
-    public_key = setting&.credentials&.dig("public_key")
-
-    if public_key.present?
-      { success: true, message: "Mercado Pago conectado (chave: #{public_key[0..10]}...)" }
-    else
-      { success: false, message: "Chave pública não configurada" }
-    end
   end
 end

@@ -6,6 +6,17 @@ class MockMessagingProvider < MessagingProvider
   SMS_SEGMENT_SIZE = 160
   WHATSAPP_COST_PER_MESSAGE = 0.005
 
+  def self.test_connection(settings:)
+    sid = settings[:twilio_account_sid].to_s
+    token = settings[:twilio_auth_token].to_s
+
+    if sid.present? && token.present?
+      { success: true, message: "Twilio configurado (SID: #{sid[0..5]}...)" }
+    else
+      { success: false, message: "Credenciais do Twilio não configuradas" }
+    end
+  end
+
   def self.send_whatsapp(settings:, phone:, message:)
     validate_message!(message)
     validate_phone!(phone)

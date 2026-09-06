@@ -2,6 +2,19 @@
 # derived from the order id unless the caller supplies one explicitly, so
 # emissions are repeatable.
 class MockFiscalProvider < FiscalProvider
+  def self.test_connection(settings:)
+    env = settings[:environment] || "homologacao"
+    cnpj = settings[:cnpj].to_s
+
+    if env == "homologacao"
+      { success: true, message: "Ambiente de homologação configurado" }
+    elsif cnpj.present?
+      { success: true, message: "Produção configurada (CNPJ: #{cnpj})" }
+    else
+      { success: false, message: "CNPJ não configurado para produção" }
+    end
+  end
+
   def self.emit_nfc_e(settings:, args:)
     number = args[:nfc_e_number] || "NFCe-#{args.fetch(:order_id)}"
     {

@@ -6,6 +6,10 @@ class MarketplaceProvider
     raise NotImplementedError
   end
 
+  def self.test_connection(settings:)
+    raise NotImplementedError
+  end
+
   def self.update_order(settings:, args:)
     raise NotImplementedError
   end

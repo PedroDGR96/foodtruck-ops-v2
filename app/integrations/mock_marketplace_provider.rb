@@ -4,6 +4,17 @@
 class MockMarketplaceProvider < MarketplaceProvider
   STATUSES = %w[pending confirmed preparing ready delivered cancelled].freeze
 
+  def self.test_connection(settings:)
+    merchant_id = settings[:merchant_id].to_s
+    platform = settings[:platform] || "ifood"
+
+    if merchant_id.present?
+      { success: true, message: "#{platform.capitalize} conectado (merchant: #{merchant_id})" }
+    else
+      { success: false, message: "ID do estabelecimento não configurado" }
+    end
+  end
+
   def self.create_order(settings:, args:)
     merchant_id = args.fetch(:merchant_id)
     platform = args.fetch(:platform, "ifood")

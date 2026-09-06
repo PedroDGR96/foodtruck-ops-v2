@@ -4,6 +4,10 @@ class MapsProvider
     raise NotImplementedError
   end
 
+  def self.test_connection(settings:)
+    raise NotImplementedError
+  end
+
   def self.distance(settings:, args:)
     raise NotImplementedError
   end

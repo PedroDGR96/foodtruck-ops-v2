@@ -11,6 +11,14 @@ class OsmMapsProvider < MapsProvider
   class GeocodingError < StandardError; end
   class RoutingError < StandardError; end
 
+  def self.test_connection(settings:)
+    geocode(settings: {}, args: { address: "Porto Alegre, RS" })[:success] ?
+      { success: true, message: "OpenStreetMap conectado" } :
+      { success: false, message: "Falha ao conectar com OpenStreetMap" }
+  rescue => e
+    { success: false, message: "Erro: #{e.message}" }
+  end
+
   def self.geocode(settings:, args:)
     address = args[:address].to_s
     validate_address!(address)

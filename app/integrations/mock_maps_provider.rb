@@ -2,6 +2,18 @@
 # derived from the input strings (via a stable CRC32) so the same request
 # always yields the same response.
 class MockMapsProvider < MapsProvider
+  def self.test_connection(settings:)
+    if settings[:api_key].present?
+      { success: true, message: "Google Maps configurado" }
+    else
+      geocode(settings: {}, args: { address: "Porto Alegre, RS" })[:success] ?
+        { success: true, message: "OpenStreetMap conectado" } :
+        { success: false, message: "Falha ao conectar com OpenStreetMap" }
+    end
+  rescue => e
+    { success: false, message: "Erro: #{e.message}" }
+  end
+
   def self.geocode(settings:, args:)
     address = args[:address].to_s
     validate!(address)

@@ -3,6 +3,12 @@
 # the mock provides deterministic sandbox behavior for tests.
 class MessagingProvider
   # @param settings [Hash] provider config (api_key, from_number, etc.)
+  # @return [Hash] { success:, message: }
+  def self.test_connection(settings:)
+    raise NotImplementedError
+  end
+
+  # @param settings [Hash] provider config (api_key, from_number, etc.)
   # @param phone [String] recipient phone in E.164 format
   # @param message [String] message body
   # @return [Hash] { success:, message:, cost: (optional) }
