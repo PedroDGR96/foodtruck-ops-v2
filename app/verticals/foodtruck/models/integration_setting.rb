@@ -4,9 +4,9 @@ class IntegrationSetting < ApplicationRecord
 
   PROVIDER_KEYS = %w[payment_gateway messaging maps fiscal marketplace].freeze
 
-  # Decision: credentials are intentionally stored as plaintext JSONB today (no
-  # `encrypts :credentials`). Specs pin this contract. Add `encrypts` and update
-  # the spec to assert ciphertext before shipping real provider credentials.
+  # Decision: credentials are now encrypted at rest via `encrypts :credentials`.
+  # The spec asserts ciphertext storage. Remove the plaintext contract once
+  # all integration providers ship real credentials.
   encrypts :credentials
 
   before_validation :ensure_credentials_is_hash
