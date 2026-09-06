@@ -62,7 +62,7 @@ class IntegrationsController < AuthenticatedController
     when "messaging"
       MockMessagingProvider.test_connection(settings: setting_credentials(setting))
     else
-      { success: false, message: "Provider not supported" }
+      { success: false, message: t("integrations.providers.unknown") }
     end
 
     render json: result
@@ -96,6 +96,6 @@ class IntegrationsController < AuthenticatedController
       OsmMapsProvider.test_connection(settings: creds.except(:provider, :api_key))
     end
   rescue => e
-    { success: false, message: "Erro: #{e.message}" }
+    { success: false, message: t("integrations.providers.error", error: e.message) }
   end
 end
