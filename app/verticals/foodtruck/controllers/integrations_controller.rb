@@ -46,6 +46,7 @@ class IntegrationsController < AuthenticatedController
   def test_connection
     @business = Current.business
     authorize @business, :update?
+    
     provider = params[:provider]
     setting = Current.business.integration_settings.find_by(provider_key: provider)
 
