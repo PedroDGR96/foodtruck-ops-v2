@@ -50,18 +50,18 @@ class IntegrationsController < AuthenticatedController
     setting = Current.business.integration_settings.find_by(provider_key: provider)
 
     result = case provider
-    when "maps"
-               test_maps_connection(setting)
-    when "fiscal"
-               MockFiscalProvider.test_connection(settings: setting_credentials(setting))
-    when "marketplace"
-               MockMarketplaceProvider.test_connection(settings: setting_credentials(setting))
-    when "messaging"
-               MockMessagingProvider.test_connection(settings: setting_credentials(setting))
     when "payment_gateway"
-               MockPaymentGateway.test_connection(settings: setting_credentials(setting))
+      MockPaymentGateway.test_connection(settings: setting_credentials(setting))
+    when "maps"
+      test_maps_connection(setting)
+    when "fiscal"
+      MockFiscalProvider.test_connection(settings: setting_credentials(setting))
+    when "marketplace"
+      MockMarketplaceProvider.test_connection(settings: setting_credentials(setting))
+    when "messaging"
+      MockMessagingProvider.test_connection(settings: setting_credentials(setting))
     else
-               { success: false, message: "Provedor não suportado" }
+      { success: false, message: "Provedor não suportado" }
     end
 
     render json: result
