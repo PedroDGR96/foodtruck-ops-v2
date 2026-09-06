@@ -142,6 +142,7 @@ pt-BR:
     primary_nav: "Navegação principal"
     nav:
       orders: "Pedidos"
+      integrations: "Integrações"
       cash_register: "Caixa"
       daily_report: "Relatório"
       customers: "Clientes"
