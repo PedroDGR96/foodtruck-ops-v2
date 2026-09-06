@@ -39,11 +39,22 @@ class OrderPaymentController < AuthenticatedController
       return
     end
 
+    authorization = MockPaymentGateway.authorize(
+      settings: { currency: "BRL" },
+      amount: amount,
+      order_id: @order.id,
+      metadata: { source: "checkout", method: method }
+    )
+    unless authorization[:success]
+      redirect_to checkout_path(@order), alert: authorization[:message]
+      return
+    end
+
     lifecycle = OrderLifecycle.new(@order, current_user)
     payment = @order.payments.build(
       method: method,
       amount: amount,
-      gateway_reference: "step_#{params[:step]&.to_i}"
+      gateway_reference: authorization.dig(:metadata, :auth_token)
     )
 
     begin
@@ -94,10 +105,18 @@ class OrderPaymentController < AuthenticatedController
   end
 
   def build_payment_for_step(order, step)
+    amount = calculate_amount_for_step(order, step)
+    authorization = MockPaymentGateway.authorize(
+      settings: { currency: "BRL" },
+      amount: amount,
+      order_id: order.id,
+      metadata: { source: "checkout_preview", step: step }
+    )
+
     order.payments.build(
       method: Payment.methods.keys.first,
-      amount: calculate_amount_for_step(order, step),
-      gateway_reference: "step_#{step.to_i}"
+      amount: amount,
+      gateway_reference: authorization.dig(:metadata, :auth_token)
     )
   end
 end

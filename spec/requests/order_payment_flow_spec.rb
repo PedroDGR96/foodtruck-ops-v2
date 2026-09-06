@@ -128,6 +128,29 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
       expect(payment.amount).to eq(40.0)
     end
 
+    it "records the payment with a mock gateway reference" do
+      order = open_order
+
+      post checkout_path(order), params: { payment: { amount: 40.0 } }
+
+      expect(response).to redirect_to(order_path(order))
+      payment = Tenancy.with_business(business) { order.payments.last }
+      expect(payment.gateway_reference).to eq("mock_auth_#{order.id}")
+    end
+
+    it "redirects with an alert when the gateway declines the authorization" do
+      order = open_order
+      allow(MockPaymentGateway).to receive(:authorize).and_return(
+        success: false, message: "Cartão recusado", metadata: {}
+      )
+
+      post checkout_path(order), params: { payment: { amount: 40.0 } }
+
+      expect(response).to redirect_to(checkout_path(order))
+      expect(flash[:alert]).to eq("Cartão recusado")
+      expect(payment_count(order)).to eq(0)
+    end
+
     it "redirects with an alert when the amount is zero" do
       order = open_order
 
