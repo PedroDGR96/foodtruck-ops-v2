@@ -17,8 +17,10 @@
   <%= link_to t("layouts.nav.orders"), orders_path, class: nav_link_class(request.path.start_with?(orders_path)) %>
   <%= link_to t("layouts.nav.customers"), customers_path, class: nav_link_class(request.path.start_with?(customers_path)) %>
   <%= link_to t("layouts.nav.menu"), menu_path, class: nav_link_class(request.path == menu_path) %>
+  <%= link_to t("layouts.nav.integrations"), edit_integrations_path, class: nav_link_class(request.path.start_with?(edit_integrations_path)) %>
 <% else %>
   <%= link_to t("layouts.nav.orders"), orders_path, class: nav_link_class(request.path.start_with?(orders_path)) %>
   <%= link_to t("layouts.nav.menu"), menu_path, class: nav_link_class(request.path == menu_path) %>
   <%= link_to t("layouts.nav.kitchen"), kitchen_path, class: nav_link_class(request.path == kitchen_path) %>
+  <%= link_to t("layouts.nav.integrations"), edit_integrations_path, class: nav_link_class(request.path.start_with?(edit_integrations_path)) %>
 <% end %>
