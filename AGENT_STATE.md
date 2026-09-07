@@ -1,76 +1,89 @@
-# AGENT_STATE — foodtruck-ops autonomous fleet
+# AGENT_STATE — foodtruck-ops (single-loop era)
 
-> Filesystem is the shared memory between agents (Pickle + local workers .172/.245).
-> Update this file after any meaningful change. Companion files: `NEXT_TASK.md`,
-> `WORK_LOG.md`, `KNOWN_ISSUES.md`. These four are gitignored (via `.git/info/exclude`)
-> so loop gate operations never stage or dirty them, but they are present in the repo
-> tree for any fresh agent to read.
+> Filesystem is the shared memory between agents and the autonomous loop. Update
+> this file after any meaningful operator-side change. Frozen paths for the loop:
+> `app/core/ spec/core/ spec/rls/ spec/i18n/ docker/postgres/ bin/ db/ config/`
+> (except `config/routes.rb`) + `Gemfile*` + `.gitignore`. `loop-findings.md`
+> is gitignored via `.git/info/exclude` (loop's live findings store).
 
 ## Overall project objective
-Build the foodtruck-ops restaurant SaaS to a solid, demo-able state: core POS order
-lifecycle, cash register, daily reports, menu/catalog, kitchen display, delivery,
-JSON:API, mock integration adapters, and strict multi-tenant RLS. Keep the test gate
-green (rspec 0 failures, SimpleCov ≥95 overall and per-file, rubocop, brakeman).
+Build the foodtruck-ops restaurant SaaS to a demo-able, client-pitch state: core POS
+order lifecycle, cash register, daily reports, kitchen display, delivery, JSON:API,
+mock integration adapters, strict multi-tenant RLS. Gate must stay green: rspec 0
+failures, SimpleCov ≥95 overall AND per-file, rubocop, brakeman (`bin/ci`). The
+**Integrações tab** is the current client-facing milestone (see `docs/DEMO.md`).
 
 ## Current development phase
-**M1 feature-complete + autonomous audit/fix phase.** All feature branches (T6–T13)
-merged to `main`. The three-model fleet (loops A/B/C) audits subsystems, finds bugs,
-and lands gated patches. Loop surfaces: A = auth-users/customers-delivery/audit-log/web-surface;
-B = order-lifecycle/cash-register/daily-reports; C = tenancy-rls/cart-checkout/menu-catalog/integrations.
+**Single autonomous loop on `main`** (replaces the aug-20 loops A/B/C, all retired).
+- Loop: `hermes-router.service` on `.172` (systemd, `Restart=always`), steerable via
+  `PRIORITIES.md` (bullet-style, no `## DIRECTIVE` headers — `directives_active`
+  handles that). Rootless restart path: `kill <MainPID>` → systemd revives ≤10s.
+- Loop engine notes (2026-09-06): `directives_active` fixed for empty directive
+  blocks (backup `loop.py.bak-20260906-225838`). Executor feed capped at
+  `EXECUTOR_FEED_CHARS=17600` (~4.4k tokens).
+- Fleet topology (2026-09-06, `.85` back online):
+  - **.85 / rtx5050** = PLANNER `qwen3.8-distilled-4b-npu2` (~310 tok/s) — pinned via
+    `PLANNER_MODEL`/`PLANNER_BACKEND=rtx5050` in `start.sh`.
+  - **.172 / mi50** = EXECUTOR elastic on the single loaded Q6_K
+    (`qwen3.6-14b-a3b-fablevibes`, **262144 ctx / Q8_0 K+V / 12 experts** — benched
+    2026-09-06: apply-PASS at 55–60 tok/s, Q8 near-lossless, 262k beyond native 131k
+    but loop feeds are tiny → no practical regress).
+  - **.245 / rx6600** = REVIEWER `qwen3.8-2b-sft-fable5` (`REVIEWER_BACKEND=rx6600`).
 
 ## Completed milestones
-- T6 kitchen display, T7 cash register, T8 customers, T9 daily report, T13 delivery, T10 JSON API, T11 mock adapters, T12 documentation merged to `main`.
-- `bin/demo-data.rb` bootstrap seed for POS demo (catalog, gateway, open shift).
-- Loop gates now enforce: rubocop → db-prepare → full rspec → `git diff --cached --stat`
-  (no-op guard) → commit → ff-merge with `merged_sha == commit_sha` verification.
-- Stale test-DB root cause fixed: `db_prepare` runs at startup and before every rspec gate.
-- Cross-loop docker race fixed: all `docker compose` ops serialized via a shared flock.
-- Completed loops (A, C) write a `COMPLETE` marker and refuse to relaunch churn.
+- T6–T13 feature work merged to `main` (kitchen display, cash register, customers,
+  daily report, delivery, JSON:API, mock adapters) + doc cleanup (aug 2026).
+- Multi-tenant RLS (Postgres GUC `app.business_id`, `Tenancy.with_business`,
+  `BusinessScoped` default scope) — never run tenant queries outside the block.
+- **Integrações demo milestone (2026-09-06)**: owner nav+footer "Integrações" link,
+  `IntegrationsController#test_connection` running each real mock adapter
+  (`MockPaymentGateway`, `MockMapsProvider`/OSM, `MockFiscalProvider`,
+  `MockMarketplaceProvider`, `MockMessagingProvider`) returning
+  `{success:, message:}`; `OrderPaymentController#create` authorized via
+  `MockPaymentGateway` (deterministic, offline, idempotent by order).
+  Live-verified end-to-end at `:3000` (owner@foodtruck.local / password123).
+  Two demo bugs fixed + gated: `test_maps_connection` routed through
+  `MockMapsProvider` (was a dead `MockGoogleMapsProvider` NameError) and
+  required api_key; added `integrations.providers.unknown/error` i18n keys.
 
-## Current task
-- Payment flows consolidated onto a single pt-BR checkout surface (`OrderPaymentController`,
-  `/checkout/:id`); home dashboard is role-aware with live stats; `bin/demo-data.rb` seeds live
-  orders across states (incl. a delivery order with address); kitchen display polished (T-05:
-  delivery info, addons on done, rail counts); POS cart actions rescue stale lines/closed carts
-  instead of 500ing (T-06); **delivery status lifecycle wired (T-08)** — order show page advances
-  pending → out_for_delivery → delivered via `POST /orders/:id/out_for_delivery` and
-  `POST /orders/:id/delivered` (owner/cashier policy, `RecordInvalid` rescue). Client-demo
-  runbook in `docs/DEMO.md`.
-- v2 lead-architect bench complete: DeepSeek (`deepseek-v4-pro-qwen3.5-9b-mtp` on `.172`) scored
-  Part1 C+ / Part2 C+ / Part3 B− — same weakness class as qwopus but thinner. Verdict: qwopus
-  remains the v2 lead; qwythos worker-only; DeepSeek worker/alternative. Open decision: canonical
-  home for the v2 spec (v2 repo vs. spec artifact under this epic).
-- Takeover loop auxiliary dispatch updated: **gemma (.245) is now the default working auxiliary**
-  (reviewer/auditor/light-generator); apex (.172) reserved for lead-architect/deep-design work
-  (needs `reasoning_effort:none` + `n_reasoning_tokens:0` workaround).
+## Current loop steering (PRIORITIES.md)
+- **night-01 (PATCH)**: mask truncated credential echoes in mock adapter success
+  messages — `MockPaymentGateway` `(chave: …)` done (loop iters 5659/5668);
+  `MockMessagingProvider` `(SID: …)` **still open**; extend
+  `spec/requests/integrations_spec.rb` to assert no credential fragments.
+- **night-02 (AUDIT, standing)**: demo-flow regression watch on `docs/DEMO.md`
+  (POS → checkout → payment → kitchen → report → cash register + Integrações tab).
+- Patch domain: `app/ spec/ lib/ config/routes.rb` only (not the frozen list above).
 
-## Current owner
-- Big Pickle (takeover session) on `main`. Local loops A/B/C parked (COMPLETE markers written).
-- Bench transport agents pinned to `.172` models: `067a6d93` (exited; `qwopus3.5-4b-coder` gone
-  from `.172`), `1f68a594` (qwythos). DeepSeek tested directly via raw chat-completions API.
+## Current owner / watchers
+- Operator: pedro-goes8083. Loop engine runs under systemd on `.172` (user-time;
+  the `foodtruck-autopush.timer` is a USER unit, active every 30 min, log at
+  `~/.local/state/foodtruck-autopush.log`; a failed `--tags` push is a non-fatal
+  tag race — manual `git push origin main` clears it).
+- Night watch: `night-monitor` agent (a2906ad6) on **opencode:mimo-v2.5-free**
+  (backup: `.245`); watchdog script `~/.local/bin/night-monitor-watchdog.sh`
+  (persistent shell) auto-flips the monitor to `.245` if 3 pings go unanswered.
 
-## Blocked tasks / known failures
-- See `KNOWN_ISSUES.md`. Nothing blocks the fleet (machine down ⇒ loop waits/falls back).
-
-## Next recommended tasks
-1. Add a delivery order (with address) to `bin/demo-data.rb` to showcase the delivery rail.
-2. Polish the kitchen display for the demo (KDS handoff already wired via broadcasts).
-3. Run full `bin/ci` on main after each change.
+## Blocked / known issues
+- See `KNOWN_ISSUES.md` (dated; P1 tenancy items verified addressed historically).
+- `systemctl stop` on the loop service times out (D-Bus) — use rootless `kill`.
+- Loop reverts `PRIORITIES.md`? No — editing it is the steering channel; deleting
+  retires the loop.
 
 ## Important architectural decisions
-- Multi-tenant isolation = Postgres RLS via `app.business_id` GUC, never AR scopes alone.
-  All tenant queries MUST run inside `Tenancy.with_business(...)`. Lazy relations read
-  outside the block hit `PG::InvalidTextRepresentation uuid: ""`.
-- Loops commit to per-loop branches (A→`main`, B→`loop/parallel-b`, C→`loop/parallel-c`);
-  each uses its own `TEST_DB` (t13/t14/t15) and its own git patch-branch prefix.
-- Patches restricted to `app/ spec/ lib/ bin/demo-data.rb config/routes.rb`.
-- Executor = qwopus3.5-4b-coder@bf16 on `.172`; planners = gemma-4-e2b (`.245` A/B, `.85` C).
+- Multi-tenant isolation = Postgres RLS via `app.business_id` GUC, never AR scopes
+  alone. Lazy relations read outside `Tenancy.with_business` → `uuid: ""` error.
+- Demo is offline-first: only deterministic mock adapters, never real providers.
+- Loop commits gated on rspec 0 failures + SimpleCov ≥95 overall+per-file; never
+  weaken a spec; UI strings only via `config/locales/pt-BR.yml` (operator-side).
+- `app/core` is Tier-1 frozen for the loop (core convergence is operator/mannual).
 
 ## Test status
-- `main` @ `cc2dd13` (pushed) — rspec **629/0**, SimpleCov **99.67%** (overall + per-file ≥95),
-  rubocop clean, brakeman clean. Canonical repo: `~/Desktop/foodtruck-ops-v2` (only git copy;
-  pre-squash history no longer exists locally). 2026-08-20 repo detox: defunct t12 worktree clone
-  evicted from repo root; foreign `app/models/restaurant/*` removed (quarantined, see WORK_LOG).
+- `main` @ `46d790a` (pushed): rspec **795/0**, SimpleCov **99.40%** (2026-09-06),
+  rubocop + brakeman clean. Canonical repo: `~/Desktop/foodtruck-ops-v2`.
 
 ## Last meaningful change
-- 2026-08-20 — Traycer takeover: baseline verified + repo detox (8260bf6, cc2dd13); gate green.
+- 2026-09-06 — Integrações demo milestone complete + pushed (`607d52d`, `46d790a`);
+  loop un-wedged and productive (iter ~5695), `directives_active` crash fixed,
+  fleet topology restored (planner → .85, executor → .172 262k/Q8). Diary:
+  `~/Desktop/diary/entries/2026-09-06.md` (entry 04).
