@@ -106,6 +106,8 @@ RSpec.describe "Integrations", type: :request do
       post "/integrations/test/messaging", params: { provider: "messaging" }, as: :json
       json = JSON.parse(response.body)
       expect(json["success"]).to eq(true)
+      expect(json["message"]).not_to include("SID")
+      expect(json["message"]).not_to include("AC123456")
     end
 
     it "tests fiscal connection in homologacao" do
