@@ -46,7 +46,7 @@ class MockPaymentGateway < PaymentGateway
 
     {
       success: true,
-      message: "Mercado Pago conectado (chave: #{public_key[0..10]}...)",
+      message: "Payment gateway configured",
       metadata: {}
     }
   end
