@@ -204,6 +204,8 @@ pt-BR:
       maps: "Mapas"
       fiscal: "Fiscal"
       marketplace: "Marketplace"
+      unknown: "Provedor desconhecido"
+      error: "Falha na conexão: %{error}"
     descriptions:
       payment_gateway: "Provedor de pagamentos para PIX, cartão e dinheiro."
       messaging: "Envio de WhatsApp, SMS e e-mail para clientes."
