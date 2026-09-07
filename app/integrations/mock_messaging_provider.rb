@@ -11,7 +11,7 @@ class MockMessagingProvider < MessagingProvider
     token = settings[:twilio_auth_token].to_s
 
     if sid.present? && token.present?
-      { success: true, message: "Twilio connection verified" }
+      { success: true, message: "Twilio configurado" }
     else
       { success: false, message: "Credenciais do Twilio não configuradas" }
     end
