@@ -87,11 +87,15 @@ class IntegrationsController < AuthenticatedController
 
   def test_maps_connection(setting)
     creds = setting_credentials(setting)
-    provider = creds[:provider] || "osm"
-    
+    provider = creds[:provider].presence || "osm"
+
     case provider
     when "google"
-      MockGoogleMapsProvider.test_connection(settings: creds) if creds[:api_key].present?
+      if creds[:api_key].present?
+        MockMapsProvider.test_connection(settings: creds)
+      else
+        { success: false, message: "Chave da API do Google Maps não configurada" }
+      end
     else
       OsmMapsProvider.test_connection(settings: creds.except(:provider, :api_key))
     end

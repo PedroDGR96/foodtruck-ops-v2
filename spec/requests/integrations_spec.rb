@@ -162,6 +162,28 @@ RSpec.describe "Integrations", type: :request do
       expect(json["success"]).to eq(true)
     end
 
+    it "tests google maps connection with api key via deterministic mock" do
+      Tenancy.with_business(business) do
+        create(:integration_setting, business: business, provider_key: "maps",
+               credentials: { "provider" => "google", "api_key" => "AIzaSy123" }, enabled: true)
+      end
+      post "/integrations/test/maps", params: { provider: "maps" }, as: :json
+      json = JSON.parse(response.body)
+      expect(json["success"]).to eq(true)
+      expect(json["message"]).to eq("Google Maps configurado")
+    end
+
+    it "rejects google maps connection without api key" do
+      Tenancy.with_business(business) do
+        create(:integration_setting, business: business, provider_key: "maps",
+               credentials: { "provider" => "google" }, enabled: true)
+      end
+      post "/integrations/test/maps", params: { provider: "maps" }, as: :json
+      json = JSON.parse(response.body)
+      expect(json["success"]).to eq(false)
+      expect(json["message"]).to include("Chave da API")
+    end
+
     it "returns unsupported for unknown provider" do
       post "/integrations/test/bogus", params: { provider: "bogus" }, as: :json
       expect(response).to have_http_status(:ok)
