@@ -49,8 +49,9 @@ failures, SimpleCov ≥95 overall AND per-file, rubocop, brakeman (`bin/ci`). Th
 ## Current loop steering (PRIORITIES.md)
 - **night-01 (PATCH)**: mask truncated credential echoes in mock adapter success
   messages — `MockPaymentGateway` `(chave: …)` done (loop iters 5659/5668);
-  `MockMessagingProvider` `(SID: …)` **still open**; extend
-  `spec/requests/integrations_spec.rb` to assert no credential fragments.
+  `MockMessagingProvider` `(SID: …)` done (`31c7cec`, loop iter 5729);
+  spec regression assertion added (`ccc1216`). **night-01 complete** (795/0,
+  SimpleCov 99.40%).
 - **night-02 (AUDIT, standing)**: demo-flow regression watch on `docs/DEMO.md`
   (POS → checkout → payment → kitchen → report → cash register + Integrações tab).
 - Patch domain: `app/ spec/ lib/ config/routes.rb` only (not the frozen list above).
