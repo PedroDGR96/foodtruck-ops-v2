@@ -581,5 +581,75 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "computes accurate totals for an order with diverse line item configurations" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 2.50,
+          delivery_fee: 1.75,
+          total: 0.0
+        )
+
+        # Item A: high quantity with addon
+        item_a = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 5,
+          unit_price: 12.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_a, name: "Extra cheese", price: 2.50)
+
+        # Item B: low quantity without addon
+        item_b = create(
+          :order_item,
+          order: order,
+          product_name: "Fries",
+          quantity: 1,
+          unit_price: 8.00,
+          line_total: 0.0
+        )
+
+        # Item C: medium quantity with small addon
+        item_c = create(
+          :order_item,
+          order: order,
+          product_name: "Taco",
+          quantity: 3,
+          unit_price: 5.50,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_c, name: "Extra topping", price: 1.25)
+
+        order.recalculate_totals!
+        order.reload
+
+        # Item A subtotal = (12.00 + 2.50).round(2) * 5 = 14.50 * 5 = 72.50
+        # Item B subtotal = (8.00 + 0.00).round(2) * 1 = 8.00 * 1 = 8.00
+        # Item C subtotal = (5.50 + 1.25).round(2) * 3 = 6.75 * 3 = 20.25
+        # Order subtotal = 72.50 + 8.00 + 20.25 = 100.75
+        expect(order.subtotal).to eq(100.75)
+
+        # Total = subtotal + tax + delivery_fee = 100.75 + 2.50 + 1.75 = 105.00
+        expect(order.total).to eq(105.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 60.00)
+        create(:payment, order: order, status: :succeeded, amount: 45.00)
+
+        Tenancy.with_business(business) do
+          # paid_amount = 60.00 + 45.00 = 105.00
+          expect(order.paid_amount).to eq(105.00)
+          # balance_due = total - paid_amount = 105.00 - 105.00 = 0.00
+          expect(order.balance_due).to eq(0.00)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
