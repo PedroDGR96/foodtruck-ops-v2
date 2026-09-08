@@ -1219,5 +1219,66 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "characterizes the invariant that total equals subtotal plus tax plus delivery fee across diverse inputs" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 4.87654321,
+          delivery_fee: 2.99999999,
+          total: 0.0
+        )
+
+        # Add items with varying quantities and prices to diversify the input space
+        item_a = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 7,
+          unit_price: 13.25489617,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_a, name: "Extra cheese", price: 2.3456789)
+
+        item_b = create(
+          :order_item,
+          order: order,
+          product_name: "Fries",
+          quantity: 1,
+          unit_price: 6.00123456,
+          line_total: 0.0
+        )
+
+        # Add a third item with a small addon to further diversify the input space
+        item_c = create(
+          :order_item,
+          order: order,
+          product_name: "Taco",
+          quantity: 3,
+          unit_price: 5.987654321,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_c, name: "Extra topping", price: 1.1234567)
+
+        # Recalculate totals and verify the invariant holds
+        order.recalculate_totals!
+        order.reload
+
+        expected_total = (order.subtotal + order.tax + order.delivery_fee).round(2)
+        expect(order.total).to eq(expected_total)
+
+        # Verify this holds even after adding a payment
+        create(:payment, order: order, status: :succeeded, amount: order.total)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
