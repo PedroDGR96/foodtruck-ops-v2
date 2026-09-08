@@ -61,6 +61,106 @@
   --theme-brand-950: #4c0519;
 }
 
+[data-theme="oceano"] {
+  --theme-brand-50:  #f0f9ff;
+  --theme-brand-100: #e0f2fe;
+  --theme-brand-200: #bae6fd;
+  --theme-brand-300: #7dd3fc;
+  --theme-brand-400: #38bdf8;
+  --theme-brand-500: #0ea5e9;
+  --theme-brand-600: #0284c7;
+  --theme-brand-700: #0369a1;
+  --theme-brand-800: #075985;
+  --theme-brand-900: #0c4a6e;
+  --theme-brand-950: #082f49;
+}
+
+[data-theme="roxo"] {
+  --theme-brand-50:  #faf5ff;
+  --theme-brand-100: #f3e8ff;
+  --theme-brand-200: #e9d5ff;
+  --theme-brand-300: #d8b4fe;
+  --theme-brand-400: #c084fc;
+  --theme-brand-500: #a855f7;
+  --theme-brand-600: #9333ea;
+  --theme-brand-700: #7e22ce;
+  --theme-brand-800: #6b21a8;
+  --theme-brand-900: #581c87;
+  --theme-brand-950: #3b0764;
+}
+
+[data-theme="floresta"] {
+  --theme-brand-50:  #f0fdfa;
+  --theme-brand-100: #ccfbf1;
+  --theme-brand-200: #99f6e4;
+  --theme-brand-300: #5eead4;
+  --theme-brand-400: #2dd4bf;
+  --theme-brand-500: #14b8a6;
+  --theme-brand-600: #0d9488;
+  --theme-brand-700: #0f766e;
+  --theme-brand-800: #115e59;
+  --theme-brand-900: #134e4a;
+  --theme-brand-950: #042f2e;
+}
+
+[data-theme="brasa"] {
+  --theme-brand-50:  #fff8f1;
+  --theme-brand-100: #feecdc;
+  --theme-brand-200: #fcd9bd;
+  --theme-brand-300: #fdba74;
+  --theme-brand-400: #fb923c;
+  --theme-brand-500: #f97316;
+  --theme-brand-600: #ea580c;
+  --theme-brand-700: #c2410c;
+  --theme-brand-800: #9a3412;
+  --theme-brand-900: #7c2d12;
+  --theme-brand-950: #431407;
+}
+
+/* ── Dark surface tints: each dark-named theme keeps its hue in extended
+   surfaces (body/card), so dark mode isn't one global slate. Light-named
+   themes keep the neutral slate defaults. ── */
+
+[data-theme="midnight"].dark body {
+  background-color: #0f1430;
+}
+[data-theme="midnight"].dark .card {
+  background-color: #1a2145;
+  border-color: #2c3564;
+}
+
+[data-theme="roxo"].dark body {
+  background-color: #180f2b;
+}
+[data-theme="roxo"].dark .card {
+  background-color: #241843;
+  border-color: #3a2a63;
+}
+
+[data-theme="floresta"].dark body {
+  background-color: #0b1f19;
+}
+[data-theme="floresta"].dark .card {
+  background-color: #123226;
+  border-color: #1f4d3d;
+}
+
+[data-theme="brasa"].dark body {
+  background-color: #250e08;
+}
+[data-theme="brasa"].dark .card {
+  background-color: #3a1a10;
+  border-color: #5c2a16;
+}
+
+[data-theme="sunset"].dark body {
+  background-color: #2b1119;
+}
+[data-theme="sunset"].dark .card {
+  background-color: #3d1b26;
+  border-color: #5a2a3a;
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
