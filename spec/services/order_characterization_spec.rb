@@ -980,5 +980,35 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "handles an order with no line items" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.25,
+          delivery_fee: 3.75,
+          total: 0.0
+        )
+
+        order.recalculate_totals!
+        order.reload
+
+        # With no items, subtotal stays at 0.00
+        expect(order.subtotal).to eq(0.0)
+        # total = 0.00 + 1.25 + 3.75 = 5.00
+        expect(order.total).to eq(5.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 5.00)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
