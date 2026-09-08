@@ -536,5 +536,50 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "recomputes totals when an item's unit_price changes after the initial recalculation" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.50,
+          delivery_fee: 2.00,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 10.50,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra cheese", price: 2.00)
+
+        # First pass: subtotal = (10.50 + 2.00).round(2) * 3 = 37.50
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(37.50)
+        expect(order.total).to eq(41.00)
+
+        # Change unit_price from 10.50 to 12.00 -> subtotal = (12.00 + 2.00).round(2) * 3 = 42.00
+        item.update(unit_price: 12.00)
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(42.00)
+
+        # total = subtotal + tax + delivery_fee = 42.00 + 1.50 + 2.00 = 45.50
+        expect(order.total).to eq(45.50)
+
+        create(:payment, order: order, status: :succeeded, amount: 45.50)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
