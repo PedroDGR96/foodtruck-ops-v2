@@ -742,6 +742,55 @@ RSpec.describe Order do
       end
     end
 
+    it "maintains total consistency across multiple recalculations and state mutations" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.25,
+          delivery_fee: 3.75,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 4,
+          unit_price: 12.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra cheese", price: 2.50)
+
+        # First recalculation
+        order.recalculate_totals!
+        first_subtotal = order.reload.subtotal
+        first_total = order.total
+
+        # Change quantity and unit_price
+        item.update(quantity: 3, unit_price: 14.00)
+        order.recalculate_totals!
+        second_subtotal = order.reload.subtotal
+        second_total = order.total
+
+        # Verify totals are consistent with new values
+        expected_subtotal = ((14.00 + 2.50).round(2) * 3).round(2)
+        expect(second_subtotal).to eq(expected_subtotal)
+        expect(second_total).to eq((second_subtotal + order.tax + order.delivery_fee).round(2))
+
+        # Add payment and verify balance_due is correct
+        create(:payment, order: order, status: :succeeded, amount: second_total)
+        
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
+
     it "recomputes totals when an addon price changes after the initial recalculation" do
       Tenancy.with_business(business) do
         order = create(
