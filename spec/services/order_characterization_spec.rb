@@ -582,6 +582,96 @@ RSpec.describe Order do
       end
     end
 
+    it "recomputes totals when tax or delivery fee changes after the initial recalculation" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.50,
+          delivery_fee: 2.00,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 10.50,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra cheese", price: 2.00)
+
+        # First pass: subtotal = (10.50 + 2.00).round(2) * 3 = 37.50; total = 37.50 + 1.50 + 2.00 = 41.00
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(37.50)
+        expect(order.total).to eq(41.00)
+
+        # Change tax from 1.50 to 3.25 -> total = 37.50 + 3.25 + 2.00 = 42.75 (subtotal unchanged)
+        order.update(tax: 3.25)
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(37.50)
+
+        # total = subtotal + tax + delivery_fee = 37.50 + 3.25 + 2.00 = 42.75
+        expect(order.total).to eq(42.75)
+
+        create(:payment, order: order, status: :succeeded, amount: 42.75)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
+
+    it "recomputes totals when an addon price changes after the initial recalculation" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.50,
+          delivery_fee: 2.00,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 10.50,
+          line_total: 0.0
+        )
+        addon = create(:order_item_addon, order_item: item, name: "Extra cheese", price: 2.00)
+
+        # First pass: subtotal = (10.50 + 2.00).round(2) * 3 = 37.50
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(37.50)
+        expect(order.total).to eq(41.00)
+
+        # Change addon price from 2.00 to 3.50 -> subtotal = (10.50 + 3.50).round(2) * 3 = 42.00
+        addon.update(price: 3.50)
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(42.00)
+
+        # total = subtotal + tax + delivery_fee = 42.00 + 1.50 + 2.00 = 45.50
+        expect(order.total).to eq(45.50)
+
+        create(:payment, order: order, status: :succeeded, amount: 45.50)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
+
     it "computes accurate totals for an order with diverse line item configurations" do
       Tenancy.with_business(business) do
         order = create(
