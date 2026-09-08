@@ -3,6 +3,7 @@
 # real adapter; when none is registered yet it falls back to the mock so the
 # demo flow never breaks mid-switch. The resolver owns the provider→class map,
 # so controllers/services never hardcode a provider name.
+
 class AdapterResolver
   # provider_key => { mock:, real: }
   ADAPTERS = {
