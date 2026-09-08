@@ -5,9 +5,9 @@
 # so controllers/services never hardcode a provider name.
 
 class AdapterResolver
-  # provider_key => { mock:, real: }
+  # provider_key => { mock:, real:, backup: }
   ADAPTERS = {
-    payment_gateway: { mock: MockPaymentGateway, real: nil },
+    payment_gateway: { mock: MockPaymentGateway, real: nil, backup: MockPaymentGateway },
     maps: { mock: MockMapsProvider, real: OsmMapsProvider },
     fiscal: { mock: MockFiscalProvider, real: nil },
     marketplace: { mock: MockMarketplaceProvider, real: nil },
