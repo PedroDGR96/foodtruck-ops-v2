@@ -7,7 +7,7 @@
 class AdapterResolver
   # provider_key => { mock:, real:, backup: }
   ADAPTERS = {
-    payment_gateway: { mock: MockPaymentGateway, real: nil, backup: MockPaymentGateway },
+    payment_gateway: { mock: MockPaymentGateway, real: nil, backup: nil },
     maps: { mock: MockMapsProvider, real: OsmMapsProvider },
     fiscal: { mock: MockFiscalProvider, real: nil },
     marketplace: { mock: MockMarketplaceProvider, real: nil },
