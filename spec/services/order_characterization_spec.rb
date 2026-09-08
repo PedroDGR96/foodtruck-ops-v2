@@ -835,5 +835,133 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "verifies balance_due precision with complex decimal arithmetic" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 2.50,
+          delivery_fee: 1.75,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 9.87654,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra cheese", price: 1.2345)
+
+        order.recalculate_totals!
+        order.reload
+
+        # per-item unit = (9.87654 + 1.2345).round(2) = 11.11; subtotal = 11.11 * 3 = 33.33
+        expect(order.subtotal).to eq(33.33)
+
+        # total = 33.33 + 2.50 + 1.75 = 37.58
+        expect(order.total).to eq(37.58)
+
+        create(:payment, order: order, status: :succeeded, amount: 15.00)
+
+        Tenancy.with_business(business) do
+          # balance_due = total - paid_amount = 37.58 - 15.00 = 22.58
+          expect(order.balance_due).to eq(22.58)
+          expect(order.fully_paid?).to be(false)
+
+          create(:payment, order: order, status: :succeeded, amount: 22.58)
+          expect(order.balance_due).to eq(0.00)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
+
+    it "handles very large quantities without overflow" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 12.50,
+          delivery_fee: 7.50,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 1000,
+          unit_price: 12.50,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra cheese", price: 3.00)
+
+        order.recalculate_totals!
+        order.reload
+
+        # subtotal = (12.50 + 3.00).round(2) * 1000 = 15.50 * 1000 = 15500.00
+        expect(order.subtotal).to eq(15500.00)
+
+        # total = 15500.00 + 12.50 + 7.50 = 15520.00
+        expect(order.total).to eq(15520.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 15520.00)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
+
+    it "ensures balance_due never goes below zero even with rounding" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.25,
+          delivery_fee: 3.75,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 4,
+          unit_price: 12.00,
+          line_total: 0.0
+        )
+
+        order.recalculate_totals!
+        order.reload
+
+        # subtotal = (12.00 + 0).round(2) * 4 = 48.00
+        expect(order.subtotal).to eq(48.00)
+
+        # total = 48.00 + 1.25 + 3.75 = 53.00
+        expect(order.total).to eq(53.00)
+
+        create(:payment, order: order, status: :succeeded, amount: 53.00)
+
+        Tenancy.with_business(business) do
+          # balance_due should be exactly zero, never negative due to rounding
+          expect(order.balance_due).to eq(0.00)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
