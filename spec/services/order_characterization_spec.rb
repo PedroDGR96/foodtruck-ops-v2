@@ -582,6 +582,53 @@ RSpec.describe Order do
       end
     end
 
+    it "recomputes totals when an item's quantity AND unit_price change simultaneously" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 1.50,
+          delivery_fee: 2.00,
+          total: 0.0
+        )
+
+        item = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 10.50,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item, name: "Extra cheese", price: 2.00)
+
+        # First recalculation: subtotal = (10.50 + 2.00).round(2) * 3 = 37.50
+        order.recalculate_totals!
+        expect(order.reload.subtotal).to eq(37.50)
+        expect(order.total).to eq(41.00)
+
+        # Simultaneous changes: quantity from 3 to 2, unit_price from 10.50 to 8.00
+        item.update(quantity: 2, unit_price: 8.00)
+        order.recalculate_totals!
+
+        expected_subtotal = ((8.00 + 2.00).round(2) * 2).round(2) # (10.00).round(2) * 2 = 20.00
+        expect(order.reload.subtotal).to eq(expected_subtotal)
+
+        expected_total = (expected_subtotal + order.tax + order.delivery_fee).round(2) # 20.00 + 1.50 + 2.00 = 23.50
+        expect(order.total).to eq(expected_total)
+
+        create(:payment, order: order, status: :succeeded, amount: expected_total)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
+
     it "recomputes totals when tax or delivery fee changes after the initial recalculation" do
       Tenancy.with_business(business) do
         order = create(
