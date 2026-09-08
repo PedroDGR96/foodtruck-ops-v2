@@ -19,6 +19,14 @@ class Business < ApplicationRecord
   has_many :data_subject_requests, dependent: :restrict_with_exception
   has_many :privacy_incidents, dependent: :restrict_with_exception
 
+  # Runtime switch between deterministic sandbox adapters (mock, default) and
+  # real provider adapters (live). Adapters are selected per provider through
+  # AdapterResolver; live keeps mocks as fallback until a real adapter exists.
+  ADAPTER_MODES = %w[mock live].freeze
+
+  enum :integration_adapter_mode, ADAPTER_MODES.index_with(&:itself)
+
   validates :name, :currency, :timezone, presence: true
   validates :delivery_fee, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :integration_adapter_mode, inclusion: { in: ADAPTER_MODES }
 end

@@ -11,20 +11,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
-
-
---
--- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
-
-
---
 -- Name: assign_business_id_from_guc(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -188,6 +174,7 @@ CREATE TABLE public.businesses (
     updated_at timestamp(6) without time zone NOT NULL,
     menu_version integer DEFAULT 0 NOT NULL,
     delivery_fee numeric(12,2),
+    integration_adapter_mode character varying DEFAULT 'mock'::character varying NOT NULL,
     CONSTRAINT businesses_delivery_fee_non_negative CHECK (((delivery_fee IS NULL) OR (delivery_fee >= (0)::numeric)))
 );
 
@@ -973,6 +960,13 @@ CREATE INDEX index_audit_logs_on_business_id ON public.audit_logs USING btree (b
 --
 
 CREATE INDEX index_audit_logs_on_business_id_and_created_at ON public.audit_logs USING btree (business_id, created_at);
+
+
+--
+-- Name: index_businesses_on_integration_adapter_mode; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_businesses_on_integration_adapter_mode ON public.businesses USING btree (integration_adapter_mode);
 
 
 --
@@ -2292,6 +2286,7 @@ CREATE POLICY tenant_isolation ON public.products USING ((business_id = (current
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260907100000'),
 ('20260829090000'),
 ('20260826040000'),
 ('20260826020000'),

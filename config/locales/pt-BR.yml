@@ -198,6 +198,16 @@ pt-BR:
     test_connection: "Testar Conexão"
     save: "Salvar Integrações"
     updated: "Integrações salvas."
+    adapter_mode:
+      title: "Modo de execução"
+      subtitle: "Alterna os adaptadores entre sandbox (mock) e provedores reais em tempo real."
+      mock: "Demo (mock)"
+      mock_hint: "Todas as integrações usam adaptadores simulados. Sem chamadas externas."
+      live: "Ao vivo"
+      live_hint: "Usa adaptadores reais quando disponíveis; sem adapter real, cai para mock."
+      fallback_badge: "Ao vivo (mock como fallback — sem adapter real)"
+      live_badge: "Ao vivo"
+      live_saved: "Modo de execução atualizado."
     providers:
       payment_gateway: "Pagamentos"
       messaging: "Mensagens"

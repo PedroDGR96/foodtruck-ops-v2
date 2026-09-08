@@ -2,6 +2,36 @@
   <h1 class="text-2xl font-bold"><%= t("integrations.title") %></h1>
   <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><%= t("integrations.subtitle") %></p>
 
+  <% if current_user.owner? %>
+    <%= form_for @business, url: integrations_path, method: :patch do |f| %>
+      <section class="card mt-6 p-5">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-semibold"><%= t("integrations.adapter_mode.title") %></h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><%= t("integrations.adapter_mode.subtitle") %></p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <%= f.label :integration_adapter_mode, value: "mock",
+                class: "btn #{@business.mock? ? 'btn-primary' : 'btn-secondary'}" do %>
+              <%= radio_button_tag "business[integration_adapter_mode]", "mock", @business.mock? %>
+              <%= t("integrations.adapter_mode.mock") %>
+            <% end %>
+            <%= f.label :integration_adapter_mode, value: "live",
+                class: "btn #{@business.live? ? 'btn-primary' : 'btn-secondary'}" do %>
+              <%= radio_button_tag "business[integration_adapter_mode]", "live", @business.live? %>
+              <%= t("integrations.adapter_mode.live") %>
+            <% end %>
+            <%= f.submit t("integrations.save"), class: "btn btn-primary" %>
+          </div>
+        </div>
+        <p class="mt-2 text-sm <%= @business.live? ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400' %>">
+          <%= @business.live? ? t("integrations.adapter_mode.live_hint") : t("integrations.adapter_mode.mock_hint") %>
+        </p>
+      </section>
+    <% end %>
+  <% end %>
+
   <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-[200px_1fr]">
     <!-- Sidebar -->
     <nav class="flex flex-row gap-2 md:flex-col">
@@ -31,7 +61,14 @@
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400"><%= t("integrations.descriptions.#{provider_key}") %></p>
               </div>
 
-              <label class="relative inline-flex cursor-pointer items-center gap-2">
+              <div class="flex flex-col items-end gap-2">
+                <% if @business.live? %>
+                  <span class="rounded-full px-2 py-0.5 text-xs font-medium
+                       <%= AdapterResolver.fallback?(@business, provider_key) ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' %>">
+                    <%= AdapterResolver.fallback?(@business, provider_key) ? t("integrations.adapter_mode.fallback_badge") : t("integrations.adapter_mode.live_badge") %>
+                  </span>
+                <% end %>
+                <label class="relative inline-flex cursor-pointer items-center gap-2">
                 <input type="checkbox"
                        name="integrations[<%= provider_key %>][enabled]"
                        value="1"

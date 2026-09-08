@@ -54,6 +54,24 @@ RSpec.describe Business, type: :model do
     end
   end
 
+  describe "integration adapter mode" do
+    it "defaults to mock" do
+      expect(business.integration_adapter_mode).to eq("mock")
+      expect(business).to be_mock
+      expect(business).not_to be_live
+    end
+
+    it "accepts live and exposes enum predicates" do
+      business.update!(integration_adapter_mode: "live")
+      expect(business).to be_live
+      expect(business).not_to be_mock
+    end
+
+    it "rejects an unknown adapter mode" do
+      expect { build(:business, integration_adapter_mode: "real") }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "associations" do
     it "exposes tenant-scoped children" do
       within_tenant do

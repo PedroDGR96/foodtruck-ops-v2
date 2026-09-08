@@ -39,7 +39,7 @@ class OrderPaymentController < AuthenticatedController
       return
     end
 
-    authorization = MockPaymentGateway.authorize(
+    authorization = payment_gateway(Current.business).authorize(
       settings: { currency: "BRL" },
       amount: amount,
       order_id: @order.id,
@@ -106,7 +106,7 @@ class OrderPaymentController < AuthenticatedController
 
   def build_payment_for_step(order, step)
     amount = calculate_amount_for_step(order, step)
-    authorization = MockPaymentGateway.authorize(
+    authorization = payment_gateway(Current.business).authorize(
       settings: { currency: "BRL" },
       amount: amount,
       order_id: order.id,
@@ -118,5 +118,11 @@ class OrderPaymentController < AuthenticatedController
       amount: amount,
       gateway_reference: authorization.dig(:metadata, :auth_token)
     )
+  end
+
+  # Resolves the payment adapter from the business's integration mode so the
+  # same checkout switches between sandbox (mock) and real gateway live.
+  def payment_gateway(business)
+    AdapterResolver.resolve(business, :payment_gateway)
   end
 end

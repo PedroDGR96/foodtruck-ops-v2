@@ -13,8 +13,12 @@ class IntegrationsController < AuthenticatedController
     @business = Current.business
     authorize @business, :update?
 
+    if params.dig(:business, :integration_adapter_mode).present?
+      @business.update!(integration_adapter_mode: params[:business][:integration_adapter_mode])
+    end
+
     ActiveRecord::Base.transaction do
-      params[:integrations].each do |provider_key, attrs|
+      (params.fetch(:integrations, {}) || {}).each do |provider_key, attrs|
         next if attrs.blank?
 
         credentials = attrs[:credentials]&.to_unsafe_h&.except("controller", "action") || {}
@@ -30,7 +34,7 @@ class IntegrationsController < AuthenticatedController
       resource: "business",
       resource_id: @business.id,
       actor: current_user,
-      metadata: { providers: params[:integrations].keys }
+      metadata: { providers: params.fetch(:integrations, {}).keys }
     )
 
     redirect_to edit_integrations_path, notice: t("integrations.updated")
@@ -46,21 +50,21 @@ class IntegrationsController < AuthenticatedController
   def test_connection
     @business = Current.business
     authorize @business, :update?
-    
+
     provider = params[:provider]
     setting = Current.business.integration_settings.find_by(provider_key: provider)
 
     result = case provider
     when "payment_gateway"
-      MockPaymentGateway.test_connection(settings: setting_credentials(setting))
+      AdapterResolver.resolve(Current.business, :payment_gateway).test_connection(settings: setting_credentials(setting))
     when "maps"
       test_maps_connection(setting)
     when "fiscal"
-      MockFiscalProvider.test_connection(settings: setting_credentials(setting))
+      AdapterResolver.resolve(Current.business, :fiscal).test_connection(settings: setting_credentials(setting))
     when "marketplace"
-      MockMarketplaceProvider.test_connection(settings: setting_credentials(setting))
+      AdapterResolver.resolve(Current.business, :marketplace).test_connection(settings: setting_credentials(setting))
     when "messaging"
-      MockMessagingProvider.test_connection(settings: setting_credentials(setting))
+      AdapterResolver.resolve(Current.business, :messaging).test_connection(settings: setting_credentials(setting))
     else
       { success: false, message: t("integrations.providers.unknown") }
     end
