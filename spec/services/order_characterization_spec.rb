@@ -1010,5 +1010,92 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "computes accurate totals for an order with five diverse line items" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 2.50,
+          delivery_fee: 1.75,
+          total: 0.0
+        )
+
+        # Five items with varying quantities, prices, and addons
+        item_a = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 3,
+          unit_price: 9.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_a, name: "Extra cheese", price: 1.50)
+
+        item_b = create(
+          :order_item,
+          order: order,
+          product_name: "Fries",
+          quantity: 2,
+          unit_price: 6.00,
+          line_total: 0.0
+        )
+        # No addon for B
+
+        item_c = create(
+          :order_item,
+          order: order,
+          product_name: "Taco",
+          quantity: 4,
+          unit_price: 5.50,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_c, name: "Extra topping", price: 1.25)
+
+        item_d = create(
+          :order_item,
+          order: order,
+          product_name: "Salad",
+          quantity: 1,
+          unit_price: 8.75,
+          line_total: 0.0
+        )
+        # No addon for D
+
+        item_e = create(
+          :order_item,
+          order: order,
+          product_name: "Cocoa",
+          quantity: 2,
+          unit_price: 4.25,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_e, name: "Extra sauce", price: 1.75)
+
+        order.recalculate_totals!
+        order.reload
+
+        # Item A subtotal = (9.00 + 1.50).round(2) * 3 = 10.50 * 3 = 31.50
+        # Item B subtotal = (6.00 + 0).round(2) * 2 = 6.00 * 2 = 12.00
+        # Item C subtotal = (5.50 + 1.25).round(2) * 4 = 6.75 * 4 = 27.00
+        # Item D subtotal = (8.75 + 0).round(2) * 1 = 8.75 * 1 = 8.75
+        # Item E subtotal = (4.25 + 1.75).round(2) * 2 = 6.00 * 2 = 12.00
+        # Total subtotal = 31.50 + 12.00 + 27.00 + 8.75 + 12.00 = 91.25
+        expect(order.subtotal).to eq(91.25)
+
+        # total = 91.25 + 2.50 + 1.75 = 95.50
+        expect(order.total).to eq(95.50)
+
+        create(:payment, order: order, status: :succeeded, amount: 95.50)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
