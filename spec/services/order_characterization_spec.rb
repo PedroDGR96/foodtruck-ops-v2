@@ -1280,5 +1280,79 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "characterizes balance_due as the mathematical difference between total and paid_amount" do
+      Tenancy.with_business(business) do
+        order = create(
+          :order,
+          business: business,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 5.75,
+          delivery_fee: 3.25,
+          total: 0.0
+        )
+
+        # Create multiple items with varying quantities and prices to diversify the input space
+        item_a = create(
+          :order_item,
+          order: order,
+          product_name: "Burger",
+          quantity: 6,
+          unit_price: 14.50,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_a, name: "Extra cheese", price: 2.75)
+
+        item_b = create(
+          :order_item,
+          order: order,
+          product_name: "Fries",
+          quantity: 3,
+          unit_price: 7.25,
+          line_total: 0.0
+        )
+
+        # Add a third item with a small addon to further diversify the input space
+        item_c = create(
+          :order_item,
+          order: order,
+          product_name: "Taco",
+          quantity: 4,
+          unit_price: 6.00,
+          line_total: 0.0
+        )
+        create(:order_item_addon, order_item: item_c, name: "Extra topping", price: 1.50)
+
+        # Recalculate totals and verify the invariant holds
+        order.recalculate_totals!
+        order.reload
+
+        expected_subtotal = (item_a.unit_total * item_a.quantity + 
+                           item_b.unit_total * item_b.quantity + 
+                           item_c.unit_total * item_c.quantity).round(2)
+        expect(order.subtotal).to eq(expected_subtotal)
+
+        # Total = subtotal + tax + delivery_fee
+        expected_total = (expected_subtotal + order.tax + order.delivery_fee).round(2)
+        expect(order.total).to eq(expected_total)
+
+        # Add partial payment and verify balance_due is computed as total - paid_amount
+        create(:payment, order: order, status: :succeeded, amount: 50.00)
+        
+        Tenancy.with_business(business) do
+          expected_balance = (expected_total - 50.00).round(2)
+          expect(order.balance_due).to eq(expected_balance)
+          expect(order.fully_paid?).to be(false)
+
+          # Add remaining payment to fully pay the order and verify balance_due becomes zero
+          create(:payment, order: order, status: :succeeded, amount: expected_balance)
+          
+          expect(order.balance_due).to eq(0.00)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
