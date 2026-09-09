@@ -32,6 +32,11 @@ RSpec.describe MenuRecordPolicy do
     expect(policy_for(cashier).update?).to be(false)
     expect(policy_for(kitchen).create?).to be(false)
     expect(policy_for(kitchen).update?).to be(false)
+
+    expect(policy_for(cashier).new?).to be(false)
+    expect(policy_for(cashier).edit?).to be(false)
+    expect(policy_for(kitchen).new?).to be(false)
+    expect(policy_for(kitchen).edit?).to be(false)
   end
 
   it "restricts destroy to the owner" do
