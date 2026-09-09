@@ -64,18 +64,27 @@ Tenancy.with_business(business) do
     )
     OrderLifecycle.new(in_kitchen, kitchen_user).start_cooking!
 
-    # Ready for pickup — shows on the completed rail with the customer attached.
-    ready = make_order.call([ [ x_burger, 1 ], [ batata_frita, 1 ], [ suco, 2 ] ], customer: maria)
-    OrderLifecycle.new(ready, cashier).record_payment!(
-      ready.payments.build(method: "card", amount: ready.total)
+    # Kitchen → Ready transition — shows the order becoming available for pickup.
+    ready_from_kitchen = make_order.call([ [ x_burger, 1 ], [ batata_frita, 2 ] ])
+    OrderLifecycle.new(ready_from_kitchen, cashier).record_payment!(
+      ready_from_kitchen.payments.build(method: "card", amount: ready_from_kitchen.total)
     )
-    OrderLifecycle.new(ready, kitchen_user).start_cooking!
-    OrderLifecycle.new(ready, kitchen_user).mark_ready!
+    OrderLifecycle.new(ready_from_kitchen, kitchen_user).start_cooking!
+    OrderLifecycle.new(ready_from_kitchen, kitchen_user).mark_ready!
+
+    # Ready → Completed transition — shows the order finishing and feeding customer history.
+    completed_from_ready = make_order.call([ [ suco, 3 ] ], customer: maria)
+    OrderLifecycle.new(completed_from_ready, cashier).record_payment!(
+      completed_from_ready.payments.build(method: "cash", amount: completed_from_ready.total)
+    )
+    OrderLifecycle.new(completed_from_ready, kitchen_user).start_cooking!
+    OrderLifecycle.new(completed_from_ready, kitchen_user).mark_ready!
+    OrderLifecycle.new(completed_from_ready, cashier).complete!
 
     # Completed — feeds the customer history and today's revenue.
-    completed = make_order.call([ [ suco, 3 ] ], customer: maria)
+    completed = make_order.call([ [ x_burger, 1 ], [ batata_frita, 1 ], [ suco, 2 ] ], customer: maria)
     OrderLifecycle.new(completed, cashier).record_payment!(
-      completed.payments.build(method: "pix", amount: completed.total)
+      completed.payments.build(method: "card", amount: completed.total)
     )
     OrderLifecycle.new(completed, kitchen_user).start_cooking!
     OrderLifecycle.new(completed, kitchen_user).mark_ready!
