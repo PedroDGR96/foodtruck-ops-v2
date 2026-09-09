@@ -34,4 +34,21 @@ RSpec.describe CustomerPolicy do
     expect(policy_for(cashier).destroy?).to be(false)
     expect(policy_for(kitchen).destroy?).to be(false)
   end
+
+  it "scope resolves to all records — no policy-level filtering (controller uses BusinessScoped default_scope)" do
+    Tenancy.with_business(business) do
+      scope = CustomerPolicy::Scope.new(owner, Customer.all)
+      expect(scope.resolve.to_a).to eq(Customer.all.to_a)
+    end
+  end
+
+  it "new? and edit? are aliases to create? and update?" do
+    expect(policy_for(owner).new?).to be(true)
+    expect(policy_for(owner).edit?).to be(true)
+    expect(policy_for(cashier).new?).to be(true)
+    expect(policy_for(cashier).edit?).to be(true)
+
+    expect(policy_for(kitchen).new?).to be(false)
+    expect(policy_for(kitchen).edit?).to be(false)
+  end
 end
