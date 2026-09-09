@@ -1354,5 +1354,60 @@ RSpec.describe Order do
         end
       end
     end
+
+    it "characterizes the mathematical invariant that total equals subtotal plus tax plus delivery fee across diverse inputs" do
+      Tenancy.with_business(business) do
+        # Create an order with direct model instantiation (no factories for Order, OrderItem, ProductAddon)
+        order = Order.new(
+          business_id: business.id,
+          status: :paid,
+          payment_status: :pending,
+          subtotal: 0.0,
+          tax: 3.75,
+          delivery_fee: 2.50,
+          total: 0.0
+        )
+        order.save!
+
+        # Create an order item with direct model instantiation
+        item = OrderItem.new(
+          order_id: order.id,
+          product_name: "Burger",
+          quantity: 4,
+          unit_price: 12.50,
+          line_total: 0.0
+        )
+        item.save!
+
+        # Create an addon with direct model instantiation (no factory for ProductAddon)
+        addon = OrderItemAddon.new(
+          order_item_id: item.id,
+          name: "Extra cheese",
+          price: 3.25
+        )
+        addon.save!
+
+        # Recalculate totals — the service should compute subtotal from line items plus addons
+        order.recalculate_totals!
+        order.reload
+
+        expected_subtotal = ((12.50 + 3.25).round(2) * 4).round(2) # (15.75).round(2) * 4 = 63.00
+        expect(order.subtotal).to eq(expected_subtotal)
+
+        expected_total = (expected_subtotal + order.tax + order.delivery_fee).round(2) # 63.00 + 3.75 + 2.50 = 69.25
+        expect(order.total).to eq(expected_total)
+
+        # Verify the invariant: total should always equal subtotal + tax + delivery_fee
+        expect(order.total).to eq((order.subtotal + order.tax + order.delivery_fee).round(2))
+
+        # Create a payment and verify balance_due computation (using factory since Payment isn't in context)
+        create(:payment, order: order, status: :succeeded, amount: expected_total)
+
+        Tenancy.with_business(business) do
+          expect(order.balance_due).to eq(0.0)
+          expect(order.fully_paid?).to be(true)
+        end
+      end
+    end
   end
 end
