@@ -77,8 +77,10 @@ RSpec.describe Business, type: :model do
       within_tenant do
         user = create(:user, :owner, business: business)
         customer = create(:customer, business: business)
-        expect(business.users).to include(user)
-        expect(business.customers).to include(customer)
+        users = business.users.to_a
+        customers = business.customers.to_a
+        expect(users).to include(user)
+        expect(customers).to include(customer)
       end
     end
   end
