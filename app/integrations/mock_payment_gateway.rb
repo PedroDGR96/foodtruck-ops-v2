@@ -46,7 +46,7 @@ class MockPaymentGateway < PaymentGateway
 
     {
       success: true,
-      message: "Payment gateway configured",
+      message: "Twilio configurado",
       metadata: {}
     }
   end
