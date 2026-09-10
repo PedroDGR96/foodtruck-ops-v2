@@ -51,4 +51,13 @@ RSpec.describe MockPaymentGateway, type: :model do
       expect(result[:data][:state]).to eq("paid")
     end
   end
+
+  describe ".refund" do
+    it "returns a success refund result" do
+      result = described_class.refund(settings: {}, amount: amount, order_id: order_id)
+
+      expect(result[:success]).to be true
+      expect(result[:metadata][:amount]).to eq(99.9)
+    end
+  end
 end
