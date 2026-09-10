@@ -17,6 +17,7 @@ RSpec.describe CategoryPolicy do
     expect(policy_for(owner).destroy?).to be(true)
 
     expect(policy_for(cashier).index?).to be(true)
+    expect(policy_for(cashier).show?).to be(true)
     expect(policy_for(cashier).create?).to be(false)
     expect(policy_for(cashier).update?).to be(false)
     expect(policy_for(cashier).destroy?).to be(false)
