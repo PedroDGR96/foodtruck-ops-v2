@@ -164,4 +164,28 @@ RSpec.describe "money rounding" do
       expect(order.reload.total).to eq(23.08)
     end
   end
+
+  describe "tax and delivery fee rounding" do
+    it "rounds tax to two decimals when the value has more than two decimal places" do
+      order = within_tenant { create(:order, business: business) }
+      product = within_tenant { create(:product, business: business, price: 10.0) }
+
+      OrderCart.add_item(order, product: product)
+      within_tenant { order.update!(tax: 0.125) }
+
+      # 0.125 is exactly representable in binary and rounds to 0.13.
+      expect(order.reload.tax).to eq(0.13)
+    end
+
+    it "rounds delivery_fee to two decimals when the value has more than two decimal places" do
+      order = within_tenant { create(:order, business: business) }
+      product = within_tenant { create(:product, business: business, price: 10.0) }
+
+      OrderCart.add_item(order, product: product)
+      within_tenant { order.update!(delivery_fee: 0.375) }
+
+      # 0.375 is exactly representable in binary and rounds to 0.38.
+      expect(order.reload.delivery_fee).to eq(0.38)
+    end
+  end
 end
