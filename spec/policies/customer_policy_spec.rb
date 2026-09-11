@@ -51,4 +51,11 @@ RSpec.describe CustomerPolicy do
     expect(policy_for(kitchen).new?).to be(false)
     expect(policy_for(kitchen).edit?).to be(false)
   end
+
+  it "evaluates the same decisions when given a persisted Customer instance" do
+    customer = Tenancy.with_business(business) { create(:customer, business: business) }
+    expect(policy_for(owner, customer).show?).to be(true)
+    expect(policy_for(cashier, customer).update?).to be(true)
+    expect(policy_for(kitchen, customer).destroy?).to be(false)
+  end
 end
