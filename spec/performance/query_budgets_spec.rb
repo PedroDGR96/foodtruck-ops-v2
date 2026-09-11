@@ -54,4 +54,47 @@ RSpec.describe "Query budgets", type: :request do
 
     expect(queries).to be <= budget
   end
+
+  it "menu show stays under the query budget with multiple products (N+1 guard)" do
+    category = Tenancy.with_business(business) do
+      create(:category, business: business, name: "Lanches", position: 1)
+    end
+
+    3.times do |i|
+      Tenancy.with_business(business) do
+        create(:product, business: business, category: category, name: "X-Burger #{i + 1}")
+      end
+    end
+
+    queries = count_queries do
+      get "/menu"
+    end
+
+    expect(queries).to be <= budget
+  end
+
+  it "menu show does not grow unbounded with additional products (N+1 guard)" do
+    category_a = Tenancy.with_business(business) do
+      create(:category, business: business, name: "Lanches", position: 1)
+    end
+    category_b = Tenancy.with_business(business) do
+      create(:category, business: business, name: "Bebidas", position: 2)
+    end
+
+    [category_a, category_b].each_with_index do |cat, i|
+      Tenancy.with_business(business) do
+        create(:product, business: business, category: cat, name: "Item #{i}")
+      end
+    end
+
+    baseline = count_queries { get "/menu" }
+
+    Tenancy.with_business(business) do
+      create(:product, business: business, category: category_a, name: "Extra Item")
+    end
+
+    after = count_queries { get "/menu" }
+
+    expect(after).to be <= budget
+  end
 end
