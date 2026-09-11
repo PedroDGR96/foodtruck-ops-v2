@@ -69,6 +69,14 @@ RSpec.describe OrderLifecycle do
         within_tenant { order.update!(kitchen_status: :done) }
         lifecycle(order, cashier).complete!
         order
+      when :partially_paid
+        # Build the partially_paid state through the real lifecycle so that
+        # subsequent record_payment! calls see the existing partial payment.
+        total = props_for(status)[:total] || 30.0
+        order = build_order(:open, total: total, subtotal: total)
+        within_tenant { create(:payment, order: order, amount: (total / 2).to_f) }
+        lifecycle(order, cashier).record_payment!(order.payments.first.reload)
+        order
       else
         build_order(status, **props_for(status))
       end
