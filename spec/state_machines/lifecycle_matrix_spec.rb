@@ -80,7 +80,7 @@ RSpec.describe OrderLifecycle do
           to = map[status]
           if to
             it "moves #{status} -> #{to}" do
-              order = action == :cancel_force! ? order_for(status) : order_for(status)
+              order = order_for(status)
               actor = action == :cancel_force! ? owner : cashier
 
               events = within_tenant { order.order_events.count }
