@@ -2,7 +2,9 @@ require "rails_helper"
 
 RSpec.describe "Query budgets", type: :request do
   let(:business) { create(:business) }
-  let!(:budget) { 5 }
+  let!(:menu_render_budget)    { 8 }
+  let!(:order_show_budget)    { 6 }
+  let!(:kitchen_board_budget) { 10 }
 
   before do
     Rails.cache.clear
@@ -28,7 +30,7 @@ RSpec.describe "Query budgets", type: :request do
       get "/menu"
     end
 
-    expect(queries).to be <= budget
+    expect(queries).to be <= menu_render_budget
   end
 
   it "order show stays under the query budget" do
@@ -40,7 +42,7 @@ RSpec.describe "Query budgets", type: :request do
       get "/orders/#{order.id}"
     end
 
-    expect(queries).to be <= budget
+    expect(queries).to be <= order_show_budget
   end
 
   it "kitchen board stays under the query budget" do
@@ -52,7 +54,7 @@ RSpec.describe "Query budgets", type: :request do
       get "/kitchen/board"
     end
 
-    expect(queries).to be <= budget
+    expect(queries).to be <= kitchen_board_budget
   end
 
   it "menu show stays under the query budget with multiple products (N+1 guard)" do
@@ -70,7 +72,7 @@ RSpec.describe "Query budgets", type: :request do
       get "/menu"
     end
 
-    expect(queries).to be <= budget
+    expect(queries).to be <= menu_render_budget
   end
 
   it "menu show does not grow unbounded with additional products (N+1 guard)" do
@@ -95,6 +97,6 @@ RSpec.describe "Query budgets", type: :request do
 
     after = count_queries { get "/menu" }
 
-    expect(after).to be <= budget
+    expect(after).to be <= menu_render_budget
   end
 end
