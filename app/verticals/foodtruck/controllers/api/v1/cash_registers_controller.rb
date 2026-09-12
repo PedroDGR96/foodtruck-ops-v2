@@ -1,7 +1,7 @@
 module Api
   module V1
     class CashRegistersController < BaseController
-      before_action :set_cash_register, only: %i[show close]
+      before_action :set_cash_registers, only: %i[show close]
 
       def index
         authorize CashRegister
@@ -39,7 +39,7 @@ module Api
 
       private
 
-      def set_cash_register
+      def set_cash_registers
         @cash_register = Current.business.cash_registers.find(params[:id])
       end
 
