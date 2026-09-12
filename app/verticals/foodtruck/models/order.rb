@@ -47,14 +47,23 @@ class Order < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
   scope :active, -> { where(status: %i[paid in_kitchen ready delivered]) }
   scope :kitchen_queue, -> do
-    where(status: %i[paid in_kitchen])
+    business_id = Current.business&.id
+    where(
+      status: %i[paid in_kitchen],
+      business_id: business_id
+    )
       .eager_load(order_items: :order_item_addons)
       .order(Arel.sql("CASE kitchen_status WHEN 'in_progress' THEN 0 ELSE 1 END"), created_at: :asc)
       .limit(KITCHEN_BATCH_LIMIT)
   end
   scope :purchases, -> { where.not(status: %i[draft cancelled refunded]) }
   scope :kitchen_completed, -> do
-    where(kitchen_status: :done, status: :ready)
+    business_id = Current.business&.id
+    where(
+      kitchen_status: :done,
+      status: :ready,
+      business_id: business_id
+    )
       .eager_load(order_items: :order_item_addons)
       .order(created_at: :desc)
       .limit(KITCHEN_BATCH_LIMIT)
