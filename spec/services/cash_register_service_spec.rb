@@ -93,4 +93,39 @@ RSpec.describe CashRegisterService do
       expect(Tenancy.with_business(business) { register.reload.drift }).to eq(10.0)
     end
   end
+
+  describe "drawer reconciliation" do
+    it "lands a cash payment on an open shift in that shift's drawer total" do
+      register = within_tenant { create(:cash_register, :open, business: business, user: cashier, opening_amount: 100.0) }
+      order = within_tenant { create(:order, :open, business: business, total: 30.0, subtotal: 30.0) }
+      payment = order.payments.build(method: "cash", amount: 30.0)
+
+      within_tenant do
+        OrderLifecycle.new(order, cashier).record_payment!(payment)
+      end
+
+      within_tenant { register.reload }
+      expect(within_tenant { register.cash_sales }).to eq(30.0)
+      expect(within_tenant { register.expected_closing }).to eq(130.0)
+    end
+
+    it "creates exactly ONE expense movement per refunded cash payment" do
+      register = within_tenant { create(:cash_register, :open, business: business, user: cashier, opening_amount: 100.0) }
+      order = within_tenant { create(:order, :open, business: business, total: 30.0, subtotal: 30.0) }
+      payment = within_tenant do
+        create(:payment, order: order, method: "cash", amount: 30.0, cash_register: register)
+      end
+      within_tenant { order.update!(status: "paid", payment_status: "paid") }
+
+      within_tenant do
+        CashRegisterLedger.record_refunds!(payments: [ payment ], order: order, actor: cashier)
+      end
+
+      movements = within_tenant { register.cash_movements.reload.to_a }
+      expect(movements.size).to eq(1)
+      expect(movements.first).to be_expense
+      expect(movements.first.category).to eq("refund")
+      expect(movements.first.amount).to eq(30.0)
+    end
+  end
 end
