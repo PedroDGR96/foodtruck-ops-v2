@@ -79,6 +79,11 @@ class CashRegister < ApplicationRecord
     )
   end
 
+  # Exposes the cash register status for drawer visibility via API
+  def cash_register_status
+    status
+  end
+
   private
 
   def assign_opened_at
