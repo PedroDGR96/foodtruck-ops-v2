@@ -28,6 +28,7 @@ class Order < ApplicationRecord
 
   before_create :assign_order_number
 
+  belongs_to :business, optional: true
   belongs_to :user, optional: true
   belongs_to :customer, optional: true
   has_many :order_items, dependent: :restrict_with_exception
