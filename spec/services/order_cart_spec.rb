@@ -244,4 +244,36 @@ RSpec.describe OrderCart do
       expect(order.reload.customer).to be_nil
     end
   end
+
+  describe "snapshot integrity" do
+    it "keeps the line's original price snapshot when the product's price changes" do
+      product = within_tenant { create(:product, business: business, price: 9.9, name: "Snack") }
+      order = within_tenant { create(:order, business: business) }
+
+      within_tenant { OrderCart.add_item(order, product: product) }
+      item = within_tenant { order.order_items.first }
+      expect(item.unit_price).to eq(9.9)
+
+      within_tenant { product.update!(price: 19.9) }
+
+      expect(within_tenant { item.reload.unit_price }).to eq(9.9)
+      expect(within_tenant { item.reload.product_name }).to eq("Snack")
+      expect(within_tenant { order.reload.total }).to eq(9.9)
+    end
+  end
+
+  describe "duplicate confirm guards" do
+    it "produces ONE order when a draft is confirmed twice" do
+      order = within_tenant { create(:order, business: business) }
+      expect(order).to be_draft
+
+      within_tenant { OrderLifecycle.new(order, cashier).confirm! }
+      expect(within_tenant { order.order_events.where(event: "confirmed").count }).to eq(1)
+
+      expect { within_tenant { OrderLifecycle.new(order, cashier).confirm! } }
+        .to raise_error(OrderLifecycle::IllegalTransition)
+
+      expect(within_tenant { order.order_events.where(event: "confirmed").count }).to eq(1)
+    end
+  end
 end
