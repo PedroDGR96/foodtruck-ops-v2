@@ -183,6 +183,46 @@ RSpec.describe OrderLifecycle do
       event = within_tenant { order.order_events.last }
       expect(event.metadata).to include("amount" => "15.0", "method" => "card")
     end
+
+    it "concurrent payments never double-settle the balance" do
+      order = build_order(:open, total: 30.0, subtotal: 30.0)
+
+      first = order.payments.build(method: "cash", amount: 15.0)
+      lifecycle(order).record_payment!(first)
+
+      second = order.payments.build(method: "card", amount: 15.0)
+      lifecycle(order).record_payment!(second)
+
+      expect(within_tenant { order.order_events.where(event: "paid").size }).to eq(1)
+      expect(within_tenant { order.payments.successful.sum(:amount) }).to eq(30.0)
+    end
+
+    it "rejects a payment exceeding the remaining balance" do
+      order = build_order(:open, total: 20.0, subtotal: 20.0)
+
+      first = order.payments.build(method: "cash", amount: 15.0)
+      lifecycle(order).record_payment!(first)
+
+      second = order.payments.build(method: "pix", amount: 10.0)
+
+      expect { lifecycle(order).record_payment!(second) }
+        .to raise_error(ActiveRecord::RecordInvalid) do |e|
+          expect(e.message).to include("não pode exceder o saldo restante do pedido")
+        end
+    end
+
+    it "a successful payment of exactly the remaining balance marks the order paid" do
+      order = build_order(:open, total: 25.0, subtotal: 25.0)
+
+      first = order.payments.build(method: "pix", amount: 10.0)
+      lifecycle(order).record_payment!(first)
+
+      second = order.payments.build(method: "card", amount: 15.0)
+      lifecycle(order).record_payment!(second)
+
+      expect(order).to be_paid
+      expect(order.payment_status).to eq("paid")
+    end
   end
 
   describe "audit timeline" do
