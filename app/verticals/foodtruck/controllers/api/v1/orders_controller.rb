@@ -17,8 +17,12 @@ module Api
         authorize Order
         require_writer!
         order = Current.business.orders.new(order_attributes)
-        OrderLifecycle.new(order, current_user).confirm!
-        render_record order, status: :created
+        begin
+          OrderLifecycle.new(order, current_user).confirm!
+          render_record order, status: :created
+        rescue ActiveRecord::RecordInvalid => e
+          render json: { errors: [{ title: 'Validation failed', detail: e.record.errors.full_messages.join(', ') }], status: 422 }, status: :unprocessable_entity
+        end
       end
 
       def cancel
@@ -54,6 +58,10 @@ module Api
         attrs[:tax] ||= 0
         attrs[:delivery_fee] ||= 0
         attrs[:total] ||= (attrs[:subtotal].to_f + attrs[:tax].to_f + attrs[:delivery_fee].to_f).round(2)
+
+        unless attrs.fetch(:order_type, '').present?
+          raise ActiveRecord::RecordInvalid.new(attrs), 'Order type is required'
+        end
         attrs
       end
     end
