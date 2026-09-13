@@ -13,6 +13,8 @@ class User < ApplicationRecord
 
   after_save :record_lock_change
 
+  scope :business, ->(id) { where(business_id: id) }
+
   def self.serialize_from_session(key, salt)
     unscoped { super }
   end
@@ -26,6 +28,8 @@ class User < ApplicationRecord
 
   # Tenants associated with this user (tenancy association)
   has_many :tenants, -> { where(business_id: business_id) }, dependent: :delete_all
+
+  belongs_to :business, optional: true
 
   def active_for_authentication?
     super && active?
