@@ -66,20 +66,40 @@ RSpec.describe DailyReport do
       expect(products.last.total).to eq(10.0)
     end
 
-    it "nets refunds against gross total" do
+    it "counts each completed paid order exactly once in the day's revenue" do
       with_business do
-        create_paid_order(business, total: 100.0, created_at: zone.local(2026, 8, 4, 11, 0)) do |o|
-          create(:payment, order: o, amount: 100.0, method: "cash", status: "succeeded")
+        create_paid_order(business, total: 75.0, created_at: zone.local(2026, 8, 4, 13, 0)) do |o|
+          # Multiple payments on the same order — should still count once
+          create(:payment, order: o, amount: 25.0, method: "cash", status: "succeeded")
+          create(:payment, order: o, amount: 50.0, method: "pix", status: "succeeded")
         end
-
-        refunded_order = create(:order, :refunded, business: business, total: 30.0, subtotal: 30.0, tax: 0, delivery_fee: 0,
-                                            created_at: zone.local(2026, 8, 4, 14, 0))
       end
 
       report = with_business { described_class.call(business, date) }
 
+      # .distinct(:order_id) before group(:method).sum(:amount) is INTENTIONAL
+      # to prevent per-payment counting. Each order contributes its total once.
       expect(report[:total_count]).to eq(1)
-      expect(report[:gross_total]).to eq(100.0)
+      expect(report[:gross_total]).to eq(75.0)
+    end
+
+    it "nets refunds against gross total without double-counting" do
+      with_business do
+        # Original paid order: +R$ 80.00 to revenue
+        create_paid_order(business, total: 80.0, created_at: zone.local(2026, 8, 4, 10, 0)) do |o|
+          create(:payment, order: o, amount: 80.0, method: "cash", status: "succeeded")
+        end
+
+        # Refunded order: -R$ 30.00 offsets revenue (not double-counted)
+        refunded_order = create(:order, :refunded, business: business, total: 30.0, subtotal: 30.0, tax: 0, delivery_fee: 0,
+                                            created_at: zone.local(2026, 8, 4, 15, 0))
+      end
+
+      report = with_business { described_class.call(business, date) }
+
+      # .distinct(:order_id) ensures refunded orders offset once without double-counting
+      expect(report[:total_count]).to eq(1)
+      expect(report[:gross_total]).to eq(80.0)
       expect(report[:refund_total]).to eq(30.0)
     end
 
