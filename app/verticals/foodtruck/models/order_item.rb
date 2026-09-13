@@ -12,6 +12,8 @@ class OrderItem < ApplicationRecord
   validates :unit_price, numericality: { greater_than_or_equal_to: 0 }
   validates_parent_business_for :order, :product, :product_variant
 
+  validates_associated :product
+
   before_save :set_line_total
   after_save :refresh_order_totals
   after_destroy :refresh_order_totals
