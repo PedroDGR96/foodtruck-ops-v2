@@ -44,8 +44,12 @@ class Order < ApplicationRecord
   validate :delivery_address_required_for_delivery
   validates_parent_business_for :customer
 
-  scope :recent, -> { order(created_at: :desc) }
-  scope :active, -> { where(status: %i[paid in_kitchen ready delivered]) }
+  scope :recent, -> do
+    Tenancy.with_business(Current.business) { order(created_at: :desc) }
+  end
+  scope :active, -> do
+    Tenancy.with_business(Current.business) { where(status: %i[paid in_kitchen ready delivered]) }
+  end
   scope :kitchen_queue, -> do
     Tenancy.with_business(Current.business) do
       business_id = Current.business&.id
@@ -58,7 +62,9 @@ class Order < ApplicationRecord
         .limit(KITCHEN_BATCH_LIMIT)
     end
   end
-  scope :purchases, -> { where.not(status: %i[draft cancelled refunded]) }
+  scope :purchases, -> do
+    Tenancy.with_business(Current.business) { where.not(status: %i[draft cancelled refunded]) }
+  end
   scope :kitchen_completed, -> do
     Tenancy.with_business(Current.business) do
       business_id = Current.business&.id
