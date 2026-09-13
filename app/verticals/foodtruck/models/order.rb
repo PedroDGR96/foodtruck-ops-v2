@@ -47,30 +47,34 @@ class Order < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
   scope :active, -> { where(status: %i[paid in_kitchen ready delivered]) }
   scope :kitchen_queue, -> do
-    business_id = Current.business&.id
-    where(
-      status: %i[paid in_kitchen],
-      business_id: business_id
-    )
-      .eager_load(order_items: :order_item_addons)
-      .order(Arel.sql("CASE kitchen_status WHEN 'in_progress' THEN 0 ELSE 1 END"), created_at: :asc)
-      .limit(KITCHEN_BATCH_LIMIT)
+    Tenancy.with_business(Current.business) do
+      business_id = Current.business&.id
+      where(
+        status: %i[paid in_kitchen],
+        business_id: business_id
+      )
+        .eager_load(order_items: :order_item_addons)
+        .order(Arel.sql("CASE kitchen_status WHEN 'in_progress' THEN 0 ELSE 1 END"), created_at: :asc)
+        .limit(KITCHEN_BATCH_LIMIT)
+    end
   end
   scope :purchases, -> { where.not(status: %i[draft cancelled refunded]) }
   scope :kitchen_completed, -> do
-    business_id = Current.business&.id
-    where(
-      kitchen_status: :done,
-      status: :ready,
-      business_id: business_id
-    )
-      .eager_load(order_items: :order_item_addons)
-      .order(created_at: :desc)
-      .limit(KITCHEN_BATCH_LIMIT)
+    Tenancy.with_business(Current.business) do
+      business_id = Current.business&.id
+      where(
+        kitchen_status: :done,
+        status: :ready,
+        business_id: business_id
+      )
+        .eager_load(order_items: :order_item_addons)
+        .order(created_at: :desc)
+        .limit(KITCHEN_BATCH_LIMIT)
+    end
   end
 
   def paid_amount
-    payments.where(status: :succeeded).sum(:amount)
+    Tenancy.with_business(Current.business) { payments.where(status: :succeeded).sum(:amount) }
   end
 
   def balance_due
@@ -93,11 +97,11 @@ class Order < ApplicationRecord
   # shift's books after the fact, so it needs owner authorization (see
   # OrderPolicy and CashRegisterLedger).
   def refund_touches_closed_shift?
-    cash_payments_refundable.any? { |payment| payment.cash_register&.closed? }
+    Tenancy.with_business(Current.business) { cash_payments_refundable.any? { |payment| payment.cash_register&.closed? } }
   end
 
   def cash_payments_refundable
-    payments.cash.successful.to_a
+    Tenancy.with_business(Current.business) { payments.cash.successful.to_a }
   end
 
   def recalculate_totals!
@@ -122,7 +126,9 @@ class Order < ApplicationRecord
   def assign_order_number
     return if number.present?
 
-    self.number = self.class.where(business_id: business_id).maximum(:number).to_i + 1
+    Tenancy.with_business(Current.business) do
+      self.number = self.class.where(business_id: business_id).maximum(:number).to_i + 1
+    end
   end
 
   def totals_consistent
