@@ -17,15 +17,21 @@ module Api
         authorize Customer
         require_writer!
         customer = Current.business.customers.new(customer_params)
-        customer.save!
-        render_record customer, status: :created
+        if customer.save
+          render_record customer, status: :created
+        else
+          render json: { errors: customer.errors.full_messages }, status: :unprocessable_entity
+        end
       end
 
       def update
         authorize @customer
         require_writer!
-        @customer.update!(customer_params)
-        render_record @customer
+        if @customer.update(customer_params)
+          render_record @customer
+        else
+          render json: { errors: @customer.errors.full_messages }, status: :unprocessable_entity
+        end
       end
 
       private
