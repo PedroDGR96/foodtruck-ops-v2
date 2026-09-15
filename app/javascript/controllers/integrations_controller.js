@@ -48,7 +48,7 @@ export default class extends Controller {
         resultTarget.classList.remove("hidden")
         if (data.success) {
           resultTarget.className = "text-sm text-emerald-600 dark:text-emerald-400"
-          resultTarget.textContent = "✓ Conectado"
+          resultTarget.textContent = data.message ? `✓ ${data.message}` : "✓ Conectado"
         } else {
           resultTarget.className = "text-sm text-red-600 dark:text-red-400"
           resultTarget.textContent = `✗ ${data.message || "Erro ao conectar"}`

@@ -89,6 +89,7 @@ RSpec.describe "Integrations", type: :request do
       post "/integrations/test/payment_gateway", params: { provider: "payment_gateway" }, as: :json
       json = JSON.parse(response.body)
       expect(json["success"]).to eq(true)
+      expect(json["message"]).to include("modo simulado")
     end
 
     it "tests messaging connection without credentials" do
@@ -106,6 +107,7 @@ RSpec.describe "Integrations", type: :request do
       post "/integrations/test/messaging", params: { provider: "messaging" }, as: :json
       json = JSON.parse(response.body)
       expect(json["success"]).to eq(true)
+      expect(json["message"]).to include("modo simulado")
       expect(json["message"]).not_to include("SID")
       expect(json["message"]).not_to include("AC123456")
     end
@@ -115,6 +117,7 @@ RSpec.describe "Integrations", type: :request do
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
       expect(json["success"]).to eq(true)
+      expect(json["message"]).to include("modo simulado")
     end
 
     it "tests fiscal connection in production with cnpj" do
@@ -152,6 +155,7 @@ RSpec.describe "Integrations", type: :request do
       post "/integrations/test/marketplace", params: { provider: "marketplace" }, as: :json
       json = JSON.parse(response.body)
       expect(json["success"]).to eq(true)
+      expect(json["message"]).to include("modo simulado")
     end
 
     it "tests maps connection with api key" do
@@ -164,26 +168,20 @@ RSpec.describe "Integrations", type: :request do
       expect(json["success"]).to eq(true)
     end
 
-    it "tests google maps connection with api key via deterministic mock" do
-      Tenancy.with_business(business) do
-        create(:integration_setting, business: business, provider_key: "maps",
-               credentials: { "provider" => "google", "api_key" => "AIzaSy123" }, enabled: true)
-      end
+    it "routes maps test through the mock adapter in mock mode (no network)" do
+      expect(MockMapsProvider).to receive(:test_connection).and_call_original
       post "/integrations/test/maps", params: { provider: "maps" }, as: :json
       json = JSON.parse(response.body)
       expect(json["success"]).to eq(true)
-      expect(json["message"]).to eq("Google Maps configurado")
+      expect(json["message"]).to include("OpenStreetMap")
+      expect(json["message"]).to include("modo simulado")
     end
 
-    it "rejects google maps connection without api key" do
-      Tenancy.with_business(business) do
-        create(:integration_setting, business: business, provider_key: "maps",
-               credentials: { "provider" => "google" }, enabled: true)
-      end
+    it "does not call the real OSM provider in mock mode" do
+      expect(OsmMapsProvider).not_to receive(:test_connection)
+      expect(OsmMapsProvider).not_to receive(:geocode)
       post "/integrations/test/maps", params: { provider: "maps" }, as: :json
-      json = JSON.parse(response.body)
-      expect(json["success"]).to eq(false)
-      expect(json["message"]).to include("Chave da API")
+      expect(response).to have_http_status(:ok)
     end
 
     it "returns unsupported for unknown provider" do
@@ -194,7 +192,7 @@ RSpec.describe "Integrations", type: :request do
     end
 
     it "handles maps connection errors gracefully" do
-      allow(OsmMapsProvider).to receive(:geocode).and_raise(RuntimeError, "boom")
+      allow(MockMapsProvider).to receive(:geocode).and_raise(RuntimeError, "boom")
       post "/integrations/test/maps", params: { provider: "maps" }, as: :json
       json = JSON.parse(response.body)
       expect(json["success"]).to be false

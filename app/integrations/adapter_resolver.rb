@@ -1,43 +1,50 @@
 # Resolves the concrete adapter class for a provider under a business's
 # integration_adapter_mode ("mock" default vs "live"). Live mode prefers the
-# real adapter; when none is registered yet it falls back to the mock so the
-# demo flow never breaks mid-switch. The resolver owns the provider→class map,
-# so controllers/services never hardcode a provider name.
+# real adapter; the resolver owns the provider→class map, so controllers and
+# services never hardcode a provider name. Real adapters are shipped by the
+# integrations-kit gem and referenced here.
+#
+# Runtime behavior follows the agreed fail-loud contract: live mode never
+# silently falls back to a mock adapter at runtime — it raises
+# NoRealAdapterError instead.
+
+class NoRealAdapterError < StandardError; end
 
 class AdapterResolver
-  # provider_key => { mock:, real:, backup: }
+  # provider_key => { mock:, real: }
   ADAPTERS = {
-    payment_gateway: { mock: MockPaymentGateway, real: nil, backup: nil },
-    maps: { mock: MockMapsProvider, real: OsmMapsProvider },
-    fiscal: { mock: MockFiscalProvider, real: nil },
-    marketplace: { mock: MockMarketplaceProvider, real: nil },
-    messaging: { mock: MockMessagingProvider, real: nil }
+    payment_gateway: { mock: MockPaymentGateway, real: IntegrationsKit::MercadoPagoGateway },
+    maps:           { mock: MockMapsProvider, real: OsmMapsProvider },
+    fiscal:         { mock: MockFiscalProvider, real: IntegrationsKit::FocusNFeProvider },
+    marketplace:    { mock: MockMarketplaceProvider, real: IntegrationsKit::IfoodMarketplaceProvider },
+    messaging:      { mock: MockMessagingProvider, real: IntegrationsKit::TwilioMessagingProvider }
   }.freeze
 
   class << self
     def resolve(business, provider_key)
-      adapter_spec(provider_key).then do |spec|
-        if live?(business) && spec[:real]
-          spec[:real]
-        else
-          spec[:mock]
-        end
-      end
+      return providers(provider_key)[:mock] unless live?(business)
+
+      real = providers(provider_key)[:real]
+      raise NoRealAdapterError, "sem adapter real para #{provider_key} em modo live" if real.nil?
+
+      real
     end
 
     def live?(business)
       business.integration_adapter_mode == "live"
     end
 
-    # True when live mode would fall back to the mock because no real adapter
-    # is registered for the provider. Used to badge the UI as a fallback.
-    def fallback?(business, provider_key)
-      live?(business) && adapter_spec(provider_key)[:real].nil?
+    # Symbolized credentials stored for the provider under the business, so
+    # callers never reach into IntegrationSetting directly. Materializes
+    # inside the caller's tenant block (RLS-safe).
+    def settings_for(business, provider_key)
+      setting = business.integration_settings.find_by(provider_key: provider_key.to_s)
+      setting ? setting.credentials.deep_symbolize_keys : {}
     end
 
     private
 
-    def adapter_spec(provider_key)
+    def providers(provider_key)
       ADAPTERS.fetch(provider_key.to_sym)
     end
   end

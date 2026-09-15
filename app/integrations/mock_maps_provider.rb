@@ -3,13 +3,9 @@
 # always yields the same response.
 class MockMapsProvider < MapsProvider
   def self.test_connection(settings:)
-    if settings[:api_key].present?
-      { success: true, message: "Google Maps configurado" }
-    else
-      geocode(settings: {}, args: { address: "Porto Alegre, RS" })[:success] ?
-        { success: true, message: "OpenStreetMap conectado" } :
-        { success: false, message: "Falha ao conectar com OpenStreetMap" }
-    end
+    geocode(settings: {}, args: { address: "Porto Alegre, RS" })[:success] ?
+      { success: true, message: "OpenStreetMap conectado — modo simulado (nenhuma chamada real)" } :
+      { success: false, message: "Falha na geocodificação simulada" }
   rescue => e
     { success: false, message: "Erro: #{e.message}" }
   end

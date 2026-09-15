@@ -103,6 +103,35 @@ RSpec.describe OsmMapsProvider do
     end
   end
 
+  describe ".test_connection" do
+    it "reports success when the probe geocodes" do
+      allow(http_double).to receive(:request).and_return(build_response(body: success_body))
+
+      result = described_class.test_connection(settings: {})
+
+      expect(result[:success]).to be true
+      expect(result[:message]).to include("OpenStreetMap conectado")
+    end
+
+    it "reports failure when the probe geocoding fails" do
+      allow(http_double).to receive(:request).and_return(build_response(body: "[]"))
+
+      result = described_class.test_connection(settings: {})
+
+      expect(result[:success]).to be false
+      expect(result[:message]).to include("Falha ao conectar")
+    end
+
+    it "reports errors when the probe raises" do
+      allow(described_class).to receive(:geocode).and_raise(RuntimeError, "boom")
+
+      result = described_class.test_connection(settings: {})
+
+      expect(result[:success]).to be false
+      expect(result[:message]).to include("Erro: boom")
+    end
+  end
+
   describe ".distance" do
     let(:route_body) { '{"routes":[{"distance":1500,"duration":180}]}' }
 
@@ -169,6 +198,34 @@ RSpec.describe OsmMapsProvider do
       )
 
       expect(result[:success]).to be true
+    end
+
+    it "returns failure when the routing request errors" do
+      allow(http_double).to receive(:request).and_return(
+        build_response(body: success_body),
+        build_response(body: success_body),
+        build_response(body: "", status: :error)
+      )
+
+      result = described_class.distance(
+        settings: {},
+        args: { origin: "Addr A", destination: "Addr B" }
+      )
+
+      expect(result[:success]).to be false
+      expect(result[:message]).to include("Routing failed")
+    end
+
+    it "returns failure when a route endpoint cannot be resolved" do
+      allow(http_double).to receive(:request).and_return(build_response(body: "[]"))
+
+      result = described_class.distance(
+        settings: {},
+        args: { origin: "Unresolvable", destination: "Also Unresolvable" }
+      )
+
+      expect(result[:success]).to be false
+      expect(result[:message]).to include("Routing failed")
     end
   end
 

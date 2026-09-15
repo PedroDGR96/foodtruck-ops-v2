@@ -29,11 +29,11 @@ RSpec.describe MockMapsProvider, type: :model do
   end
 
   describe ".test_connection" do
-    it "reports the configured API key when present" do
-      result = described_class.test_connection(settings: { api_key: "AIzaSy123" })
+    it "always routes the mock through OpenStreetMap, ignoring stale google settings" do
+      result = described_class.test_connection(settings: { api_key: "AIzaSy123", provider: "google" })
 
       expect(result[:success]).to be true
-      expect(result[:message]).to include("Google Maps")
+      expect(result[:message]).to include("OpenStreetMap")
     end
 
     it "falls back to the mock OSM geocode without an API key" do

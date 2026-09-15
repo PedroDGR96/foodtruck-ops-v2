@@ -1,3 +1,9 @@
+PATH
+  remote: /integrations-kit
+  specs:
+    integrations-kit (0.1.0)
+      net-smtp
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -455,6 +461,7 @@ DEPENDENCIES
   faker
   image_processing (~> 1.2)
   importmap-rails
+  integrations-kit!
   jbuilder
   kamal
   pg (~> 1.1)

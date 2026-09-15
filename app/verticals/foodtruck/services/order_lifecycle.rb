@@ -65,6 +65,42 @@ class OrderLifecycle
     transition!("completed", %i[ready], :completed)
   end
 
+  # Records a payment that still awaits external confirmation (e.g. a Pix QR
+  # created by the real gateway). The payment is persisted as "pending" and does
+  # not move the order; the poller flips it to succeeded via confirm_payment!.
+  def pending_payment!(payment)
+    raise IllegalTransition.new("payment", order.status) unless order.status.in?(%w[open partially_paid])
+
+    ActiveRecord::Base.transaction do
+      payment.order = order
+      payment.status = :pending
+      payment.save!
+      order.lock!
+      order.update_columns(payment_status: :pending) unless order.payment_status.to_sym == :partially_paid
+    end
+  end
+
+  # Confirms a previously pending gateway payment once the provider reports
+  # success (status polling). Recomputes paid totals the same way
+  # record_payment! does, so the order advances to paid as soon as the
+  # accumulated succeeded legs reach the total. Idempotent per payment.
+  def confirm_payment!(payment)
+    ActiveRecord::Base.transaction do
+      payment.status = :succeeded
+      payment.save!
+
+      order.lock!
+      paid = order.payments.successful.sum(:amount)
+      if paid >= order.total
+        order.update_columns(payment_status: :paid)
+        transition!("paid", %i[open partially_paid], :paid, { amount: payment.amount.to_s, method: payment.method })
+        broadcast_kds_append
+      elsif paid.positive?
+        order.update_columns(payment_status: :partially_paid)
+      end
+    end
+  end
+
   # Records a payment leg, recomputes payment_status and advances the order to
   # partially_paid/paid as soon as the accumulated amount reaches the total.
   # Cash payments are tied to the cashier's open shift so the drawer

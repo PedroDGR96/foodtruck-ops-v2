@@ -4,13 +4,10 @@ class IntegrationSetting < ApplicationRecord
 
   PROVIDER_KEYS = %w[payment_gateway messaging maps fiscal marketplace].freeze
 
-  # Decision: credentials are now encrypted at rest via `encrypts :credentials`.
-  # The spec asserts ciphertext storage. Remove the plaintext contract once
-  # all integration providers ship real credentials.
+  attribute :credentials, :jsonb, default: {}
   encrypts :credentials
 
   before_validation :ensure_credentials_is_hash
-  attribute :credentials, :jsonb, default: {}
 
   validates :provider_key, inclusion: { in: PROVIDER_KEYS }
   validates :provider_key, uniqueness: { scope: :business_id }

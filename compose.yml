@@ -4,8 +4,11 @@ x-rails: &rails
   build:
     context: .
     target: development
+    additional_contexts:
+      integrations-kit: /home/pedrp/integrations-kit
   volumes:
     - .:/rails
+    - /home/pedrp/integrations-kit:/integrations-kit:ro
   environment:
     DATABASE_URL: postgresql://app:app@db:5432/foodtruck_ops_development?sslmode=require
     REDIS_URL: redis://redis:6379/0
@@ -104,6 +107,8 @@ services:
     build:
       context: .
       target: production
+      additional_contexts:
+        integrations-kit: /home/pedrp/integrations-kit
     profiles: ["prod"]
     environment:
       DATABASE_URL: ${DATABASE_URL}

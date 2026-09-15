@@ -87,7 +87,7 @@ class OsmMapsProvider < MapsProvider
         duration_minutes: (route["duration"] / 60.0).round(1)
       }
     }
-  rescue RoutingError => e
+  rescue GeocodingError, RateLimitError, RoutingError => e
     { success: false, message: "Routing failed: #{e.message}", data: {} }
   end
 

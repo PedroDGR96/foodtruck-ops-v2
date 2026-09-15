@@ -42,13 +42,13 @@ RSpec.describe IntegrationSetting, type: :model do
   end
 
   describe "credentials storage" do
-    it "stores the value as plain JSONB" do
+    it "stores the value encrypted at rest" do
       Tenancy.with_business(business) do
         setting = create(:integration_setting, business: business,
                                   credentials: { api_key: "plaintext-secret" })
 
         raw = IntegrationSetting.find(setting.id).read_attribute_before_type_cast("credentials")
-        expect(raw).to include("plaintext-secret")
+        expect(raw).not_to include("plaintext-secret")
         expect(setting.credentials).to eq("api_key" => "plaintext-secret")
       end
     end

@@ -26,11 +26,12 @@ RSpec.describe "Integration adapter mode toggle", type: :request do
       expect(response).to redirect_to(new_user_session_path)
     end
 
-    it "badges a fallback provider when live" do
+    it "badges live mode without a fallback when every provider has a real adapter" do
       business.update!(integration_adapter_mode: "live")
       get "/integrations/edit"
-      expect(response.body).to include("cai para mock")
-      expect(response.body).to include("mock como fallback")
+      expect(response.body).not_to include("cai para mock")
+      expect(response.body).not_to include("mock como fallback")
+      expect(response.body).to include("Ao vivo")
     end
   end
 

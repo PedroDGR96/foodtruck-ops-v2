@@ -46,7 +46,7 @@ class MockPaymentGateway < PaymentGateway
 
     {
       success: true,
-      message: "Twilio configurado",
+      message: "Mercado Pago configurado — modo simulado (nenhuma chamada real)",
       metadata: {}
     }
   end

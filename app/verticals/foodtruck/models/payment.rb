@@ -3,7 +3,7 @@ class Payment < ApplicationRecord
   include TenantChild
 
   enum :method, { cash: "cash", pix: "pix", card: "card" }
-  enum :status, { succeeded: "succeeded", refunded: "refunded" }, default: :succeeded
+  enum :status, { succeeded: "succeeded", refunded: "refunded", pending: "pending", failed: "failed" }, default: :succeeded
 
   belongs_to :order
   belongs_to :cash_register, optional: true

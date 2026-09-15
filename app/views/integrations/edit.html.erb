@@ -63,9 +63,8 @@
 
               <div class="flex flex-col items-end gap-2">
                 <% if @business.live? %>
-                  <span class="rounded-full px-2 py-0.5 text-xs font-medium
-                       <%= AdapterResolver.fallback?(@business, provider_key) ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' %>">
-                    <%= AdapterResolver.fallback?(@business, provider_key) ? t("integrations.adapter_mode.fallback_badge") : t("integrations.adapter_mode.live_badge") %>
+                  <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                    <%= t("integrations.adapter_mode.live_badge") %>
                   </span>
                 <% end %>
                 <label class="relative inline-flex cursor-pointer items-center gap-2">

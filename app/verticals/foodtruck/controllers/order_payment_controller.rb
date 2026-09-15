@@ -40,10 +40,10 @@ class OrderPaymentController < AuthenticatedController
     end
 
     authorization = payment_gateway(Current.business).authorize(
-      settings: { currency: "BRL" },
+      settings: payment_settings(Current.business),
       amount: amount,
       order_id: @order.id,
-      metadata: { source: "checkout", method: method }
+      metadata: { source: "checkout", payment_method: method }
     )
     unless authorization[:success]
       redirect_to checkout_path(@order), alert: authorization[:message]
@@ -58,6 +58,14 @@ class OrderPaymentController < AuthenticatedController
     )
 
     begin
+      if authorization.dig(:metadata, :status).to_s == "pending"
+        # Real gateway (e.g. Pix) confirms asynchronously; the status poller
+        # flips the payment to succeeded once the provider reports approval.
+        lifecycle.pending_payment!(payment)
+        redirect_to checkout_path(@order), notice: t("orders.payment_pending")
+        return
+      end
+
       lifecycle.record_payment!(payment)
       if payment.status == :succeeded && @order.balance_due > 0 && @order.status == "open"
         @order.update_column(status: "partially_paid")
@@ -104,19 +112,16 @@ class OrderPaymentController < AuthenticatedController
     (remaining / remaining_statuses).round(2)
   end
 
+  # Renders the checkout form without authorizing: showing the page must never
+  # move money through the gateway. The amount/method here are suggestions that
+  # the cashier confirms on submit (POST create performs the real authorize).
   def build_payment_for_step(order, step)
     amount = calculate_amount_for_step(order, step)
-    authorization = payment_gateway(Current.business).authorize(
-      settings: { currency: "BRL" },
-      amount: amount,
-      order_id: order.id,
-      metadata: { source: "checkout_preview", step: step }
-    )
 
     order.payments.build(
       method: Payment.methods.keys.first,
       amount: amount,
-      gateway_reference: authorization.dig(:metadata, :auth_token)
+      gateway_reference: nil
     )
   end
 
@@ -124,5 +129,11 @@ class OrderPaymentController < AuthenticatedController
   # same checkout switches between sandbox (mock) and real gateway live.
   def payment_gateway(business)
     AdapterResolver.resolve(business, :payment_gateway)
+  end
+
+  # The mock adapter reads :currency only; the real gateway needs the stored
+  # sandbox credentials (MP access token etc.) so it is reached as-is.
+  def payment_settings(business)
+    AdapterResolver.settings_for(business, :payment_gateway).merge(currency: "BRL")
   end
 end

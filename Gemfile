@@ -13,6 +13,9 @@ gem "jbuilder"
 gem "redis", ">= 5.0", "< 6"
 gem "sidekiq", "~> 8.0"
 gem "bootsnap", require: false
+# Real sandbox adapters; resolved from the build-context / runtime volume
+# /integrations-kit (see compose.yml additional_contexts).
+gem "integrations-kit", path: "/integrations-kit", require: "integrations_kit"
 gem "kamal", require: false
 gem "thruster", require: false
 gem "image_processing", "~> 1.2"

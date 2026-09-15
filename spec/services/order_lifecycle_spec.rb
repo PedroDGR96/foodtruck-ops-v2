@@ -327,4 +327,78 @@ RSpec.describe OrderLifecycle do
       lifecycle(order, owner).refund!
     end
   end
+
+  describe "pending_payment!" do
+    it "persists the payment as pending without settling the order" do
+      order = build_order(:open, total: 30.0, subtotal: 30.0)
+      payment = order.payments.build(method: "pix", amount: 30.0)
+
+      lifecycle(order).pending_payment!(payment)
+
+      expect(payment).to be_pending
+      expect(payment.persisted?).to be(true)
+      expect(order.payment_status).to eq("pending")
+      expect(order).not_to be_paid
+      expect(within_tenant { order.payments.successful.sum(:amount) }).to eq(0.0)
+    end
+
+    it "keeps partial payments partially paid" do
+      order = build_order(:open, total: 30.0, subtotal: 30.0)
+      first = order.payments.build(method: "cash", amount: 15.0)
+      lifecycle(order).record_payment!(first)
+
+      gateway_payment = order.payments.build(method: "pix", amount: 15.0)
+      lifecycle(order).pending_payment!(gateway_payment)
+
+      expect(order.payment_status).to eq("partially_paid")
+      expect(gateway_payment).to be_pending
+    end
+
+    it "rejects pending payments on a closed order" do
+      order = build_order(:draft)
+      payment = order.payments.build(method: "pix", amount: 5.0)
+
+      expect { lifecycle(order).pending_payment!(payment) }
+        .to raise_error(OrderLifecycle::IllegalTransition)
+    end
+  end
+
+  describe "confirm_payment!" do
+    it "settles the order when the pending payment covers the total" do
+      order = build_order(:open, total: 30.0, subtotal: 30.0)
+      payment = order.payments.build(method: "pix", amount: 30.0)
+      lifecycle(order).pending_payment!(payment)
+
+      lifecycle(order).confirm_payment!(payment)
+
+      expect(payment).to be_succeeded
+      expect(order).to be_paid
+      expect(within_tenant { order.payments.successful.sum(:amount) }).to eq(30.0)
+      expect(within_tenant { order.order_events.where(event: "paid").size }).to eq(1)
+    end
+
+    it "keeps the order partially paid until the balance is settled" do
+      order = build_order(:open, total: 30.0, subtotal: 30.0)
+      pending = order.payments.build(method: "pix", amount: 20.0)
+      lifecycle(order).pending_payment!(pending)
+
+      lifecycle(order).confirm_payment!(pending)
+
+      expect(order.payment_status).to eq("partially_paid")
+      expect(order.status).to eq("open")
+    end
+
+    it "confirms a second leg and reaches the total" do
+      order = build_order(:open, total: 30.0, subtotal: 30.0)
+      first = order.payments.build(method: "cash", amount: 10.0)
+      lifecycle(order).record_payment!(first)
+
+      pending = order.payments.build(method: "pix", amount: 20.0)
+      lifecycle(order).pending_payment!(pending)
+      lifecycle(order).confirm_payment!(pending)
+
+      expect(order).to be_paid
+      expect(within_tenant { order.payments.successful.sum(:amount) }).to eq(30.0)
+    end
+  end
 end

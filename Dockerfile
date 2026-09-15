@@ -12,6 +12,9 @@ RUN apt-get update -qq && apt-get install --no-install-recommends -y \
     rm -rf /var/lib/apt/lists/*
 
 COPY Gemfile Gemfile.lock ./
+# Real sandbox adapters shipped as a path gem from a named build context
+# (compose additional_contexts). Runtime-bound via the /integrations-kit volume.
+COPY --from=integrations-kit / /integrations-kit
 RUN bundle install
 
 FROM base AS development

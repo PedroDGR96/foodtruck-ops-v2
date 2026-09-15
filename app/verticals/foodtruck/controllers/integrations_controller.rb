@@ -1,6 +1,4 @@
 class IntegrationsController < AuthenticatedController
-  before_action :set_provider, only: %i[test_connection]
-
   def edit
     @business = Current.business
     authorize @business, :update?
@@ -13,11 +11,11 @@ class IntegrationsController < AuthenticatedController
     @business = Current.business
     authorize @business, :update?
 
-    if params.dig(:business, :integration_adapter_mode).present?
-      @business.update!(integration_adapter_mode: params[:business][:integration_adapter_mode])
-    end
-
     ActiveRecord::Base.transaction do
+      if params.dig(:business, :integration_adapter_mode).present?
+        @business.update!(integration_adapter_mode: params[:business][:integration_adapter_mode])
+      end
+
       (params.fetch(:integrations, {}) || {}).each do |provider_key, attrs|
         next if attrs.blank?
 
@@ -52,31 +50,17 @@ class IntegrationsController < AuthenticatedController
     authorize @business, :update?
 
     provider = params[:provider]
-    setting = Current.business.integration_settings.find_by(provider_key: provider)
-
-    result = case provider
-    when "payment_gateway"
-      AdapterResolver.resolve(Current.business, :payment_gateway).test_connection(settings: setting_credentials(setting))
-    when "maps"
-      test_maps_connection(setting)
-    when "fiscal"
-      AdapterResolver.resolve(Current.business, :fiscal).test_connection(settings: setting_credentials(setting))
-    when "marketplace"
-      AdapterResolver.resolve(Current.business, :marketplace).test_connection(settings: setting_credentials(setting))
-    when "messaging"
-      AdapterResolver.resolve(Current.business, :messaging).test_connection(settings: setting_credentials(setting))
-    else
-      { success: false, message: t("integrations.providers.unknown") }
+    unless IntegrationSetting::PROVIDER_KEYS.include?(provider)
+      return render json: { success: false, message: t("integrations.providers.unknown") }
     end
 
-    render json: result
+    setting = Current.business.integration_settings.find_by(provider_key: provider)
+    adapter = AdapterResolver.resolve(Current.business, provider)
+
+    render json: adapter.test_connection(settings: setting_credentials(setting))
   end
 
   private
-
-  def set_provider
-    @provider = params[:provider]
-  end
 
   def load_settings
     IntegrationSetting::PROVIDER_KEYS.each_with_object({}) do |key, hash|
@@ -87,23 +71,5 @@ class IntegrationsController < AuthenticatedController
 
   def setting_credentials(setting)
     setting&.credentials&.deep_symbolize_keys || {}
-  end
-
-  def test_maps_connection(setting)
-    creds = setting_credentials(setting)
-    provider = creds[:provider].presence || "osm"
-
-    case provider
-    when "google"
-      if creds[:api_key].present?
-        MockMapsProvider.test_connection(settings: creds)
-      else
-        { success: false, message: "Chave da API do Google Maps não configurada" }
-      end
-    else
-      OsmMapsProvider.test_connection(settings: creds.except(:provider, :api_key))
-    end
-  rescue => e
-    { success: false, message: t("integrations.providers.error", error: e.message) }
   end
 end

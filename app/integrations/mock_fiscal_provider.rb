@@ -7,9 +7,9 @@ class MockFiscalProvider < FiscalProvider
     cnpj = settings[:cnpj].to_s
 
     if env == "homologacao"
-      { success: true, message: "Ambiente de homologação configurado" }
+      { success: true, message: "Ambiente de homologação configurado — modo simulado (nenhuma chamada real)" }
     elsif cnpj.present?
-      { success: true, message: "Produção configurada (CNPJ: #{cnpj})" }
+      { success: true, message: "Produção configurada (CNPJ: #{cnpj}) — modo simulado (nenhuma chamada real)" }
     else
       { success: false, message: "CNPJ não configurado para produção" }
     end

@@ -49,6 +49,17 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
       expect(response.body).to include("R$ 20,00")
     end
 
+    it "renders the checkout without authorizing through the gateway" do
+      order = open_order
+      login_as cashier, scope: :user
+
+      expect(MockPaymentGateway).not_to receive(:authorize)
+
+      get checkout_path(order)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("mock_auth_")
+    end
+
     it "redirects with an alert for an invalid step" do
       order = open_order
       login_as cashier, scope: :user
@@ -149,6 +160,23 @@ RSpec.describe "Order payment flow (checkout)", type: :request do
       expect(response).to redirect_to(checkout_path(order))
       expect(flash[:alert]).to eq("Cartão recusado")
       expect(payment_count(order)).to eq(0)
+    end
+
+    it "records the payment as pending when the gateway defers confirmation (Pix)" do
+      order = open_order
+      allow(MockPaymentGateway).to receive(:authorize).and_return(
+        success: true,
+        message: "Aguardando pagamento",
+        metadata: { auth_token: "mock_pix_1", status: "pending" }
+      )
+
+      post checkout_path(order), params: { payment: { method: "pix", amount: 40.0 } }
+
+      expect(response).to redirect_to(checkout_path(order))
+      expect(flash[:notice]).to eq(I18n.t("orders.payment_pending"))
+      payment = Tenancy.with_business(business) { order.payments.last }
+      expect(payment).to be_pending
+      expect(order_state(order)).to be_open
     end
 
     it "redirects with an alert when the amount is zero" do

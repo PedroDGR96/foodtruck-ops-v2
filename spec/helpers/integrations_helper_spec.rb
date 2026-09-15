@@ -14,17 +14,17 @@ RSpec.describe IntegrationsHelper, type: :helper do
 
     it "returns maps fields" do
       fields = helper.provider_fields("maps")
-      expect(fields.map { |f| f[:key] }).to include("provider", "api_key")
+      expect(fields.map { |f| f[:key] }).to include("default_origin")
     end
 
     it "returns fiscal fields" do
       fields = helper.provider_fields("fiscal")
-      expect(fields.map { |f| f[:key] }).to include("environment", "cnpj")
+      expect(fields.map { |f| f[:key] }).to include("environment", "token", "cnpj")
     end
 
     it "returns marketplace fields" do
       fields = helper.provider_fields("marketplace")
-      expect(fields.map { |f| f[:key] }).to include("merchant_id", "platform")
+      expect(fields.map { |f| f[:key] }).to include("client_id", "client_secret", "merchant_id")
     end
 
     it "returns empty array for unknown provider" do

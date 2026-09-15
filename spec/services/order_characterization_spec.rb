@@ -830,7 +830,7 @@ RSpec.describe Order do
 
         # Add payment and verify balance_due is correct
         create(:payment, order: order, status: :succeeded, amount: second_total)
-        
+
         Tenancy.with_business(business) do
           expect(order.balance_due).to eq(0.0)
           expect(order.fully_paid?).to be(true)
@@ -1194,8 +1194,8 @@ RSpec.describe Order do
         order.recalculate_totals!
         order.reload
 
-        expected_subtotal = (item_a.unit_total * item_a.quantity + 
-                           item_b.unit_total * item_b.quantity + 
+        expected_subtotal = (item_a.unit_total * item_a.quantity +
+                           item_b.unit_total * item_b.quantity +
                            item_c.unit_total * item_c.quantity).round(2)
         expect(order.subtotal).to eq(expected_subtotal)
 
@@ -1205,7 +1205,7 @@ RSpec.describe Order do
 
         # Add partial payment and verify balance_due
         create(:payment, order: order, status: :succeeded, amount: 45.00)
-        
+
         Tenancy.with_business(business) do
           expected_balance = (expected_total - 45.00).round(2)
           expect(order.balance_due).to eq(expected_balance)
@@ -1213,7 +1213,7 @@ RSpec.describe Order do
 
           # Add remaining payment to fully pay the order
           create(:payment, order: order, status: :succeeded, amount: expected_balance)
-          
+
           expect(order.balance_due).to eq(0.00)
           expect(order.fully_paid?).to be(true)
         end
@@ -1329,8 +1329,8 @@ RSpec.describe Order do
         order.recalculate_totals!
         order.reload
 
-        expected_subtotal = (item_a.unit_total * item_a.quantity + 
-                           item_b.unit_total * item_b.quantity + 
+        expected_subtotal = (item_a.unit_total * item_a.quantity +
+                           item_b.unit_total * item_b.quantity +
                            item_c.unit_total * item_c.quantity).round(2)
         expect(order.subtotal).to eq(expected_subtotal)
 
@@ -1340,7 +1340,7 @@ RSpec.describe Order do
 
         # Add partial payment and verify balance_due is computed as total - paid_amount
         create(:payment, order: order, status: :succeeded, amount: 50.00)
-        
+
         Tenancy.with_business(business) do
           expected_balance = (expected_total - 50.00).round(2)
           expect(order.balance_due).to eq(expected_balance)
@@ -1348,7 +1348,7 @@ RSpec.describe Order do
 
           # Add remaining payment to fully pay the order and verify balance_due becomes zero
           create(:payment, order: order, status: :succeeded, amount: expected_balance)
-          
+
           expect(order.balance_due).to eq(0.00)
           expect(order.fully_paid?).to be(true)
         end

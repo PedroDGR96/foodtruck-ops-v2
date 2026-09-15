@@ -9,7 +9,7 @@ class MockMarketplaceProvider < MarketplaceProvider
     platform = settings[:platform] || "ifood"
 
     if merchant_id.present?
-      { success: true, message: "#{platform.capitalize} conectado (merchant: #{merchant_id})" }
+      { success: true, message: "#{platform.capitalize} configurado — modo simulado (nenhuma chamada real) (merchant: #{merchant_id})" }
     else
       { success: false, message: "ID do estabelecimento não configurado" }
     end

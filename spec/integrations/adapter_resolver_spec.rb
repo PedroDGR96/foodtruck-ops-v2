@@ -12,11 +12,10 @@ RSpec.describe AdapterResolver, type: :integration do
     it "returns the real adapter when live mode and a real adapter is registered" do
       business.update!(integration_adapter_mode: "live")
       expect(AdapterResolver.resolve(business, :maps)).to eq(OsmMapsProvider)
-    end
-
-    it "falls back to the mock when live mode but no real adapter is registered" do
-      business.update!(integration_adapter_mode: "live")
-      expect(AdapterResolver.resolve(business, :payment_gateway)).to eq(MockPaymentGateway)
+      expect(AdapterResolver.resolve(business, :payment_gateway)).to eq(IntegrationsKit::MercadoPagoGateway)
+      expect(AdapterResolver.resolve(business, :fiscal)).to eq(IntegrationsKit::FocusNFeProvider)
+      expect(AdapterResolver.resolve(business, :marketplace)).to eq(IntegrationsKit::IfoodMarketplaceProvider)
+      expect(AdapterResolver.resolve(business, :messaging)).to eq(IntegrationsKit::TwilioMessagingProvider)
     end
 
     it "raises for an unknown provider key" do
@@ -35,23 +34,47 @@ RSpec.describe AdapterResolver, type: :integration do
     end
   end
 
-  describe ".fallback?" do
-    it "is false in mock mode regardless of the provider" do
-      expect(AdapterResolver.fallback?(business, :payment_gateway)).to be(false)
-      expect(AdapterResolver.fallback?(business, :maps)).to be(false)
+  describe ".live?" do
+    it "is false by default" do
+      expect(AdapterResolver.live?(business)).to be(false)
     end
 
-    it "is true for a provider without a real adapter in live mode" do
+    it "is true after switching to live" do
       business.update!(integration_adapter_mode: "live")
-      expect(AdapterResolver.fallback?(business, :payment_gateway)).to be(true)
-      expect(AdapterResolver.fallback?(business, :fiscal)).to be(true)
-      expect(AdapterResolver.fallback?(business, :marketplace)).to be(true)
-      expect(AdapterResolver.fallback?(business, :messaging)).to be(true)
+      expect(AdapterResolver.live?(business)).to be(true)
+    end
+  end
+
+  describe "fail-loud resolution" do
+    it "raises NoRealAdapterError in live mode when no real adapter is registered" do
+      business.update!(integration_adapter_mode: "live")
+      stub_const("AdapterResolver::ADAPTERS",
+                 payment_gateway: { mock: MockPaymentGateway },
+                 maps: { mock: MockMapsProvider, real: OsmMapsProvider },
+                 fiscal: { mock: MockFiscalProvider, real: IntegrationsKit::FocusNFeProvider },
+                 marketplace: { mock: MockMarketplaceProvider, real: IntegrationsKit::IfoodMarketplaceProvider },
+                 messaging: { mock: MockMessagingProvider, real: IntegrationsKit::TwilioMessagingProvider })
+
+      expect { AdapterResolver.resolve(business, :payment_gateway) }
+        .to raise_error(NoRealAdapterError, /payment_gateway/)
+    end
+  end
+
+  describe ".settings_for" do
+    it "returns symbolized stored credentials for the provider" do
+      Tenancy.with_business(business) do
+        business.integration_settings.create!(provider_key: "payment_gateway", credentials: { access_token: "APP_T", "public_key" => "APP_P" }, enabled: true)
+      end
+
+      Tenancy.with_business(business) do
+        expect(AdapterResolver.settings_for(business, :payment_gateway)).to eq(access_token: "APP_T", public_key: "APP_P")
+      end
     end
 
-    it "is false for a provider with a real adapter in live mode" do
-      business.update!(integration_adapter_mode: "live")
-      expect(AdapterResolver.fallback?(business, :maps)).to be(false)
+    it "returns an empty hash when no setting is stored" do
+      Tenancy.with_business(business) do
+        expect(AdapterResolver.settings_for(business, :payment_gateway)).to eq({})
+      end
     end
   end
 end
