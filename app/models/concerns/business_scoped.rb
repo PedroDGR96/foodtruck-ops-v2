@@ -1,23 +1,19 @@
+# FoodTruck-specific concerns that delegate to UniversalSaaS
+
 module BusinessScoped
-  extend ActiveSupport::Concern
-
-  included do
-    belongs_to :business
-
-    default_scope { where(business_id: Current.business_id!) }
-    before_validation :assign_current_business, on: :create
-    validate :business_matches_current_business, on: :create
+  def self.included(base)
+    base.include UniversalSaaS::Concerns::TenantScoped
   end
+end
 
-  private
-
-  def assign_current_business
-    self.business_id ||= Current.business_id!
+module TenantChild
+  def self.included(base)
+    base.include UniversalSaaS::Concerns::TenantChild
   end
+end
 
-  def business_matches_current_business
-    return if business_id == Current.business_id!
-
-    errors.add(:business_id, "must match the current business")
+module SoftDelete
+  def self.included(base)
+    base.include UniversalSaaS::Concerns::SoftDelete
   end
 end

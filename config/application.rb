@@ -1,5 +1,4 @@
 require_relative "boot"
-require_relative "../app/middleware/tenant_middleware"
 
 require "rails"
 # Pick the frameworks you want:
@@ -30,7 +29,7 @@ module App
     config.autoload_lib(ignore: %w[assets tasks generators])
     config.active_job.queue_adapter = :sidekiq
     config.active_record.schema_format = :sql
-    config.middleware.insert_after Warden::Manager, TenantMiddleware
+    config.middleware.insert_after Warden::Manager, UniversalSaaS::Middleware::TenantMiddleware
 
     # The application is fully Brazilian Portuguese: default locale, all
     # user-facing strings, money (BRL) and date/time formats.

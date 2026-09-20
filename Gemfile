@@ -20,6 +20,7 @@ gem "tzinfo-data", platforms: %i[windows jruby]
 gem "devise", "~> 4.9"
 gem "pundit", "~> 2.4"
 gem "rails-i18n", "~> 8.0"
+gem "universal_saas", path: "../universal_saas"
 
 group :development, :test do
   gem "brakeman", require: false

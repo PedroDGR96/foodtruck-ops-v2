@@ -10,8 +10,8 @@ Warden::Manager.before_failure do |env, opts|
   user = email.presence && User.unscoped.find_by(email: email)
   next unless user
 
-  Tenancy.with_business(user.business) do
-    AuditLog.record!(
+  UniversalSaaS::Tenancy.with_tenant(user.business) do
+    UniversalSaaS::AuditLog.record!(
       action: "failed_sign_in",
       resource: "user",
       resource_id: user.id,
